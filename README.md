@@ -25,7 +25,7 @@
 ## Tecnologías Utilizadas
 
 Listado de todas las tecnologías, frameworks y librerías utilizadas en el frontend del aplicativo.
-
+- Mockups realizados en figma: https://www.figma.com/design/Y6Gfw5R7G3ratov2E1kC2B/PATRICI-A?node-id=0-1&t=RVX81Q6Bd7qnVFHd-1
 ---
 
 ## Descripción General y Cómo Ejecutarlo
