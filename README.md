@@ -1,111 +1,358 @@
-# PATRICI.A Front-end
+# Patricia Frontend
+
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-4.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![React Router](https://img.shields.io/badge/React-Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-16+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+
+Red social académica y de entretenimiento para estudiantes universitarios. Conecta usuarios con intereses similares, facilita la creación de grupos de estudio y entretenimiento (Parchas), y proporciona recomendaciones inteligentes basadas en perfiles.
+
+## Descripción del proyecto
+
+Patricia (EciBuddy) es una plataforma integral diseñada para resolver la fragmentación de conexiones estudiantiles en universidades. Los estudiantes actuales enfrentan dificultades para encontrar compañeros con intereses similares, formar grupos de estudio efectivos y participar en actividades extracurriculares organizadas. Nuestra solución automatiza el emparejamiento de usuarios ("Perfect Matches") y ofrece gestión administrativa centralizada de grupos o "Parchas", creando un ecosistema de conexión académica y social.
+
+## Equipo
+
+Desarrollado por estudiantes de la Escuela Colombiana de Ingeniería como proyecto académico.
+
+## Estándares técnicos
+
+**Stack tecnológico**
+- **Frontend:** React 18 con TypeScript 5.0
+- **Build tool:** Vite 4.0
+- **Styling:** Tailwind CSS
+- **Routing:** React Router
+- **Runtime:** Node.js 16+
+
+**Características de desarrollo**
+- Tipado estático completo con TypeScript
+- Componentes funcionales con Hooks
+- Linting automático y validación de código
+- Formateo consistente
+- Build optimizado para producción
+
+## Primeros pasos
+
+### Requisitos previos
+
+- Node.js 16 o superior
+- npm 8 o superior (o yarn/pnpm)
+
+### Instalación
+
+```bash
+git clone <repository-url>
+cd patricia-frontend
+npm install
+```
+
+### Desarrollo local
+
+```bash
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:5173` (puerto por defecto de Vite).
+
+## Scripts disponibles
+
+```bash
+npm run dev       # Ejecutar servidor de desarrollo
+npm run build     # Compilar para producción
+npm run preview   # Visualizar build de producción localmente
+npm run lint      # Ejecutar ESLint para validación de código
+npm run format    # Formatear código con Prettier
+npm run test      # Ejecutar suite de pruebas (si aplica)
+npm run type-check # Validar tipos TypeScript
+```
+
+## Arquitectura del proyecto
+
+```
+src/
+├── components/          # Componentes reutilizables
+│   ├── auth/           # Componentes de autenticación
+│   ├── dashboard/      # Componentes del dashboard
+│   ├── parcha/         # Componentes de gestión de parchas
+│   ├── profile/        # Componentes de perfil de usuario
+│   └── common/         # Componentes comunes (header, footer, etc.)
+├── pages/              # Páginas principales
+├── hooks/              # Custom hooks
+├── services/           # Servicios API
+├── context/            # Context API para estado global
+├── types/              # Definiciones de tipos TypeScript
+├── styles/             # Estilos globales
+├── utils/              # Funciones utilitarias
+└── App.tsx             # Componente raíz
+```
+
+## Mockups y diseño
+
+Todos los mockups se encuentran en `docs/mockups/`. La siguiente es la estructura visual del proyecto según Sprint 4:
+
+### Identidad visual
+![alt text](image.png)
+
+*Logo oficial del proyecto Patricia (EciBuddy)*
+
+[Revisar manual de identidad visual](/docs/MANUAL_IDENTIDAD.md)
+
+### Diseño en Figma
+[Acceder al prototipo completo en Figma](https://figma.com/your-project-link)
+
+## Módulos funcionales
+
+### 1. Módulo de autenticación
+
+Gestiona el ingreso y registro de usuarios con múltiples opciones de autenticación.
+
+**Funcionalidades:**
+- Registro con correo electrónico
+- Inicio de sesión con credenciales
+- Autenticación social (Google, Facebook)
+- Recuperación de contraseña
+- Control de acceso a funcionalidades del sistema
+
+![alt text](image-4.png)
+*Pantalla de inicio de sesión - Acceso a la plataforma*
+
+![alt text](image-5.png)
+*Pantalla de registro - Creación de nueva cuenta*
+
+### 2. Módulo de dashboard
+
+Vista principal personalizada que proporciona recomendaciones y visibilidad de la comunidad.
+
+**Funcionalidades:**
+- Recomendaciones de estudiantes ("Perfect Matches") basadas en intereses
+- Feed de actividades de la comunidad ("University Pulse")
+- Accesos rápidos a funcionalidades principales
+- Resumen de información relevante del usuario
+
+![alt text](image-1.png)
+*Vista principal - Recomendaciones y actividad de comunidad*
+
+![alt text](image-2.png)
+*Sección de Perfect Matches - Conexiones sugeridas*
+
+![alt text](image-3.png)
+*University Pulse - Actividad reciente de la comunidad*
+
+### 3. Módulo de gestión de parchas
+
+Permite crear, visualizar, buscar y unirse a grupos de estudio y entretenimiento.
+
+**Funcionalidades:**
+- Crear nuevas parchas con categorización (Académicas, Sociales, Deportes)
+- Visualizar listado de parchas disponibles
+- Detalles de cada parcha (miembros, descripción, actividades)
+- Buscar y filtrar parchas por categoría e intereses
+- Sistema de solicitud para unirse a parchas
+
+![alt text](image-6.png)*Catálogo de parches - Búsqueda y descubrimiento*
+
+![alt text](image-7.png)
+*Vista detallada - Información de miembros y actividades*
+
+![alt text](image-8.png)*Formulario de creación - Configuración de nueva parcha*
+
+
+
+### 4. Módulo de perfil
+
+Visualización y edición del perfil de usuario con seguimiento de progreso social.
+
+**Funcionalidades:**
+- Información completa del perfil
+- Social Progress: puntos de experiencia (XP) y eventos asistidos
+- Historial de clubes y parchas
+- Logros y milestones alcanzados
+- Galería de fotos y multimedia
+- Edición de preferencias e intereses
+
+![alt text](image-9.png)
+*Vista principal del perfil - Información y estadísticas básicas*
+
+
+
+![alt text](image-10.png)
+*Sección de milestones - Logros desbloqueados*
+
+![alt text](image-11.png)
+*Formulario de edición - Actualización de información*
+
+## Decisiones técnicas
+
+El proyecto utiliza tecnologías modernas de frontend para asegurar escalabilidad, mantenibilidad y rendimiento óptimo. Cada herramienta fue seleccionada basándose en las mejores prácticas de la industria.
+
+## Convenciones de código
+
+**Nombres de componentes:** PascalCase
+```typescript
+// ✓ Correcto
+export const UserProfile = () => { }
+export const NavigationBar = () => { }
+
+// ✗ Incorrecto
+export const userProfile = () => { }
+```
+
+**Nombres de archivos:** kebab-case para archivos, PascalCase para componentes
+```
+src/components/
+├── user-profile.tsx      // archivo
+├── UserProfile.tsx       // componente
+├── hooks/
+│   └── use-auth.ts       // custom hook
+```
+
+**Variables y funciones:** camelCase
+```typescript
+const userEmail = "";
+const calculateTotalPrice = () => { }
+```
+
+**Constantes:** UPPER_SNAKE_CASE
+```typescript
+const API_BASE_URL = "https://api.example.com";
+const MAX_RETRY_ATTEMPTS = 3;
+```
+
+**Imports organizados:**
+```typescript
+// 1. Librerías externas
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// 2. Componentes locales
+import { Header } from '@/components/common/Header';
+import { UserCard } from '@/components/user/UserCard';
+
+// 3. Hooks personalizados
+import { useAuth } from '@/hooks/use-auth';
+
+// 4. Servicios y utilidades
+import { userService } from '@/services/user-service';
+import { formatDate } from '@/utils/date-utils';
+
+// 5. Tipos
+import type { User } from '@/types/user';
+
+// 6. Estilos
+import styles from './component.module.css';
+```
+
+## Gestión de estado
+
+Se recomienda utilizar una de las siguientes estrategias según la complejidad:
+
+**Context API + Hooks:** Para estado global simple
+```typescript
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth debe ser usado dentro de AuthProvider');
+  }
+  return context;
+};
+```
+
+**Zustand o Redux Toolkit:** Para estado global complejo con múltiples acciones
+
+## Integración con API
+
+Los servicios API se centralizan en la carpeta `src/services/`. Utilizar Fetch API o Axios con gestión de errores:
+
+```typescript
+// src/services/user-service.ts
+export const userService = {
+  async getUser(id: string) {
+    const response = await fetch(`${API_BASE_URL}/users/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch user');
+    return response.json();
+  },
+
+  async updateUser(id: string, data: UserUpdatePayload) {
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update user');
+    return response.json();
+  },
+};
+```
+
+## Pruebas
+
+La suite de pruebas utiliza Vitest y React Testing Library:
+
+```bash
+npm run test              # Ejecutar todas las pruebas
+npm run test:watch       # Modo watch
+npm run test:coverage    # Cobertura de pruebas
+```
+
+**Estructura de pruebas:**
+```
+src/
+├── components/
+│   ├── UserCard.tsx
+│   └── __tests__/
+│       └── UserCard.test.tsx
+```
+
+## Performance y optimización
+
+- Lazy loading de rutas con `React.lazy()`
+- Code splitting automático por Vite
+- Optimización de imágenes (WebP, compresión)
+- Memoización de componentes con `React.memo()` cuando sea necesario
+- Eliminación de dependencias innecesarias en hooks
+
+## Variables de entorno
+
+Crear archivo `.env.local` en la raíz del proyecto:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_APP_NAME=Patricia
+VITE_ENVIRONMENT=development
+```
+
+Acceder en el código:
+```typescript
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
+```
+
+## Deployment
+
+**Build para producción:**
+```bash
+npm run build
+```
+
+La carpeta `dist/` contiene los archivos compilados listos para producción.
+
+**Opciones de hosting:**
+- Vercel
+- Netlify
+- GitHub Pages
+- AWS S3 + CloudFront
+- Azure Static Web Apps
+
+## Contribuir
+
+Para contribuir al proyecto, por favor:
+
+1. Consulta con el equipo de desarrollo
+2. Sigue los estándares de código del proyecto
+3. Asegúrate de que tu código pase validación y linting
 
 ---
 
-## Indice
-
-1. [Tecnologías Utilizadas](#tecnologías-utilizadas)
-2. [Descripción General y Cómo Ejecutarlo](#descripción-general-y-cómo-ejecutarlo)
-3. [Diagrama de Navegación](#diagrama-de-navegación)
-4. [Cómo Funciona el Aplicativo](#cómo-funciona-el-aplicativo)
-5. [Funcionalidades y Pantallas](#funcionalidades-y-pantallas)
-6. [Happy Path](#happy-path)
-7. [Manejo de Errores](#manejo-de-errores)
-8. [Módulos de Backend Consumidos por Funcionalidad](#módulos-de-backend-consumidos-por-funcionalidad)
-9. [Demo por Funcionalidad](#demo-por-funcionalidad)
-10. [Diagrama de Componentes](#diagrama-de-componentes)
-11. [Evidencia de Pruebas Funcionales](#evidencia-de-pruebas-funcionales)
-12. [Estructura del Código](#estructura-del-código)
-13. [Código Documentado](#código-documentado)
-14. [Conexiones con Servicios Externos](#conexiones-con-servicios-externos)
-15. [CI/CD y Despliegue en Azure](#cicd-y-despliegue-en-azure)
-
----
-
-## Tecnologías Utilizadas
-
-Listado de todas las tecnologías, frameworks y librerías utilizadas en el frontend del aplicativo.
-- Mockups realizados en figma: https://www.figma.com/design/Y6Gfw5R7G3ratov2E1kC2B/PATRICI-A?node-id=0-1&t=RVX81Q6Bd7qnVFHd-1
----
-
-## Descripción General y Cómo Ejecutarlo
-
-Descripción general del aplicativo: qué problema resuelve, a quién va dirigido y cuál es su propósito principal. Incluye los pasos necesarios para ejecutarlo localmente: clonar el repositorio, instalar dependencias, configurar variables de entorno y correr el proyecto.
-
----
-
-## Diagrama de Navegación
-
-Diagrama visual que muestra el flujo de navegación del aplicativo entre las diferentes pantallas. Cada transición entre pantallas debe estar explicada, indicando la acción o condición que la genera.
-
----
-
-## Cómo Funciona el Aplicativo
-
-Explicación de la estructura general del frontend: cómo están organizadas las vistas, el manejo del estado, el flujo de datos entre componentes y cómo se comunica con el backend mediante llamadas a servicios.
-
----
-
-## Funcionalidades y Pantallas
-
-Por cada funcionalidad del aplicativo: nombre, descripción de qué hace, listado de las pantallas que la conforman con una descripción de cada una, y el paso a paso de uso desde la perspectiva del usuario.
-
----
-
-## Happy Path
-
-Descripción del flujo ideal del usuario a través del aplicativo, desde el inicio hasta completar una acción exitosamente, sin errores ni casos borde. Representa el recorrido exitoso esperado.
-
----
-
-## Manejo de Errores
-
-Descripción de cómo el aplicativo responde ante fallos desde el lado del frontend: validaciones de formularios, mensajes de error mostrados al usuario, manejo de respuestas fallidas del backend y casos borde contemplados en la interfaz.
-
----
-
-## Módulos de Backend Consumidos por Funcionalidad
-
-Relación entre cada funcionalidad del frontend y los endpoints o servicios del backend que consume, indicando qué llamadas realiza cada funcionalidad y para qué.
-
----
-
-## Demo por Funcionalidad
-
-Video o enlace de demostración por cada funcionalidad del aplicativo, mostrando su funcionamiento en acción.
-
----
-
-## Diagrama de Componentes
-
-Diagrama a gran escala que muestra los componentes del frontend, cómo se relacionan entre sí y cómo se conectan con los servicios externos y el backend.
-
----
-
-## Evidencia de Pruebas Funcionales
-
-Capturas de pantalla, reportes o registros que demuestren que cada funcionalidad fue probada y validada correctamente desde el frontend.
-
----
-
-## Estructura del Código
-
-Organización del repositorio en sus respectivas carpetas, con una descripción del contenido y propósito de cada directorio y archivo relevante del proyecto frontend.
-
----
-
-## Código Documentado
-
-Evidencia de que cada función, constante y componente del código cuenta con sus respectivos comentarios de documentación que explican su propósito y funcionamiento.
-
----
-
-## Conexiones con Servicios Externos
-
-Descripción de todas las integraciones con servicios externos consumidos desde el frontend: APIs del backend, servicios de autenticación, almacenamiento, notificaciones u otros servicios de terceros.
-
----
-
-## CI/CD y Despliegue en Azure
-
-Evidencia del proceso de integración y despliegue continuo del repositorio frontend. Incluye dos pipelines: uno para el ambiente de desarrollo y otro para producción. Se debe adjuntar capturas del estado de los pipelines y el enlace público donde está desplegado el aplicativo en Azure.
