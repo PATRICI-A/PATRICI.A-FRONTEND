@@ -115,25 +115,25 @@ Gestiona el ingreso y registro de usuarios con múltiples opciones de autenticac
 - Recuperación de contraseña
 - Control de acceso a funcionalidades del sistema
 
-![alt text](resourcesAuth/image.png)
+![alt text](Imagens/Auth/image.png)
 *Pantalla de inicio de sesión - Acceso a la plataforma*
 
-![alt text](resourcesAuth/image%20copy%202.png)
+![alt text](Imagens/Auth/image%20copy%202.png)
 *Pantalla de registro - Creación de nueva cuenta*
 
-![alt text](resourcesAuth/image%20copy%203.png)
+![alt text](Imagens/Auth/image%20copy%203.png)
 *Pantalla de verificación de correo - Validación del acceso institucional*
 
-![alt text](resourcesAuth/image%20copy%204.png)
+![alt text](Imagens/Auth/image%20copy%204.png)
 *Pantalla de perfil académico - Información académica básica*
 
-![alt text](resourcesAuth/image%20copy%205.png)
+![alt text](Imagens/Auth/image%20copy%205.png)
 *Pantalla de intereses - Selección de preferencias*
 
-![alt text](resourcesAuth/image%20copy%2010.png)
+![alt text](Imagens/Auth/image%20copy%2010.png)
 *Pantalla de recuperación de contraseña - Solicitud de instrucciones*
 
-![alt text](resourcesAuth/image%20copy%2011.png)
+![alt text](Imagens/Auth/image%20copy%2011.png)
 *Pantalla de restablecimiento de contraseña - Cambio de clave*
 
 ### 2. Módulo de dashboard
@@ -197,6 +197,21 @@ Visualización y edición del perfil de usuario con seguimiento de progreso soci
 
 ![alt text](image-11.png)
 *Formulario de edición - Actualización de información*
+
+### 5. Módulo de geolocalización
+
+Herramienta de mapeo que permite visualizar y gestionar eventos en la universidad de forma espacial.
+
+**Funcionalidades:**
+- Visualización interactiva de eventos en el mapa de la universidad
+- Activar/desactivar geolocalización para ver tu ubicación actual
+- Filtrado de eventos por categoría, distancia y disponibilidad
+- Vista de eventos activos cercanos a tu ubicación
+- Notificaciones en tiempo real de nuevos eventos en tu zona
+- Búsqueda geoespacial de parchas y grupos de interés
+
+![alt text](Imagens/Geolocation/image%20copy%2014.png)
+*Mapa de eventos - Visualización interactiva de la universidad*
 
 ## Decisiones técnicas
 
