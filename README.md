@@ -111,7 +111,6 @@ Gestiona el ingreso y registro de usuarios con múltiples opciones de autenticac
 **Funcionalidades:**
 - Registro con correo electrónico
 - Inicio de sesión con credenciales
-- Autenticación social (Google, Facebook)
 - Recuperación de contraseña
 - Control de acceso a funcionalidades del sistema
 
@@ -207,8 +206,6 @@ Herramienta de mapeo que permite visualizar y gestionar eventos en la universida
 - Activar/desactivar geolocalización para ver tu ubicación actual
 - Filtrado de eventos por categoría, distancia y disponibilidad
 - Vista de eventos activos cercanos a tu ubicación
-- Notificaciones en tiempo real de nuevos eventos en tu zona
-- Búsqueda geoespacial de parchas y grupos de interés
 
 ![alt text](Imagens/Geolocation/image%20copy%2014.png)
 *Mapa de eventos - Visualización interactiva de la universidad*
@@ -385,4 +382,12 @@ Para contribuir al proyecto, por favor:
 3. Asegúrate de que tu código pase validación y linting
 
 ---
+
+## Documento de marketing
+
+Breve introducción: el documento de marketing resume la propuesta de valor, público objetivo, mensajes clave y materiales visuales diseñados para promocionar Patricia (EciBuddy) dentro de la comunidad universitaria. Está pensado para que el equipo de producto y marketing coordinen campañas, landing pages y materiales para difusión en redes y eventos.
+
+Accede al documento de marketing aquí: [Documento de marketing](docs/MARKETING.md)
+
+Si el documento se encuentra en otra ubicación (por ejemplo PDF o carpeta compartida), reemplaza el enlace anterior por la ruta correcta o la URL externa correspondiente.
 
