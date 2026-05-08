@@ -382,14 +382,3 @@ Para contribuir al proyecto, por favor:
 3. Asegúrate de que tu código pase validación y linting
 
 ---
-
-## Documento de marketing
-
-Breve introducción: el documento de marketing resume la propuesta de valor, público objetivo, mensajes clave y materiales visuales diseñados para promocionar Patricia (EciBuddy) dentro de la comunidad universitaria. Está pensado para que el equipo de producto y marketing coordinen campañas, landing pages y materiales para difusión en redes y eventos.
-
-
-[Documento](<Estrategia De Marketing Y Publ 1.docx>)
-
-
-Si el documento se encuentra en otra ubicación (por ejemplo PDF o carpeta compartida), reemplaza el enlace anterior por la ruta correcta o la URL externa correspondiente.
-
