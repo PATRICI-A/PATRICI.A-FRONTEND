@@ -388,9 +388,8 @@ Para contribuir al proyecto, por favor:
 Breve introducción: el documento de marketing resume la propuesta de valor, público objetivo, mensajes clave y materiales visuales diseñados para promocionar Patricia (EciBuddy) dentro de la comunidad universitaria. Está pensado para que el equipo de producto y marketing coordinen campañas, landing pages y materiales para difusión en redes y eventos.
 
 
-[Docuemnto](<Estrategia De Marketing Y Publ 1.docx>)
+[Documento](<Estrategia De Marketing Y Publ 1.docx>)
 
-https://pruebacorreoescuelaingeduco-my.sharepoint.com/:w:/g/personal/maria_perez-z_mail_escuelaing_edu_co/IQA8LXu3U1_pQ48Xinw8t2foAZ7nqpYSALiV_MXiSV-KrrQ?e=2S1FtU 
 
 Si el documento se encuentra en otra ubicación (por ejemplo PDF o carpeta compartida), reemplaza el enlace anterior por la ruta correcta o la URL externa correspondiente.
 
