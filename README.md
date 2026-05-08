@@ -115,11 +115,26 @@ Gestiona el ingreso y registro de usuarios con múltiples opciones de autenticac
 - Recuperación de contraseña
 - Control de acceso a funcionalidades del sistema
 
-![alt text](image-4.png)
+![alt text](resourcesAuth/image.png)
 *Pantalla de inicio de sesión - Acceso a la plataforma*
 
-![alt text](image-5.png)
+![alt text](resourcesAuth/image%20copy%202.png)
 *Pantalla de registro - Creación de nueva cuenta*
+
+![alt text](resourcesAuth/image%20copy%203.png)
+*Pantalla de verificación de correo - Validación del acceso institucional*
+
+![alt text](resourcesAuth/image%20copy%204.png)
+*Pantalla de perfil académico - Información académica básica*
+
+![alt text](resourcesAuth/image%20copy%205.png)
+*Pantalla de intereses - Selección de preferencias*
+
+![alt text](resourcesAuth/image%20copy%2010.png)
+*Pantalla de recuperación de contraseña - Solicitud de instrucciones*
+
+![alt text](resourcesAuth/image%20copy%2011.png)
+*Pantalla de restablecimiento de contraseña - Cambio de clave*
 
 ### 2. Módulo de dashboard
 
