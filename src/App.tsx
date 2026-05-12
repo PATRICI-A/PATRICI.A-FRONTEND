@@ -1,11 +1,12 @@
-import { Toaster } from 'sonner';
+import React from 'react';
+import { RouterProvider } from 'react-router';
+import { router } from './routes';
+import { AppProvider } from './context/AppContext';
 
-function App() {
+export default function App() {
   return (
-    <>
-      <Toaster position="bottom-right" richColors />
-    </>
+    <AppProvider>
+      <RouterProvider router={router} />
+    </AppProvider>
   );
 }
-
-export default App;
