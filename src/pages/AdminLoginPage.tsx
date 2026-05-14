@@ -1,49 +1,42 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Lock, Mail, ShieldCheck, AlertCircle, Sun, Moon } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE } from '../data/mockData';
+import { GRADIENT, PINK, ORANGE } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-import { useApp } from '../context/AppContext';
-
+import { useApp } from '../store/AppContext';
 export function AdminLoginPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useApp();
   const [email, setEmail] = useState('admin@admin.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Simple validation for admin access
     if (email === 'admin@admin.com' && password.length > 0) {
-      // Store admin session
       localStorage.setItem('adminSession', 'true');
       navigate('/admin/dashboard');
     } else {
       setError('Credenciales de administrador inválidas');
     }
   };
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A192F] relative flex items-center justify-center p-5">
+    <div className="min-h-screen relative flex items-center justify-center p-5">
       <DoodleBackground isDark={isDark} opacity={0.5} />
-
-      {/* Theme Toggle */}
+      {}
       <button
         onClick={toggleTheme}
         className="fixed top-5 right-5 w-10 h-10 rounded-full bg-white dark:bg-[#112240] shadow-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:scale-110 transition-transform z-50"
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
       </button>
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md relative z-10"
       >
-        {/* Admin Badge */}
+        {}
         <div className="flex justify-center mb-6">
           <motion.div
             initial={{ scale: 0 }}
@@ -55,8 +48,7 @@ export function AdminLoginPage() {
             <ShieldCheck size={40} className="text-white" />
           </motion.div>
         </div>
-
-        {/* Header */}
+        {}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
             patrici.a
@@ -68,10 +60,9 @@ export function AdminLoginPage() {
             Acceso restringido para administradores
           </p>
         </div>
-
-        {/* Login Card */}
+        {}
         <div className="bg-white dark:bg-[#112240] rounded-2xl p-6 shadow-xl">
-          {/* Info Banner */}
+          {}
           <div
             className="flex items-start gap-3 p-3 rounded-xl mb-6"
             style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)' }}
@@ -86,9 +77,8 @@ export function AdminLoginPage() {
               </p>
             </div>
           </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email Input */}
+            {}
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
                 Correo de Administrador
@@ -105,8 +95,7 @@ export function AdminLoginPage() {
                 />
               </div>
             </div>
-
-            {/* Password Input */}
+            {}
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
                 Contraseña
@@ -123,8 +112,7 @@ export function AdminLoginPage() {
                 />
               </div>
             </div>
-
-            {/* Error Message */}
+            {}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -136,8 +124,7 @@ export function AdminLoginPage() {
                 </p>
               </motion.div>
             )}
-
-            {/* Submit Button */}
+            {}
             <motion.button
               whileTap={{ scale: 0.98 }}
               type="submit"
@@ -148,8 +135,7 @@ export function AdminLoginPage() {
               Acceder al Panel
             </motion.button>
           </form>
-
-          {/* Back to App */}
+          {}
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#1E3A5F]">
             <button
               onClick={() => navigate('/login')}
@@ -159,8 +145,7 @@ export function AdminLoginPage() {
             </button>
           </div>
         </div>
-
-        {/* Footer Note */}
+        {}
         <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
           Este acceso está protegido y monitoreado
         </p>

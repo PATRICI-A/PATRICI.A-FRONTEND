@@ -1,28 +1,37 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sun, Moon } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { GRADIENT, PINK } from '../data/mockData';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sun, Moon, Calendar } from 'lucide-react';
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { DoodleBackground } from '../components/ui/DoodleBackground';
-
+import fondoClaro from '../assets/fondoClaroPATRICIA.png';
+import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, isDark, toggleTheme } = useApp();
+  useEffect(() => {
+    document.documentElement.dataset.page = 'auth';
+    return () => { delete document.documentElement.dataset.page; };
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
-
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
   const emailValid = email.toLowerCase().endsWith('@mail.escuelaing.edu.co') && email.includes('@');
-  const emailHintColor = !emailTouched || email.length === 0 ? 'text-gray-400' : emailValid ? 'text-green-500' : 'text-red-400';
-
+  const emailHintColor = !emailTouched || email.length === 0 ? (isDark ? 'text-gray-400' : 'text-gray-600') : emailValid ? (isDark ? 'text-green-400' : 'text-green-700') : 'text-red-400';
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBlocked) {
+      setError('Cuenta bloqueada temporalmente por 15 minutos');
+      return;
+    }
     if (!email || !password) {
       setError('Por favor completa todos los campos');
       return;
@@ -38,6 +47,18 @@ export function LoginPage() {
     setIsLoading(true);
     setError('');
     await new Promise(r => setTimeout(r, 1200));
+    const userRole = email.toLowerCase().includes('organizador') ? 'ORGANIZADOR' : 'ESTUDIANTE';
+    setFailedAttempts(0);
+    if (userRole === 'ORGANIZADOR') {
+      localStorage.setItem('organizerSession', JSON.stringify({
+        email,
+        name: email.split('@')[0],
+        role: 'ORGANIZADOR'
+      }));
+      setIsLoading(false);
+      navigate('/organizer/dashboard');
+      return;
+    }
     login({
       id: 'u1',
       name: 'Patricia S.',
@@ -58,49 +79,57 @@ export function LoginPage() {
     setIsLoading(false);
     navigate('/home');
   };
-
   return (
-    <div className="min-h-screen bg-[#F0F7FF] dark:bg-[#0A192F] transition-colors duration-300 flex flex-col relative">
-      <DoodleBackground isDark={isDark} />
-      {/* Header */}
+    <div className="min-h-screen transition-colors duration-300 flex flex-col relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("${isDark ? fondoOscuro : fondoClaro}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+      />
+      {}
+      <div className="relative flex flex-col flex-1" style={{ zIndex: 1 }}>
+      {}
       <div className="flex items-center justify-between p-4">
         <button
           onClick={() => navigate('/')}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#112240] shadow-sm text-gray-500 dark:text-gray-400"
+          className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white"
         >
           <ArrowLeft size={18} />
         </button>
         <button
           onClick={toggleTheme}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#112240] shadow-sm text-gray-500 dark:text-gray-400"
+          className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white"
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </div>
-
       <div className="flex-1 flex flex-col justify-center px-6 pb-8 max-w-md mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Logo */}
+          {}
           <div className="text-center mb-8">
             <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 bg-white shadow-lg">
               <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-gray-900 dark:text-white mb-1">Bienvenido de vuelta</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Conecta con tu comunidad universitaria</p>
+            <p className="text-sm text-gray-800 dark:text-white">Conecta con tu comunidad universitaria</p>
           </div>
-
-          {/* Form */}
+          {}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                 Correo Institucional
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <input
                   type="email"
                   value={email}
@@ -123,13 +152,12 @@ export function LoginPage() {
                 <span className="font-medium">@mail.escuelaing.edu.co</span>
               </p>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                 Contraseña
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -140,24 +168,22 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               <div className="text-right mt-1">
-                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-medium" style={{ color: PINK }}>
+                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-medium" style={{ color: isDark ? '#F59E0B' : PINK }}>
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
             </div>
-
             {error && (
               <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                 <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
-
             <button
               type="submit"
               disabled={isLoading}
@@ -174,25 +200,30 @@ export function LoginPage() {
               )}
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
+          <p className="text-center text-sm text-gray-800 dark:text-white mt-8">
             ¿Aún no tienes una cuenta?{' '}
-            <button onClick={() => navigate('/register')} className="font-semibold" style={{ color: PINK }}>
+            <button onClick={() => navigate('/register')} className="font-semibold" style={{ color: isDark ? '#F59E0B' : PINK }}>
               Regístrate aquí
             </button>
           </p>
-
-          {/* Admin Access Link */}
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#1E3A5F]">
+          {}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#1E3A5F] space-y-2">
             <button
               onClick={() => navigate('/admin/login')}
-              className="w-full text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors flex items-center justify-center gap-2"
+              className="w-full text-xs text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400 transition-colors flex items-center justify-center gap-2"
             >
               <Lock size={12} />
               Acceso de administrador
             </button>
+            <div className="text-center">
+              <p className="text-xs text-gray-700 dark:text-gray-400">
+                <Calendar size={12} className="inline mr-1" />
+                Organizadores de eventos: usen sus credenciales institucionales
+              </p>
+            </div>
           </div>
         </motion.div>
+      </div>
       </div>
     </div>
   );

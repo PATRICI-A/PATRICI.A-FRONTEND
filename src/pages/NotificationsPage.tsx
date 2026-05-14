@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Bell, Check, Trash2, MessageCircle, Users, Calendar, PartyPopper, AlertCircle } from 'lucide-react';
-import { notifications as initialNotifications, type Notification } from '../data/mockData';
-import { useApp } from '../context/AppContext';
+import { notifications as initialNotifications, type Notification } from '../types/mockData';
+import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-
 const NOTIFICATION_ICONS = {
   chat: MessageCircle,
   match: Users,
@@ -13,28 +12,29 @@ const NOTIFICATION_ICONS = {
   parche_invitation: PartyPopper,
   event_reminder: AlertCircle,
 } as const;
-
+const SECTION_BADGES: Record<string, { label: string; color: string; bg: string }> = {
+  chat: { label: 'Chat', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+  match: { label: 'Matching', color: '#EC4899', bg: 'rgba(236,72,153,0.12)' },
+  event: { label: 'Eventos', color: '#D97706', bg: 'rgba(217,119,6,0.12)' },
+  event_reminder: { label: 'Eventos', color: '#D97706', bg: 'rgba(217,119,6,0.12)' },
+  parche_invitation: { label: 'Parches', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
+};
 export function NotificationsPage() {
   const navigate = useNavigate();
   const { isDark } = useApp();
   const [notifications, setNotifications] = useState(initialNotifications);
-
   const unreadCount = notifications.filter(n => !n.read).length;
-
   const handleMarkAsRead = (id: string) => {
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
   };
-
   const handleDelete = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
-
   const handleMarkAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
-
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
       handleMarkAsRead(notification.id);
@@ -43,13 +43,17 @@ export function NotificationsPage() {
       navigate(notification.actionUrl);
     }
   };
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A192F] relative pb-20">
+    <div className="min-h-screen relative pb-10" style={{ background: 'transparent' }}>
       <DoodleBackground isDark={isDark} />
-
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-[#0A192F]/95 backdrop-blur-lg border-b border-gray-200 dark:border-[#1E3A5F]">
+      {}
+      <div
+        className="sticky top-[57px] z-40 backdrop-blur-xl border-b"
+        style={isDark
+          ? { background: 'rgba(10,25,47,0.97)', borderColor: '#1E3A5F' }
+          : { background: 'rgba(253,252,248,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(10,25,47,0.07)', boxShadow: '0 2px 16px rgba(10,25,47,0.07)' }
+        }
+      >
         <div className="px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -78,8 +82,7 @@ export function NotificationsPage() {
           )}
         </div>
       </div>
-
-      {/* Notifications List */}
+      {}
       <div className="px-5 py-4 space-y-2">
         <AnimatePresence mode="popLayout">
           {notifications.length === 0 ? (
@@ -112,14 +115,20 @@ export function NotificationsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`relative rounded-2xl p-4 transition-all ${
-                    notification.read
-                      ? 'bg-white dark:bg-[#112240]'
-                      : 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500'
-                  } shadow-sm`}
+                  className="relative rounded-2xl p-4 transition-all"
+                  style={{
+                    background: notification.read
+                      ? (isDark ? '#112240' : 'rgba(253,252,248,0.95)')
+                      : (isDark ? 'rgba(59,130,246,0.07)' : 'rgba(239,246,255,0.95)'),
+                    boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 12px rgba(10,25,47,0.07), 0 1px 4px rgba(10,25,47,0.04)',
+                    border: notification.read
+                      ? (isDark ? '1px solid #1E3A5F' : '1px solid rgba(10,25,47,0.06)')
+                      : `1px solid ${isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.2)'}`,
+                    borderLeft: notification.read ? undefined : '4px solid #3B82F6',
+                  }}
                 >
                   <div className="flex items-start gap-3">
-                    {/* Avatar or Icon */}
+                    {}
                     <div
                       className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden"
                       style={{
@@ -140,8 +149,7 @@ export function NotificationsPage() {
                         <Icon size={24} style={{ color: notification.color }} />
                       )}
                     </div>
-
-                    {/* Content */}
+                    {}
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
                       onClick={() => handleNotificationClick(notification)}
@@ -163,9 +171,21 @@ export function NotificationsPage() {
                       <p className="text-xs text-gray-400 dark:text-gray-500">
                         {notification.timestamp}
                       </p>
+                      {SECTION_BADGES[notification.type] && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            style={{
+                              background: SECTION_BADGES[notification.type].bg,
+                              color: SECTION_BADGES[notification.type].color,
+                            }}
+                          >
+                            → {SECTION_BADGES[notification.type].label}
+                          </span>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Actions */}
+                    {}
                     <div className="flex items-center gap-1">
                       {!notification.read && (
                         <motion.button

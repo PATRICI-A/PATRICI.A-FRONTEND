@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Users, Zap, Calendar, Heart, ChevronRight, Sun, Moon, MessageSquare, Send } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { GRADIENT, PINK, ORANGE } from '../data/mockData';
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK, ORANGE } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import slide1 from '../assets/imagen_1_u.jpg';
 import slide2 from '../assets/imagen_2_u.jpg';
 import slide3 from '../assets/imagen_3_u.jpg';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
 const features = [
   {
     icon: Zap,
@@ -36,7 +35,6 @@ const features = [
     gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
   },
 ];
-
 const slides = [
   {
     title: 'Conecta con tu',
@@ -57,7 +55,6 @@ const slides = [
     image: slide3,
   },
 ];
-
 const testimonials = [
   {
     id: 't1',
@@ -84,31 +81,28 @@ const testimonials = [
     date: 'Hace 3 días',
   },
 ];
-
 export function LandingPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useApp();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [newComment, setNewComment] = useState('');
   const isAuthenticated = false; // Simula que el usuario NO está autenticado en landing
-
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(timer);
   }, []);
-
   return (
-    <div className="min-h-screen bg-[#F0F7FF] dark:bg-[#0A192F] transition-colors duration-300">
-      {/* Header */}
+    <div className="min-h-screen transition-colors duration-300">
+      {}
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-[#0A192F]/90 backdrop-blur-md border-b border-blue-100/80 dark:border-[#233554]/60 shadow-sm">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-white shadow-md">
             <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
           </div>
           <span className="font-bold text-lg" style={{ background: GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            patrici.a
+            PATRICI.A
           </span>
         </div>
         <button
@@ -118,11 +112,10 @@ export function LandingPage() {
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </header>
-
       <div className="pt-16">
-        {/* Hero Section */}
+        {}
         <section className="relative overflow-hidden">
-          {/* Hero Image Carousel */}
+          {}
           <div className="relative h-[70vh] md:h-[80vh]">
             {slides.map((slide, i) => (
               <div
@@ -138,8 +131,7 @@ export function LandingPage() {
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%)' }} />
               </div>
             ))}
-
-            {/* Hero Content */}
+            {}
             <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
               <motion.div
                 key={currentSlide}
@@ -163,8 +155,7 @@ export function LandingPage() {
                 <p className="text-gray-200 text-sm mb-8 max-w-xs leading-relaxed">
                   {slides[currentSlide].description}
                 </p>
-
-                {/* CTA Buttons */}
+                {}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => navigate('/register')}
@@ -181,8 +172,7 @@ export function LandingPage() {
                   </button>
                 </div>
               </motion.div>
-
-              {/* Slide indicators */}
+              {}
               <div className="flex gap-2 mt-6">
                 {slides.map((_, i) => (
                   <button
@@ -199,8 +189,7 @@ export function LandingPage() {
             </div>
           </div>
         </section>
-
-        {/* Features */}
+        {}
         <section className="px-6 py-10">
           <div className="text-center mb-8">
             <h2 className="text-gray-800 dark:text-white mb-2">Todo lo que necesitas</h2>
@@ -227,8 +216,7 @@ export function LandingPage() {
             ))}
           </div>
         </section>
-
-        {/* Patricias Preview */}
+        {}
         <section className="px-6 py-8 bg-white dark:bg-[#112240] mx-0">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -280,7 +268,7 @@ export function LandingPage() {
                 className="flex-shrink-0 md:flex-shrink flex flex-col items-center justify-self-center"
                 style={{ width: 76 }}
               >
-                {/* Card */}
+                {}
                 <div
                   className="relative rounded-2xl overflow-hidden flex flex-col items-center"
                   style={{
@@ -291,7 +279,7 @@ export function LandingPage() {
                     boxShadow: `0 4px 18px ${mona.glow}, 0 0 0 1px ${mona.border}33`,
                   }}
                 >
-                  {/* Gold shimmer for legendary */}
+                  {}
                   {mona.shimmer && (
                     <div
                       className="absolute inset-0 pointer-events-none"
@@ -301,15 +289,14 @@ export function LandingPage() {
                       }}
                     />
                   )}
-                  {/* Gold top bar for legendary */}
+                  {}
                   {mona.rarity === 'LEGENDARIO' && (
                     <div
                       className="absolute top-0 left-0 right-0 h-0.5"
                       style={{ background: 'linear-gradient(90deg, #92400E, #F59E0B, #92400E)' }}
                     />
                   )}
-
-                  {/* Rarity + stars row */}
+                  {}
                   <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between">
                     <span
                       className="text-[6px] font-black px-1 py-0.5 rounded-full"
@@ -330,13 +317,11 @@ export function LandingPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Emoji */}
+                  {}
                   <div className="flex-1 flex items-center justify-center mt-3">
                     <EmojiIcon emoji={mona.emoji} size={26} color="white" strokeWidth={1.8} />
                   </div>
-
-                  {/* Name footer */}
+                  {}
                   <div
                     className="w-full text-center px-1 py-1.5"
                     style={{ background: 'rgba(0,0,0,0.45)' }}
@@ -351,8 +336,7 @@ export function LandingPage() {
                 </div>
               </div>
             ))}
-
-            {/* +7 más card */}
+            {}
             <div className="flex-shrink-0 md:flex-shrink flex flex-col items-center justify-self-center" style={{ width: 76 }}>
               <div
                 className="rounded-2xl flex items-center justify-center"
@@ -381,15 +365,13 @@ export function LandingPage() {
             </div>
           </div>
         </section>
-
-        {/* Comments / Reviews Section */}
+        {}
         <section className="px-6 py-10 bg-white dark:bg-[#0D1B2E]">
           <div className="text-center mb-6">
             <h2 className="text-gray-800 dark:text-white mb-2">Lo que dicen nuestros estudiantes</h2>
             <p className="text-sm text-blue-400 dark:text-gray-400">Experiencias reales de la comunidad</p>
           </div>
-
-          {/* Comments List */}
+          {}
           <div className="space-y-4 mb-6">
             {testimonials.map((testimonial, i) => (
               <motion.div
@@ -417,8 +399,7 @@ export function LandingPage() {
               </motion.div>
             ))}
           </div>
-
-          {/* Write Comment Section - Only for authenticated users */}
+          {}
           {isAuthenticated ? (
             <div className="bg-gray-50 dark:bg-[#112240] rounded-2xl p-4 border border-gray-100 dark:border-[#233554]">
               <textarea
@@ -431,7 +412,6 @@ export function LandingPage() {
               <div className="flex justify-end mt-3">
                 <button
                   onClick={() => {
-                    // Aquí iría la lógica para enviar el comentario
                     setNewComment('');
                   }}
                   disabled={!newComment.trim()}
@@ -453,16 +433,15 @@ export function LandingPage() {
                 className="px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all active:scale-95"
                 style={{ background: GRADIENT }}
               >
-                Crear cuenta gratis
+                Crear cuenta
               </button>
             </div>
           )}
         </section>
-
-        {/* Final CTA */}
+        {}
         <section className="px-6 pb-12">
           <div className="text-center mb-6">
-            <h2 className="text-gray-800 dark:text-white mb-2">¿Lista para conectar?</h2>
+            <h2 className="text-gray-800 dark:text-white mb-2">¿Listo para conectar?</h2>
             <p className="text-sm text-blue-400 dark:text-gray-400">Únete a miles de estudiantes que ya están construyendo su red</p>
           </div>
         </section>

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE } from '../data/mockData';
+import { GRADIENT, PINK, ORANGE } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
 const categories = [
   { id: 'musica', label: 'Música', emoji: '🎵', gradient: GRADIENT },
   { id: 'deporte', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
@@ -15,14 +14,12 @@ const categories = [
   { id: 'gastronomia', label: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)' },
   { id: 'bienestar', label: 'Bienestar', emoji: '🧘', gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' },
 ];
-
 const friends = [
   { id: 'u2', name: 'Valentina R.', avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
   { id: 'u3', name: 'Mateo S.', avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
   { id: 'u4', name: 'Sofía M.', avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
   { id: 'u5', name: 'Daniel C.', avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
 ];
-
 export function CreateParchePage() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
@@ -36,11 +33,9 @@ export function CreateParchePage() {
   const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [created, setCreated] = useState(false);
-
   const toggleFriend = (id: string) => {
     setInvitedFriends(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
-
   const handleCreate = async () => {
     if (!name || !category) return;
     setIsLoading(true);
@@ -49,12 +44,10 @@ export function CreateParchePage() {
     setIsLoading(false);
     setTimeout(() => navigate('/parches'), 2000);
   };
-
   const selectedCategory = categories.find(c => c.id === category);
-
   if (created) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0A192F] flex items-center justify-center px-6">
+      <div className="min-h-screen flex items-center justify-center px-6">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -75,10 +68,9 @@ export function CreateParchePage() {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-[#F0F7FF] dark:bg-[#0A192F] pb-8">
-      {/* Header */}
+    <div className="min-h-screen pb-8">
+      {}
       <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 md:top-0 z-10">
         <button
           onClick={() => navigate(-1)}
@@ -91,9 +83,8 @@ export function CreateParchePage() {
           <p className="text-xs text-gray-400">Arma tu plan perfecto</p>
         </div>
       </div>
-
       <div className="px-5 pt-6 max-w-lg mx-auto">
-        {/* Preview card */}
+        {}
         {(name || selectedCategory) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -118,9 +109,8 @@ export function CreateParchePage() {
             </div>
           </motion.div>
         )}
-
         <div className="space-y-5">
-          {/* Name */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre del parche *</label>
             <input
@@ -132,8 +122,7 @@ export function CreateParchePage() {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{name.length}/50</p>
           </div>
-
-          {/* Description */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
             <textarea
@@ -146,8 +135,7 @@ export function CreateParchePage() {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/200</p>
           </div>
-
-          {/* Category */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categoría *</label>
             <div className="grid grid-cols-4 gap-2">
@@ -176,8 +164,7 @@ export function CreateParchePage() {
               ))}
             </div>
           </div>
-
-          {/* Type */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de parche</label>
             <div className="grid grid-cols-2 gap-3">
@@ -207,8 +194,7 @@ export function CreateParchePage() {
               ))}
             </div>
           </div>
-
-          {/* Location & Time */}
+          {}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lugar</label>
@@ -235,7 +221,6 @@ export function CreateParchePage() {
               </div>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha</label>
@@ -264,8 +249,7 @@ export function CreateParchePage() {
               </div>
             </div>
           </div>
-
-          {/* Invite Friends */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Invitar amigos ({invitedFriends.length} seleccionados)
@@ -298,8 +282,7 @@ export function CreateParchePage() {
               })}
             </div>
           </div>
-
-          {/* Submit */}
+          {}
           <button
             onClick={handleCreate}
             disabled={!name || !category || isLoading}

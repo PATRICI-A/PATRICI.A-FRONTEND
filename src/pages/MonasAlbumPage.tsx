@@ -1,15 +1,12 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-
-// ─── CHROME BORDER GRADIENTS (metallic Panini frame per rarity) ───────────────
 const CHROME: Record<string, string> = {
   común:      'linear-gradient(135deg, #93C5FD 0%, #1E40AF 25%, #BFDBFE 50%, #3B82F6 75%, #93C5FD 100%)',
   raro:       'linear-gradient(135deg, #67E8F9 0%, #0E7490 25%, #A5F3FC 50%, #0891B2 75%, #67E8F9 100%)',
   épico:      'linear-gradient(135deg, #C4B5FD 0%, #5B21B6 25%, #DDD6FE 50%, #7C3AED 75%, #C4B5FD 100%)',
   legendario: 'linear-gradient(135deg, #FDE68A 0%, #92400E 15%, #FCD34D 40%, #B45309 60%, #FBBF24 80%, #78350F 100%)',
 };
-
-// Pre-calculated glitter dot positions for legendary cards
 const GLITTER = Array.from({ length: 8 }, (_, i) => ({
   top:   `${((i * 41 + 7)  % 80) + 5}%`,
   left:  `${((i * 67 + 13) % 85) + 5}%`,
@@ -30,12 +27,23 @@ import {
 import {
   monas as initialMonas, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD,
   TEAL, QR_ENVELOPES, type Mona, type QREnvelope,
-} from '../data/mockData';
-import { useApp } from '../context/AppContext';
+} from '../types/mockData';
+import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
-// ─── RAREZA CONFIG ─────────────────────────────────────────────────────────
+import imgPrimerChoque from '../assets/PrimerChoque-1.png';
+import imgParcheIniciado from '../assets/ParcheIniciado-1.png';
+import imgCapitanNato from '../assets/CapitanNato.png';
+import imgViral from '../assets/Viral-1.png';
+import imgConocidoDelCampus from '../assets/ConocidoDelCampus.png';
+import imgElPrevisor from '../assets/ElPrevisor.png';
+import imgElRompeHielos from '../assets/ElRompeHielos-1.png';
+import imgEspirituECI from '../assets/EspirituECI-1.png';
+import imgExplorador from '../assets/Explorador.png';
+import imgLaLeyenda from '../assets/LaLeyendaPatric.ia-2.png';
+import imgNomada from '../assets/Nomada-1.png';
+import imgAlmaSocial from '../assets/AlmaSocial.png';
+import imgAnfitrion from '../assets/Anfitrion.png';
 const R = {
   común: {
     stars: 1, label: 'Común',
@@ -62,16 +70,12 @@ const R = {
     shimmer: 'rgba(252,211,77,0.5)', textColor: '#FDE68A', tagBg: 'rgba(245,158,11,0.3)',
   },
 } as const;
-
-// ─── RECOMPENSAS ────────────────────────────────────────────────────────────
 const REWARDS = [
   { id: 'r1', pct: 25, emoji: '📝', title: '+0.2 en un parcial', subtitle: 'Décimas extra', color: '#06B6D4', bg: 'rgba(6,182,212,0.15)', description: 'Agrega 0.2 décimas a la nota de un parcial de tu elección.' },
   { id: 'r2', pct: 50, emoji: '📚', title: '+0.3 en un trabajo', subtitle: 'Décimas extra', color: '#3B82F6', bg: 'rgba(59,130,246,0.15)', description: 'Agrega 0.3 décimas a la nota de un trabajo de tu elección.' },
   { id: 'r3', pct: 75, emoji: '⭐', title: '+0.5 en una materia', subtitle: 'Décimas extra', color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)', description: 'Agrega 0.5 décimas a la nota final de una materia de tu elección.' },
   { id: 'r4', pct: 100, emoji: '👑', title: 'Punto libre', subtitle: 'Materia a tu elección', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', description: '¡El gran premio! Un punto completo en cualquier materia.' },
 ];
-
-// ─── CATEGORÍAS ─────────────────────────────────────────────────────────────
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '✨', color: '#3B82F6' },
   { id: 'live-music', label: 'Live Music', emoji: '🎵', color: '#8B5CF6' },
@@ -81,8 +85,6 @@ const CATEGORIES = [
   { id: 'gaming', label: 'Gaming', emoji: '🎮', color: '#6366F1' },
   { id: 'arte', label: 'Arte', emoji: '🎨', color: '#EC4899' },
 ];
-
-// ─── MEDALLAS (BADGES) ──────────────────────────────────────────────────────
 interface Badge {
   id: string;
   name: string;
@@ -93,32 +95,23 @@ interface Badge {
   category: 'conexiones' | 'parches' | 'campus' | 'especiales';
   rarity: 'común' | 'poco común' | 'raro' | 'épico' | 'legendario';
   xp: number;
+  imgSrc?: string;
 }
-
 const BADGES: Badge[] = [
-  // Conexiones sociales
-  { id: 'primer-choque', name: 'Primer Choque', description: 'Realiza tu primera conexión con otro usuario', Icon: Handshake, color: '#9CA3AF', unlocked: true, category: 'conexiones', rarity: 'común', xp: 50 },
-  { id: 'conocido-campus', name: 'Conocido del Campus', description: 'Acumula 5 conexiones activas', Icon: UsersIcon, color: '#10B981', unlocked: true, category: 'conexiones', rarity: 'poco común', xp: 150 },
-  { id: 'alma-social', name: 'Alma Social', description: 'Acumula 10 conexiones activas', Icon: Network, color: '#3B82F6', unlocked: false, category: 'conexiones', rarity: 'raro', xp: 350 },
-
-  // Parches
-  { id: 'parche-iniciado', name: 'Parche Iniciado', description: 'Únete o crea tu primer parche', Icon: Zap, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 75 },
-  { id: 'capitan-nato', name: 'Capitán Nato', description: 'Crea 2 parches como capitán', Icon: Award, color: '#10B981', unlocked: false, category: 'parches', rarity: 'poco común', xp: 200 },
-  { id: 'el-previsor', name: 'El Previsor', description: 'Crea un parche con más de 3 días de anticipación', Icon: Calendar, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 75 },
-  { id: 'rompe-hielos', name: 'El Rompe Hielos', description: 'Envía el primer mensaje en un parche recién creado', Icon: MessageCircle, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 100 },
-  { id: 'anfitrion', name: 'Anfitrión', description: 'Consigue que alguien se una a un parche que tú creaste', Icon: Home, color: '#9CA3AF', unlocked: false, category: 'parches', rarity: 'común', xp: 75 },
-
-  // Campus
-  { id: 'explorador', name: 'Explorador', description: 'Visita 3 zonas distintas del campus', Icon: Map, color: '#9CA3AF', unlocked: true, category: 'campus', rarity: 'común', xp: 75 },
-  { id: 'nomada-eci', name: 'Nómada ECI', description: 'Visita 5 zonas distintas del campus', Icon: MapPin, color: '#10B981', unlocked: false, category: 'campus', rarity: 'poco común', xp: 175 },
-  { id: 'espiritu-eci', name: 'Espíritu ECI', description: 'Asiste a un evento universitario institucional', Icon: Building2, color: '#3B82F6', unlocked: true, category: 'campus', rarity: 'raro', xp: 300 },
-
-  // Especiales
-  { id: 'viral-eci', name: 'Viral ECI', description: 'Pasa de 0 a 10 conexiones en menos de 30 días desde tu registro', Icon: Rocket, color: '#8B5CF6', unlocked: false, category: 'especiales', rarity: 'épico', xp: 850 },
-  { id: 'leyenda-patricia', name: 'La Leyenda Patrici.a', description: 'Desbloquea las 12 medallas anteriores', Icon: Crown, color: '#F59E0B', unlocked: false, category: 'especiales', rarity: 'legendario', xp: 1500 },
+  { id: 'primer-choque', name: 'Primer Choque', description: 'Realiza tu primera conexión con otro usuario', Icon: Handshake, color: '#9CA3AF', unlocked: true, category: 'conexiones', rarity: 'común', xp: 50, imgSrc: imgPrimerChoque },
+  { id: 'conocido-campus', name: 'Conocido del Campus', description: 'Acumula 5 conexiones activas', Icon: UsersIcon, color: '#10B981', unlocked: true, category: 'conexiones', rarity: 'poco común', xp: 150, imgSrc: imgConocidoDelCampus },
+  { id: 'alma-social', name: 'Alma Social', description: 'Acumula 10 conexiones activas', Icon: Network, color: '#3B82F6', unlocked: false, category: 'conexiones', rarity: 'raro', xp: 350, imgSrc: imgAlmaSocial },
+  { id: 'parche-iniciado', name: 'Parche Iniciado', description: 'Únete o crea tu primer parche', Icon: Zap, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 75, imgSrc: imgParcheIniciado },
+  { id: 'capitan-nato', name: 'Capitán Nato', description: 'Crea 2 parches como capitán', Icon: Award, color: '#10B981', unlocked: false, category: 'parches', rarity: 'poco común', xp: 200, imgSrc: imgCapitanNato },
+  { id: 'el-previsor', name: 'El Previsor', description: 'Crea un parche con más de 3 días de anticipación', Icon: Calendar, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 75, imgSrc: imgElPrevisor },
+  { id: 'rompe-hielos', name: 'El Rompe Hielos', description: 'Envía el primer mensaje en un parche recién creado', Icon: MessageCircle, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 100, imgSrc: imgElRompeHielos },
+  { id: 'anfitrion', name: 'Anfitrión', description: 'Consigue que alguien se una a un parche que tú creaste', Icon: Home, color: '#9CA3AF', unlocked: false, category: 'parches', rarity: 'común', xp: 75, imgSrc: imgAnfitrion },
+  { id: 'explorador', name: 'Explorador', description: 'Visita 3 zonas distintas del campus', Icon: Map, color: '#9CA3AF', unlocked: true, category: 'campus', rarity: 'común', xp: 75, imgSrc: imgExplorador },
+  { id: 'nomada-eci', name: 'Nómada ECI', description: 'Visita 5 zonas distintas del campus', Icon: MapPin, color: '#10B981', unlocked: false, category: 'campus', rarity: 'poco común', xp: 175, imgSrc: imgNomada },
+  { id: 'espiritu-eci', name: 'Espíritu ECI', description: 'Asiste a un evento universitario institucional', Icon: Building2, color: '#3B82F6', unlocked: true, category: 'campus', rarity: 'raro', xp: 300, imgSrc: imgEspirituECI },
+  { id: 'viral-eci', name: 'Viral ECI', description: 'Pasa de 0 a 10 conexiones en menos de 30 días desde tu registro', Icon: Rocket, color: '#8B5CF6', unlocked: false, category: 'especiales', rarity: 'épico', xp: 850, imgSrc: imgViral },
+  { id: 'leyenda-patricia', name: 'La Leyenda Patrici.a', description: 'Desbloquea las 12 medallas anteriores', Icon: Crown, color: '#F59E0B', unlocked: false, category: 'especiales', rarity: 'legendario', xp: 1500, imgSrc: imgLaLeyenda },
 ];
-
-// ─── DEMO QR CODES (visible in scanner) ─────────────────────────────────────
 const DEMO_CODES = [
   { code: 'PATRICIA-TECH-001', label: 'Tech', color: '#3B82F6', emoji: '⚡' },
   { code: 'PATRICIA-SOCIAL-002', label: 'Social', color: '#06B6D4', emoji: '👑' },
@@ -127,7 +120,123 @@ const DEMO_CODES = [
   { code: 'PATRICIA-ACADEMIA-005', label: 'Academia', color: '#6366F1', emoji: '🎓' },
   { code: 'PATRICIA-LEGEND-006', label: '★ Legendario', color: '#F59E0B', emoji: '🌟' },
 ];
-
+function BadgeCard({ badge, i, onClick, legendaryGlow, isDark }: {
+  badge: Badge;
+  i: number;
+  onClick: () => void;
+  legendaryGlow?: boolean;
+  isDark: boolean;
+}) {
+  const cardBg = isDark
+    ? badge.unlocked ? `linear-gradient(135deg, ${badge.color}22 0%, ${badge.color}0c 100%)` : 'rgba(255,255,255,0.05)'
+    : '#ffffff';
+  const cardBorder = isDark
+    ? `1.5px solid ${badge.unlocked ? `${badge.color}45` : 'rgba(255,255,255,0.1)'}`
+    : `1.5px solid ${badge.unlocked ? `${badge.color}55` : 'rgba(0,0,0,0.09)'}`;
+  const cardShadow = badge.unlocked
+    ? legendaryGlow
+      ? `0 0 22px ${badge.color}55, 0 0 8px ${badge.color}70`
+      : isDark ? `0 0 12px ${badge.color}30` : `0 2px 10px ${badge.color}22, 0 1px 4px rgba(0,0,0,0.06)`
+    : isDark ? 'none' : '0 1px 4px rgba(0,0,0,0.06)';
+  const imgFilter = !badge.unlocked
+    ? 'grayscale(100%) opacity(0.35)'
+    : isDark
+      ? 'none'
+      : 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))';
+  const nameColor = badge.unlocked
+    ? isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'
+    : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+  return (
+    <motion.button
+      key={badge.id}
+      onClick={onClick}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ delay: i * 0.05 }}
+      className="relative rounded-xl flex flex-col items-center"
+      style={{
+        aspectRatio: '3 / 4',
+        padding: '8px 6px 6px',
+        gap: 4,
+        background: cardBg,
+        border: cardBorder,
+        boxShadow: cardShadow,
+      }}
+    >
+      {legendaryGlow && badge.unlocked && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          animate={{ opacity: [0.25, 0.55, 0.25] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{ background: `linear-gradient(135deg, transparent 30%, ${badge.color}22 50%, transparent 70%)` }}
+        />
+      )}
+      {}
+      <div className="relative flex-1 w-full flex items-center justify-center min-h-0">
+        {badge.imgSrc ? (
+          <>
+            <img
+              src={badge.imgSrc}
+              alt={badge.name}
+              style={{
+                maxWidth: '72%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                filter: imgFilter,
+                display: 'block',
+              }}
+            />
+            {}
+            {!badge.unlocked && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <Lock size={16} style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)' }} />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: badge.unlocked ? `${badge.color}20` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}
+            >
+              <badge.Icon
+                size={22}
+                style={{
+                  color: badge.unlocked ? badge.color : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
+                  filter: !badge.unlocked ? 'grayscale(100%)' : 'none',
+                }}
+              />
+            </div>
+            {!badge.unlocked && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <Lock size={16} style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)' }} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      {}
+      <p
+        style={{
+          fontSize: '8.5px',
+          fontWeight: 700,
+          lineHeight: 1.2,
+          textAlign: 'center',
+          width: '100%',
+          color: nameColor,
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+        }}
+      >
+        {badge.name}
+      </p>
+    </motion.button>
+  );
+}
 function RarityStars({ count, color }: { count: number; color: string }) {
   return (
     <div className="flex gap-0.5">
@@ -137,12 +246,10 @@ function RarityStars({ count, color }: { count: number; color: string }) {
     </div>
   );
 }
-
 function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }) {
   const cfg = R[mona.rarity];
   const isLegendary = mona.rarity === 'legendario';
   const isEpic = mona.rarity === 'épico';
-
   return (
     <motion.button
       onClick={onClick}
@@ -151,7 +258,7 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
       className="relative w-full"
       style={{ aspectRatio: '3/4' }}
     >
-      {/* ── Metallic chrome outer frame ── */}
+      {}
       <div
         className="absolute inset-0 rounded-xl"
         style={{
@@ -165,12 +272,12 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
           ].join(', '),
         }}
       >
-        {/* ── Card face ── */}
+        {}
         <div
           className="relative w-full h-full rounded-[9px] overflow-hidden flex flex-col"
           style={{ background: cfg.cardBg }}
         >
-          {/* Horizontal shimmer sweep */}
+          {}
           {(isEpic || isLegendary) && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
@@ -179,8 +286,7 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
               transition={{ duration: isLegendary ? 1.8 : 2.8, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.6 }}
             />
           )}
-
-          {/* Glitter sparkles (legendary only) */}
+          {}
           {isLegendary && (
             <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 3 }}>
               {GLITTER.map((g, i) => (
@@ -199,29 +305,25 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
               ))}
             </div>
           )}
-
-          {/* Gold top accent bar */}
+          {}
           {isLegendary && (
             <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: CHROME.legendario }} />
           )}
-
-          {/* Rarity badge + stars */}
+          {}
           <div className="absolute top-0.5 left-0.5 right-0.5 flex justify-between items-center z-10">
             <span className="text-[6px] font-black px-1 py-0.5 rounded-full" style={{ background: cfg.tagBg, color: cfg.textColor }}>
               {cfg.label.toUpperCase()}
             </span>
             <RarityStars count={cfg.stars} color={cfg.textColor} />
           </div>
-
-          {/* Emoji — fills the card uniformly with object-fit behavior */}
+          {}
           <div
             className="flex-1 flex items-center justify-center relative z-10"
             style={{ marginTop: '14px', marginBottom: '2px' }}
           >
             <EmojiIcon emoji={mona.emoji} size={24} color="white" strokeWidth={1.8} />
           </div>
-
-          {/* Name footer */}
+          {}
           <div className="w-full px-1 pb-1 pt-0.5 text-center z-10" style={{ background: 'rgba(0,0,0,0.5)' }}>
             <p className="text-[7px] font-black leading-tight truncate" style={{ color: cfg.textColor }}>
               {mona.name}
@@ -233,7 +335,6 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
     </motion.button>
   );
 }
-
 function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; onClick: () => void }) {
   return (
     <motion.button
@@ -243,7 +344,7 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
       className="relative w-full"
       style={{ aspectRatio: '3/4' }}
     >
-      {/* Dull chrome outer frame for empty slot */}
+      {}
       <div
         className="absolute inset-0 rounded-xl"
         style={{
@@ -252,7 +353,7 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
           boxShadow: '0 1px 6px rgba(0,0,0,0.7)',
         }}
       >
-        {/* Sunken pocket — deep inset shadows simulate physical depth */}
+        {}
         <div
           className="relative w-full h-full rounded-[9px] overflow-hidden flex flex-col"
           style={{
@@ -266,7 +367,7 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
             ].join(', '),
           }}
         >
-          {/* Subtle diagonal hatch — texture of empty album pocket */}
+          {}
           <div
             className="absolute inset-0"
             style={{
@@ -274,23 +375,19 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
               backgroundSize: '6px 6px',
             }}
           />
-
-          {/* Corner fold top-left */}
+          {}
           <div className="absolute top-0 left-0 w-3 h-3" style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 50%, transparent 50%)',
           }} />
-
-          {/* Slot number */}
+          {}
           <div className="absolute top-1 left-1 z-10">
             <span className="text-[6px] font-black text-white/15">#{String(index + 1).padStart(2, '0')}</span>
           </div>
-
-          {/* Ghost emoji (barely visible) */}
+          {}
           <div className="flex-1 flex items-center justify-center relative z-10" style={{ marginTop: '12px', marginBottom: '2px' }}>
             <EmojiIcon emoji={mona.emoji} size={24} color="white" strokeWidth={1.5} className="opacity-[0.05]" />
           </div>
-
-          {/* Plus icon in centre with pulsing animation */}
+          {}
           <div className="absolute inset-0 flex items-center justify-center z-20">
             <motion.div
               className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -315,8 +412,7 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
               <span className="text-white font-black text-lg">+</span>
             </motion.div>
           </div>
-
-          {/* Bottom label */}
+          {}
           <div className="w-full py-1 text-center z-10" style={{ background: 'rgba(0,0,0,0.55)' }}>
             <p className="text-[6px] font-black tracking-widest text-white/15">???</p>
           </div>
@@ -325,8 +421,6 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
     </motion.button>
   );
 }
-
-// ─── QR SCANNER COMPONENT ───────────────────────────────────────────────────
 function QRScannerModal({
   onClose,
   onSuccess,
@@ -342,12 +436,10 @@ function QRScannerModal({
   const [foundEnvelope, setFoundEnvelope] = useState<QREnvelope | null>(null);
   const [collection] = useState<Mona[]>([...initialMonas]);
   const inputRef = useRef<HTMLInputElement>(null);
-
   const handleValidate = (code: string) => {
     const normalized = code.trim().toUpperCase();
     if (!normalized) return;
     setStep('validating');
-
     setTimeout(() => {
       const envelope = QR_ENVELOPES.find(e => e.code.toUpperCase() === normalized);
       if (!envelope) {
@@ -365,11 +457,9 @@ function QRScannerModal({
         .filter((m): m is Mona => m !== undefined);
       setFoundEnvelope(envelope);
       setStep('success');
-      // Notify parent after short pause
       setTimeout(() => onSuccess(envelope, monas), 800);
     }, 1400);
   };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -378,7 +468,7 @@ function QRScannerModal({
       className="fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto"
       style={{ background: 'rgba(2,8,20,0.97)' }}
     >
-      {/* Header */}
+      {}
       <div className="w-full flex items-center justify-between px-5 pt-12 pb-4">
         <div>
           <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
@@ -392,13 +482,11 @@ function QRScannerModal({
           <X size={18} className="text-white" />
         </button>
       </div>
-
-      {/* Scanner frame */}
+      {}
       <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
-        {/* Background dim */}
+        {}
         <div className="absolute inset-0 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }} />
-
-        {/* Corner brackets */}
+        {}
         {[
           { top: 8, left: 8, rotate: 0 },
           { top: 8, right: 8, rotate: 90 },
@@ -419,8 +507,7 @@ function QRScannerModal({
             }}
           />
         ))}
-
-        {/* Scan line (scanning state only) */}
+        {}
         {step === 'scan' && (
           <motion.div
             className="absolute left-3 right-3 h-0.5 rounded-full"
@@ -429,8 +516,7 @@ function QRScannerModal({
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           />
         )}
-
-        {/* Center content based on step */}
+        {}
         {step === 'scan' && (
           <div className="flex flex-col items-center gap-3 z-10">
             <div
@@ -442,7 +528,6 @@ function QRScannerModal({
             <p className="text-white/40 text-xs text-center px-4">Apunta la cámara a un<br />código QR de patrici.a</p>
           </div>
         )}
-
         {step === 'validating' && (
           <div className="flex flex-col items-center gap-3 z-10">
             <motion.div
@@ -454,7 +539,6 @@ function QRScannerModal({
             <p className="text-white/60 text-xs">Validando código...</p>
           </div>
         )}
-
         {step === 'success' && foundEnvelope && (
           <motion.div
             initial={{ scale: 0 }}
@@ -472,7 +556,6 @@ function QRScannerModal({
             <p className="text-green-400 text-xs font-bold">¡Código válido!</p>
           </motion.div>
         )}
-
         {step === 'error' && (
           <motion.div
             initial={{ scale: 0 }}
@@ -486,8 +569,7 @@ function QRScannerModal({
           </motion.div>
         )}
       </div>
-
-      {/* Error message */}
+      {}
       {step === 'error' && (
         <motion.p
           initial={{ opacity: 0, y: 5 }}
@@ -497,8 +579,7 @@ function QRScannerModal({
           {errorMsg}
         </motion.p>
       )}
-
-      {/* Manual input */}
+      {}
       <div className="w-full px-5 mt-6">
         <div className="flex items-center gap-2 mb-2">
           <div className="flex-1 h-px bg-white/10" />
@@ -535,8 +616,7 @@ function QRScannerModal({
           </button>
         )}
       </div>
-
-      {/* Demo codes */}
+      {}
       <div className="w-full px-5 mt-6 pb-8">
         <p className="text-white/30 text-xs mb-3 text-center">✦ Códigos de demostración disponibles</p>
         <div className="grid grid-cols-3 gap-2">
@@ -577,8 +657,6 @@ function QRScannerModal({
     </motion.div>
   );
 }
-
-// ─── ENVELOPE MODAL ─────────────────────────────────────────���───────────────
 function EnvelopeModal({
   envelope,
   cards,
@@ -589,16 +667,13 @@ function EnvelopeModal({
   onStick: () => void;
 }) {
   const [envelopeStep, setEnvelopeStep] = useState<'closed' | 'shaking' | 'opening' | 'revealed'>('closed');
-
   const handleOpen = () => {
     if (envelopeStep !== 'closed') return;
     setEnvelopeStep('shaking');
     setTimeout(() => setEnvelopeStep('opening'), 900);
     setTimeout(() => setEnvelopeStep('revealed'), 1700);
   };
-
   const isLegendary = envelope.theme === 'especial';
-
   return (
     <>
       <motion.div
@@ -621,14 +696,13 @@ function EnvelopeModal({
           overflowY: 'auto',
         }}
       >
-        {/* Header bar */}
+        {}
         <div
           className="h-1.5 w-full"
           style={{ background: envelope.gradient }}
         />
-
         <div className="p-5">
-          {/* Envelope info */}
+          {}
           <div className="flex items-center gap-3 mb-5">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -650,10 +724,9 @@ function EnvelopeModal({
               </div>
             )}
           </div>
-
           {envelopeStep !== 'revealed' ? (
             <div className="flex flex-col items-center py-6">
-              {/* Envelope graphic */}
+              {}
               <motion.div
                 animate={
                   envelopeStep === 'shaking'
@@ -683,7 +756,7 @@ function EnvelopeModal({
                     border: `2px solid ${envelope.color}88`,
                   }}
                 >
-                  {/* Shimmer on legendary */}
+                  {}
                   {isLegendary && (
                     <motion.div
                       className="absolute inset-0"
@@ -696,7 +769,7 @@ function EnvelopeModal({
                     <EmojiIcon emoji={envelope.emoji} size={44} color="white" strokeWidth={1.5} />
                     <Gift size={18} className="text-white/60" />
                   </div>
-                  {/* Contains X monas badge */}
+                  {}
                   <div
                     className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white"
                     style={{ background: 'rgba(0,0,0,0.4)' }}
@@ -705,7 +778,6 @@ function EnvelopeModal({
                   </div>
                 </div>
               </motion.div>
-
               <p className="text-white/50 text-sm mt-5 text-center">
                 {envelopeStep === 'closed' ? 'Toca el sobre para abrirlo' :
                   envelopeStep === 'shaking' ? '¡Agitando el sobre...!' :
@@ -715,7 +787,7 @@ function EnvelopeModal({
             </div>
           ) : (
             <div>
-              {/* Revealed cards */}
+              {}
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles size={14} style={{ color: envelope.color }} />
                 <h4 className="text-white font-black text-sm">¡Monas desbloqueadas!</h4>
@@ -792,8 +864,6 @@ function EnvelopeModal({
     </>
   );
 }
-
-// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
 export function MonasAlbumPage() {
   const navigate = useNavigate();
   const { isDark } = useApp();
@@ -809,36 +879,23 @@ export function MonasAlbumPage() {
   const [pastingMonaId, setPastingMonaId] = useState<string | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
-
-  // Check if welcome modal should be shown on mount
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('patricias-album-welcome-seen');
     if (!hasSeenWelcome) {
       setShowWelcomeModal(true);
     }
   }, []);
-
-  // ── Flip-book pagination ──────────────────────────────────────────────────
   const MONAS_PER_PAGE = 18;
   const [albumPage, setAlbumPage] = useState(0);
   const [flipDir, setFlipDir] = useState(1);
-
   const totalMonas = collection.length;
   const unlockedMonas = collection.filter(m => m.unlocked);
   const unlockedCount = unlockedMonas.length;
   const completionPct = Math.round((unlockedCount / totalMonas) * 100);
   const totalXP = unlockedMonas.reduce((sum, m) => sum + m.xp, 0);
   const scannedCount = usedQRCodes.length;
-
-  // Dynamic album bg: dark navy vs cobalt blue
-  const albumBg = isDark
-    ? 'linear-gradient(180deg, #050D1A 0%, #071525 100%)'
-    : 'linear-gradient(180deg, #0B2545 0%, #0D2E5A 100%)';
-
-  // ── Swipe / drag to flip pages ────────────────────────────────────────────
   const swipeStartX = useRef(0);
   const swipeActive = useRef(false);
-
   const handlePointerDown = (e: React.PointerEvent) => {
     swipeStartX.current = e.clientX;
     swipeActive.current = true;
@@ -850,7 +907,6 @@ export function MonasAlbumPage() {
     if (delta < -55 && albumPage < totalAlbumPages - 1) goToPage(1);
     else if (delta > 55 && albumPage > 0) goToPage(-1);
   };
-
   const stars = useMemo(() => Array.from({ length: 20 }, (_, i) => ({
     id: i,
     size: (i % 3) * 0.7 + 1,
@@ -860,8 +916,6 @@ export function MonasAlbumPage() {
     duration: ((i * 11 + 3) % 3) + 2,
     delay: ((i * 7 + 2) % 20) * 0.1,
   })), []);
-
-  // Mapeo de nuevas categorías a las categorías existentes de monas
   const categoryMap: Record<string, string[]> = {
     'live-music': ['cultura'],
     'outdoor': ['deporte'],
@@ -870,46 +924,37 @@ export function MonasAlbumPage() {
     'gaming': ['tecnología'],
     'arte': ['cultura'],
   };
-
   const filteredMonas = activeCategory === 'todas'
     ? collection
     : collection.filter(m => {
         const mappedCategories = categoryMap[activeCategory];
         return mappedCategories ? mappedCategories.includes(m.category) : false;
       });
-
   const totalAlbumPages = Math.ceil(filteredMonas.length / MONAS_PER_PAGE);
   const pageMonas = filteredMonas.slice(albumPage * MONAS_PER_PAGE, (albumPage + 1) * MONAS_PER_PAGE);
-
   const goToPage = (dir: 1 | -1) => {
     const next = albumPage + dir;
     if (next < 0 || next >= totalAlbumPages) return;
     setFlipDir(dir);
     setAlbumPage(next);
   };
-
   const handleCategoryChange = (catId: string) => {
     setActiveCategory(catId);
     setAlbumPage(0);
     setFlipDir(1);
   };
-
-  // Flip animation variants
   const flipVariants = {
     enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 60 : -60, rotateY: dir > 0 ? 12 : -12, scale: 0.94 }),
     center: { opacity: 1, x: 0, rotateY: 0, scale: 1, transition: { duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] as [number,number,number,number] } },
     exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -60 : 60, rotateY: dir > 0 ? -12 : 12, scale: 0.94, transition: { duration: 0.26 } }),
   };
-
   const catProgress = (catId: string) => {
     if (catId === 'todas') return { done: unlockedCount, total: totalMonas };
     const cat = collection.filter(m => m.category === catId);
     return { done: cat.filter(m => m.unlocked).length, total: cat.length };
   };
-
   const RADIUS = 52;
   const CIRC = 2 * Math.PI * RADIUS;
-
   const handleQRSuccess = (envelope: QREnvelope, monas: Mona[]) => {
     setUsedQRCodes(prev => [...prev, envelope.code.toUpperCase()]);
     setShowQRModal(false);
@@ -917,7 +962,6 @@ export function MonasAlbumPage() {
       setPendingEnvelope({ envelope, cards: monas });
     }, 300);
   };
-
   const handleStickCards = () => {
     if (!pendingEnvelope) return;
     setCollection(prev =>
@@ -929,12 +973,10 @@ export function MonasAlbumPage() {
     );
     setPendingEnvelope(null);
   };
-
   const claimReward = (reward: typeof REWARDS[0]) => {
     setClaimedRewards(prev => [...prev, reward.id]);
     setShowRewardModal(null);
   };
-
   const handleCloseWelcome = () => {
     if (dontShowAgain) {
       localStorage.setItem('patricias-album-welcome-seen', 'true');
@@ -942,20 +984,15 @@ export function MonasAlbumPage() {
     setShowWelcomeModal(false);
     setDontShowAgain(false);
   };
-
   const handleOpenWelcomeFromInfo = () => {
     setShowWelcomeModal(true);
   };
-
   const availableQRCodes = QR_ENVELOPES.filter(e => !usedQRCodes.includes(e.code.toUpperCase())).length;
-
   return (
-    <div className="min-h-screen pb-32 relative overflow-x-hidden" style={{ background: albumBg, isolation: 'isolate' }}>
-      {/* Campus doodle pattern behind everything */}
-      <DoodleBackground isDark opacity={0.75} />
-      {/* ── HEADER ── */}
-      <div className="relative px-5 pt-12 pb-8 overflow-hidden" style={{ background: 'transparent' }}>
-        {/* Texture de álbum de láminas - patrón de manchas sutiles */}
+    <div className="min-h-screen pb-32 relative overflow-x-hidden">
+      {}
+      <div className="relative px-5 pt-4 pb-8 overflow-hidden" style={{ background: 'transparent' }}>
+        {}
         <div className="absolute inset-0 opacity-30 pointer-events-none"
           style={{
             backgroundImage: `
@@ -966,18 +1003,17 @@ export function MonasAlbumPage() {
             `
           }}
         />
-
-        {/* Nav */}
+        {}
         <div className="flex items-center justify-between mb-6">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <ArrowLeft size={18} className="text-white" />
+          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}>
+            <ArrowLeft size={18} style={{ color: isDark ? '#fff' : '#1e293b' }} />
           </button>
           <div className="text-center flex-1">
-            <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
-            <h2 className="text-white font-black text-lg leading-none">Álbum de Patricias</h2>
+            <p className="text-[10px] font-bold tracking-widest text-blue-500 uppercase">patrici.a</p>
+            <h2 className="font-black text-lg leading-none" style={{ color: isDark ? '#fff' : '#1e293b' }}>Álbum de Patricias</h2>
           </div>
           <div className="flex items-center gap-2">
-            {/* QR button */}
+            {}
             <motion.button
               onClick={() => setShowQRModal(true)}
               whileHover={{ scale: 1.1 }}
@@ -986,11 +1022,11 @@ export function MonasAlbumPage() {
             >
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                style={{ background: availableQRCodes > 0 ? GOLD_GRADIENT : 'rgba(255,255,255,0.1)' }}
+                style={{ background: availableQRCodes > 0 ? GOLD_GRADIENT : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }}
               >
-                <QrCode size={20} className="text-white" />
+                <QrCode size={20} style={{ color: availableQRCodes > 0 ? '#fff' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }} />
               </div>
-              <span className="text-[9px] font-bold mt-0.5" style={{ color: availableQRCodes > 0 ? GOLD_LIGHT : 'rgba(255,255,255,0.3)' }}>
+              <span className="text-[9px] font-bold mt-0.5" style={{ color: availableQRCodes > 0 ? GOLD_LIGHT : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>
                 {availableQRCodes} QR
               </span>
               {availableQRCodes > 0 && (
@@ -1006,15 +1042,14 @@ export function MonasAlbumPage() {
             </motion.button>
           </div>
         </div>
-
-        {/* Progress Ring + Stats — ONLY on page 0 */}
+        {}
         <AnimatePresence>
         {albumPage === 0 && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
         <div className="flex flex-col items-center">
           <div className="relative">
             <svg width={130} height={130} viewBox="0 0 130 130">
-              <circle cx={65} cy={65} r={RADIUS} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={10} />
+              <circle cx={65} cy={65} r={RADIUS} fill="none" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'} strokeWidth={10} />
               <motion.circle
                 cx={65} cy={65} r={RADIUS}
                 fill="none"
@@ -1038,14 +1073,15 @@ export function MonasAlbumPage() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <motion.span
-                className="text-3xl font-black text-white"
+                className="text-3xl font-black"
+                style={{ color: isDark ? '#fff' : '#1e293b' }}
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
               >
                 {completionPct}%
               </motion.span>
-              <span className="text-[9px] text-blue-300 font-medium">completado</span>
+              <span className="text-[9px] font-medium" style={{ color: isDark ? '#93c5fd' : '#3b82f6' }}>completado</span>
               <motion.button
                 onClick={handleOpenWelcomeFromInfo}
                 whileHover={{ scale: 1.15 }}
@@ -1057,7 +1093,6 @@ export function MonasAlbumPage() {
               </motion.button>
             </div>
           </div>
-
           <div className="flex gap-6 mt-3">
             {[
               { label: 'Monas', value: `${unlockedCount}/${totalMonas}`, Icon: Library },
@@ -1065,10 +1100,10 @@ export function MonasAlbumPage() {
               { label: 'Escaneados', value: `${scannedCount} QR`, Icon: Smartphone },
             ].map(stat => (
               <div key={stat.label} className="text-center">
-                <p className="text-xs font-black text-white flex items-center justify-center gap-1">
+                <p className="text-xs font-black flex items-center justify-center gap-1" style={{ color: isDark ? '#fff' : '#1e293b' }}>
                   <stat.Icon size={11} className="opacity-70" /> {stat.value}
                 </p>
-                <p className="text-[9px] text-blue-400">{stat.label}</p>
+                <p className="text-[9px]" style={{ color: isDark ? '#60a5fa' : '#3b82f6' }}>{stat.label}</p>
               </div>
             ))}
           </div>
@@ -1078,18 +1113,17 @@ export function MonasAlbumPage() {
         </AnimatePresence>
         {albumPage > 0 && (
           <div className="flex justify-center mt-2">
-            <span className="text-white/40 text-xs font-bold tracking-widest uppercase">Página {albumPage + 1} / {totalAlbumPages}</span>
+            <span className="text-xs font-bold tracking-widest uppercase" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)' }}>Página {albumPage + 1} / {totalAlbumPages}</span>
           </div>
         )}
       </div>
-
-      {/* ── RECOMPENSAS (solo página 0) ── */}
+      {}
       {albumPage === 0 && <div className="px-5 mt-5 relative z-10">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+          <h3 className="text-sm font-black flex items-center gap-1.5" style={{ color: isDark ? '#fff' : '#1e293b' }}>
             <Trophy size={14} style={{ color: GOLD_LIGHT }} /> Recompensas del Álbum
           </h3>
-          <span className="text-[10px] text-blue-400">Desbloquea completando</span>
+          <span className="text-[10px]" style={{ color: isDark ? '#60a5fa' : '#3b82f6' }}>Desbloquea completando</span>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {REWARDS.map((reward, i) => {
@@ -1105,13 +1139,17 @@ export function MonasAlbumPage() {
                 className="flex-shrink-0 rounded-2xl p-3 flex flex-col items-center gap-1.5 relative overflow-hidden"
                 style={{
                   width: 110,
-                  background: reached ? reward.bg : 'rgba(255,255,255,0.04)',
-                  border: `1.5px solid ${reached ? (isGold ? GOLD_LIGHT : reward.color) : 'rgba(255,255,255,0.08)'}`,
+                  background: reached
+                    ? reward.bg
+                    : isDark ? 'rgba(255,255,255,0.04)' : '#EEEEEF',
+                  border: `1.5px solid ${reached
+                    ? (isGold ? GOLD_LIGHT : reward.color)
+                    : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)'}`,
                   boxShadow: reached ? `0 4px 20px ${reward.color}33` : 'none',
                   opacity: claimed ? 0.6 : 1,
                 }}
               >
-                {/* Gold shimmer for 100% reward */}
+                {}
                 {isGold && reached && !claimed && (
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
@@ -1128,15 +1166,32 @@ export function MonasAlbumPage() {
                     style={{ background: `linear-gradient(90deg, transparent, ${reward.color}25, transparent)`, width: '60%' }}
                   />
                 )}
-
                 {claimed
                   ? <CheckCircle size={22} color={GOLD_LIGHT} />
-                  : <EmojiIcon emoji={reward.emoji} size={22} color={reached ? reward.color : 'rgba(255,255,255,0.25)'} strokeWidth={2} />}
+                  : <EmojiIcon
+                      emoji={reward.emoji}
+                      size={22}
+                      color={reached ? reward.color : isDark ? 'rgba(255,255,255,0.25)' : '#6B7280'}
+                      strokeWidth={2}
+                    />}
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-white leading-tight">{reward.title}</p>
-                  <p className="text-[8px] mt-0.5" style={{ color: reached ? (isGold ? GOLD_LIGHT : reward.color) : 'rgba(255,255,255,0.3)' }}>{reward.subtitle}</p>
+                  <p
+                    className="text-[10px] font-black leading-tight"
+                    style={{ color: reached ? (isDark ? '#fff' : '#1e293b') : isDark ? '#fff' : '#2D2D2D' }}
+                  >
+                    {reward.title}
+                  </p>
+                  <p
+                    className="text-[8px] mt-0.5"
+                    style={{ color: reached ? (isGold ? GOLD_LIGHT : reward.color) : isDark ? 'rgba(255,255,255,0.3)' : '#5A5A5A' }}
+                  >
+                    {reward.subtitle}
+                  </p>
                 </div>
-                <div className="w-full h-1 rounded-full bg-white/10">
+                <div
+                  className="w-full h-1 rounded-full"
+                  style={{ background: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)' }}
+                >
                   <motion.div
                     className="h-full rounded-full"
                     style={{ background: isGold && reached ? GOLD_GRADIENT : reward.color }}
@@ -1145,7 +1200,10 @@ export function MonasAlbumPage() {
                     transition={{ duration: 1.2, delay: 0.5 + i * 0.1 }}
                   />
                 </div>
-                <p className="text-[8px] font-bold" style={{ color: reached ? (isGold ? GOLD_LIGHT : reward.color) : 'rgba(255,255,255,0.3)' }}>
+                <p
+                  className="text-[8px] font-bold"
+                  style={{ color: reached ? (isGold ? GOLD_LIGHT : reward.color) : isDark ? 'rgba(255,255,255,0.3)' : '#4A4A4A' }}
+                >
                   {claimed ? '¡Reclamado!' : reached ? '¡RECLAMAR!' : `${reward.pct}% necesario`}
                 </p>
               </motion.button>
@@ -1153,192 +1211,54 @@ export function MonasAlbumPage() {
           })}
         </div>
       </div>}
-
-      {/* ── MEDALLAS (solo página 0) ── */}
+      {}
       {albumPage === 0 && <div className="px-5 mt-5 relative z-10">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+          <h3 className="text-sm font-black flex items-center gap-1.5" style={{ color: isDark ? '#fff' : '#1e293b' }}>
             <Trophy size={14} style={{ color: GOLD_LIGHT }} /> Medallas
           </h3>
-          <span className="text-[10px] text-blue-400">{BADGES.filter(b => b.unlocked).length}/{BADGES.length} desbloqueadas</span>
+          <span className="text-[10px]" style={{ color: isDark ? '#60a5fa' : '#3b82f6' }}>{BADGES.filter(b => b.unlocked).length}/{BADGES.length} desbloqueadas</span>
         </div>
-
         <div className="space-y-4">
-          {/* Conexiones sociales */}
+          {}
           <div>
-            <p className="text-xs font-semibold text-white/50 mb-2 uppercase tracking-wide">Conexiones sociales</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Conexiones sociales</p>
+            <div className="grid grid-cols-6 gap-1.5">
               {BADGES.filter(b => b.category === 'conexiones').map((badge, i) => (
-                <motion.button
-                  key={badge.id}
-                  onClick={() => setSelectedBadge(badge)}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="relative rounded-xl p-3 flex flex-col items-center gap-2"
-                  style={{
-                    background: badge.unlocked
-                      ? `linear-gradient(135deg, ${badge.color}15 0%, ${badge.color}08 100%)`
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1.5px solid ${badge.unlocked ? `${badge.color}40` : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: badge.unlocked ? `0 0 16px ${badge.color}40, 0 0 4px ${badge.color}60` : 'none',
-                  }}
-                >
-                  {!badge.unlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-xl pointer-events-none">
-                      <Lock size={16} className="text-white/40" />
-                    </div>
-                  )}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: badge.unlocked ? `${badge.color}20` : 'transparent' }}>
-                    <badge.Icon size={24} style={{ color: badge.unlocked ? badge.color : 'rgba(255,255,255,0.2)' }} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold text-white leading-tight line-clamp-1">
-                      {badge.name}
-                    </p>
-                  </div>
-                </motion.button>
+                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
               ))}
             </div>
           </div>
-
-          {/* Parches */}
+          {}
           <div>
-            <p className="text-xs font-semibold text-white/50 mb-2 uppercase tracking-wide">Parches</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Parches</p>
+            <div className="grid grid-cols-6 gap-1.5">
               {BADGES.filter(b => b.category === 'parches').map((badge, i) => (
-                <motion.button
-                  key={badge.id}
-                  onClick={() => setSelectedBadge(badge)}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="relative rounded-xl p-3 flex flex-col items-center gap-2"
-                  style={{
-                    background: badge.unlocked
-                      ? `linear-gradient(135deg, ${badge.color}15 0%, ${badge.color}08 100%)`
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1.5px solid ${badge.unlocked ? `${badge.color}40` : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: badge.unlocked ? `0 0 16px ${badge.color}40, 0 0 4px ${badge.color}60` : 'none',
-                  }}
-                >
-                  {!badge.unlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-xl pointer-events-none">
-                      <Lock size={16} className="text-white/40" />
-                    </div>
-                  )}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: badge.unlocked ? `${badge.color}20` : 'transparent' }}>
-                    <badge.Icon size={24} style={{ color: badge.unlocked ? badge.color : 'rgba(255,255,255,0.2)' }} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold text-white leading-tight line-clamp-1">
-                      {badge.name}
-                    </p>
-                  </div>
-                </motion.button>
+                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
               ))}
             </div>
           </div>
-
-          {/* Campus */}
+          {}
           <div>
-            <p className="text-xs font-semibold text-white/50 mb-2 uppercase tracking-wide">Campus</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Campus</p>
+            <div className="grid grid-cols-6 gap-1.5">
               {BADGES.filter(b => b.category === 'campus').map((badge, i) => (
-                <motion.button
-                  key={badge.id}
-                  onClick={() => setSelectedBadge(badge)}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="relative rounded-xl p-3 flex flex-col items-center gap-2"
-                  style={{
-                    background: badge.unlocked
-                      ? `linear-gradient(135deg, ${badge.color}15 0%, ${badge.color}08 100%)`
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1.5px solid ${badge.unlocked ? `${badge.color}40` : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: badge.unlocked ? `0 0 16px ${badge.color}40, 0 0 4px ${badge.color}60` : 'none',
-                  }}
-                >
-                  {!badge.unlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-xl pointer-events-none">
-                      <Lock size={16} className="text-white/40" />
-                    </div>
-                  )}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: badge.unlocked ? `${badge.color}20` : 'transparent' }}>
-                    <badge.Icon size={24} style={{ color: badge.unlocked ? badge.color : 'rgba(255,255,255,0.2)' }} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold text-white leading-tight line-clamp-1">
-                      {badge.name}
-                    </p>
-                  </div>
-                </motion.button>
+                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
               ))}
             </div>
           </div>
-
-          {/* Especiales */}
+          {}
           <div>
-            <p className="text-xs font-semibold text-white/50 mb-2 uppercase tracking-wide">Especiales</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Especiales</p>
+            <div className="grid grid-cols-6 gap-1.5">
               {BADGES.filter(b => b.category === 'especiales').map((badge, i) => (
-                <motion.button
-                  key={badge.id}
-                  onClick={() => setSelectedBadge(badge)}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="relative rounded-xl p-3 flex flex-col items-center gap-2"
-                  style={{
-                    background: badge.unlocked
-                      ? `linear-gradient(135deg, ${badge.color}15 0%, ${badge.color}08 100%)`
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1.5px solid ${badge.unlocked ? `${badge.color}40` : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: badge.unlocked
-                      ? badge.rarity === 'legendario'
-                        ? `0 0 24px ${badge.color}60, 0 0 8px ${badge.color}80`
-                        : `0 0 16px ${badge.color}40, 0 0 4px ${badge.color}60`
-                      : 'none',
-                  }}
-                >
-                  {badge.rarity === 'legendario' && badge.unlocked && (
-                    <motion.div
-                      className="absolute inset-0 rounded-xl pointer-events-none"
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      style={{ background: `linear-gradient(135deg, transparent 30%, ${badge.color}25 50%, transparent 70%)` }}
-                    />
-                  )}
-                  {!badge.unlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-xl pointer-events-none">
-                      <Lock size={16} className="text-white/40" />
-                    </div>
-                  )}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: badge.unlocked ? `${badge.color}20` : 'transparent' }}>
-                    <badge.Icon size={24} style={{ color: badge.unlocked ? badge.color : 'rgba(255,255,255,0.2)' }} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-[9px] font-bold text-white leading-tight line-clamp-1">
-                      {badge.name}
-                    </p>
-                  </div>
-                </motion.button>
+                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} legendaryGlow={badge.rarity === 'legendario'} />
               ))}
             </div>
           </div>
         </div>
       </div>}
-
-      {/* ── CATEGORY TABS ── */}
+      {}
       <div className="mt-5">
         <div className="flex gap-2 overflow-x-auto pb-2 px-5 scrollbar-hide">
           {CATEGORIES.map(cat => {
@@ -1350,23 +1270,22 @@ export function MonasAlbumPage() {
                 onClick={() => handleCategoryChange(cat.id)}
                 className="flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all"
                 style={{
-                  background: isActive ? `linear-gradient(135deg, ${cat.color}33, ${cat.color}22)` : 'rgba(255,255,255,0.05)',
-                  border: `1.5px solid ${isActive ? cat.color : 'rgba(255,255,255,0.08)'}`,
+                  background: isActive ? `linear-gradient(135deg, ${cat.color}33, ${cat.color}22)` : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                  border: `1.5px solid ${isActive ? cat.color : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
                   boxShadow: isActive ? `0 0 12px ${cat.color}44` : 'none',
                 }}
               >
                 <div className="w-6 h-6 flex items-center justify-center">
-                  <EmojiIcon emoji={cat.emoji} size={16} color={isActive ? cat.color : 'rgba(255,255,255,0.45)'} strokeWidth={2} />
+                  <EmojiIcon emoji={cat.emoji} size={16} color={isActive ? cat.color : isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)'} strokeWidth={2} />
                 </div>
-                <span className="text-[9px] font-bold" style={{ color: isActive ? cat.color : 'rgba(255,255,255,0.5)' }}>{cat.label}</span>
-                <span className="text-[8px]" style={{ color: isActive ? cat.color : 'rgba(255,255,255,0.25)' }}>{prog.done}/{prog.total}</span>
+                <span className="text-[9px] font-bold" style={{ color: isActive ? cat.color : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }}>{cat.label}</span>
+                <span className="text-[8px]" style={{ color: isActive ? cat.color : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)' }}>{prog.done}/{prog.total}</span>
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* ── FLIP-BOOK CARD GRID ── */}
+      {}
       <div
         className="mt-4 relative select-none"
         style={{ perspective: '1200px' }}
@@ -1374,7 +1293,7 @@ export function MonasAlbumPage() {
         onPointerUp={handlePointerUp}
         onPointerCancel={() => { swipeActive.current = false; }}
       >
-        {/* Book spine — left edge, simulates physical album thickness */}
+        {}
         <div
           className="absolute left-0 top-0 bottom-0 w-5 rounded-l-sm flex items-center justify-center z-10 pointer-events-none"
           style={{
@@ -1389,13 +1308,11 @@ export function MonasAlbumPage() {
             patrici.a • ÁLBUM 2025
           </p>
         </div>
-
-        {/* Page shadow line — right binding edge */}
+        {}
         <div
           className="absolute right-0 top-0 bottom-0 w-1 pointer-events-none"
           style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent)' }}
         />
-
         <div className="px-7">
         {activeCategory !== 'todas' && albumPage === 0 && (
           <motion.div key={activeCategory} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 mb-4 px-1">
@@ -1411,7 +1328,6 @@ export function MonasAlbumPage() {
             )}
           </motion.div>
         )}
-
         <AnimatePresence mode="wait" custom={flipDir}>
           <motion.div
             key={`page-${albumPage}-${activeCategory}`}
@@ -1461,16 +1377,14 @@ export function MonasAlbumPage() {
             }
           </motion.div>
         </AnimatePresence>
-
         {filteredMonas.length === 0 && (
           <div className="text-center py-16">
             <Library size={48} className="mx-auto mb-3 text-white/20" />
             <p className="text-white/50">No hay monas en esta categoría</p>
           </div>
         )}
-        </div>{/* end px-7 */}
-
-        {/* Page curl hint — bottom-right corner */}
+        </div>{}
+        {}
         {albumPage < totalAlbumPages - 1 && (
           <motion.div
             className="absolute bottom-1 right-1 pointer-events-none"
@@ -1493,8 +1407,7 @@ export function MonasAlbumPage() {
             />
           </motion.div>
         )}
-
-        {/* Swipe hint text (disappears after first swipe) */}
+        {}
         {totalAlbumPages > 1 && albumPage === 0 && (
           <motion.p
             className="text-center text-white/30 text-[10px] mt-3 pointer-events-none"
@@ -1504,9 +1417,8 @@ export function MonasAlbumPage() {
             ← desliza para pasar la página →
           </motion.p>
         )}
-      </div>{/* end outer swipe container */}
-
-      {/* ── PAGE NAVIGATION ── */}
+      </div>{}
+      {}
       {totalAlbumPages > 1 && (
         <div className="px-4 mt-6 flex items-center justify-between">
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => goToPage(-1)} disabled={albumPage === 0}
@@ -1531,9 +1443,7 @@ export function MonasAlbumPage() {
           </motion.button>
         </div>
       )}
-
-
-      {/* ── QR SCANNER MODAL ── */}
+      {}
       <AnimatePresence>
         {showQRModal && (
           <QRScannerModal
@@ -1543,8 +1453,7 @@ export function MonasAlbumPage() {
           />
         )}
       </AnimatePresence>
-
-      {/* ── ENVELOPE MODAL ── */}
+      {}
       <AnimatePresence>
         {pendingEnvelope && (
           <EnvelopeModal
@@ -1554,8 +1463,7 @@ export function MonasAlbumPage() {
           />
         )}
       </AnimatePresence>
-
-      {/* ── MODAL: DETALLE MONA ── */}
+      {}
       <AnimatePresence>
         {selectedMona && (
           <>
@@ -1565,12 +1473,12 @@ export function MonasAlbumPage() {
               onClick={() => setSelectedMona(null)}
             />
             <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden"
-              style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.1)', borderBottom: 'none' }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 rounded-3xl overflow-hidden max-h-[85vh] overflow-y-auto"
+              style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.1)' }}
             >
               {selectedMona.unlocked ? (
                 <div>
@@ -1606,12 +1514,10 @@ export function MonasAlbumPage() {
                         <p className="text-[9px] font-black" style={{ color: R[selectedMona.rarity].textColor }}>{selectedMona.name}</p>
                       </div>
                     </motion.div>
-
                     <div className="flex-1">
                       <h3 className="text-white font-black text-lg">{selectedMona.name}</h3>
                       <p className="text-blue-400 text-xs mt-0.5">{selectedMona.category.charAt(0).toUpperCase() + selectedMona.category.slice(1)}</p>
                       <p className="text-white/70 text-xs mt-2 leading-relaxed">{selectedMona.description}</p>
-
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: R[selectedMona.rarity].tagBg }}>
                           <Zap size={10} style={{ color: R[selectedMona.rarity].textColor }} />
@@ -1667,8 +1573,7 @@ export function MonasAlbumPage() {
           </>
         )}
       </AnimatePresence>
-
-      {/* ── REWARD MODAL ── */}
+      {}
       <AnimatePresence>
         {showRewardModal && (
           <>
@@ -1704,8 +1609,7 @@ export function MonasAlbumPage() {
           </>
         )}
       </AnimatePresence>
-
-      {/* ── BADGE DETAIL MODAL ── */}
+      {}
       <AnimatePresence>
         {selectedBadge && (
           <>
@@ -1784,8 +1688,7 @@ export function MonasAlbumPage() {
           </>
         )}
       </AnimatePresence>
-
-      {/* ── WELCOME MODAL ── */}
+      {}
       <AnimatePresence>
         {showWelcomeModal && (
           <>
@@ -1807,9 +1710,8 @@ export function MonasAlbumPage() {
                 <h2 className="text-white font-black text-2xl">¡Bienvenido al Álbum!</h2>
                 <p className="text-blue-400 text-sm mt-1">Colecciona Patricias y gana recompensas</p>
               </div>
-
               <div className="space-y-4 mb-6">
-                {/* Qué son las Patricias */}
+                {}
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59,130,246,0.15)' }}>
                     <Sparkles size={20} className="text-blue-400" />
@@ -1821,8 +1723,7 @@ export function MonasAlbumPage() {
                     </p>
                   </div>
                 </div>
-
-                {/* Cómo se obtienen */}
+                {}
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(6,182,212,0.15)' }}>
                     <QrCode size={20} className="text-cyan-400" />
@@ -1834,8 +1735,7 @@ export function MonasAlbumPage() {
                     </p>
                   </div>
                 </div>
-
-                {/* Para qué sirven */}
+                {}
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)' }}>
                     <Trophy size={20} className="text-amber-400" />
@@ -1848,8 +1748,7 @@ export function MonasAlbumPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Don't show again checkbox */}
+              {}
               <div className="mb-5">
                 <button
                   onClick={() => setDontShowAgain(!dontShowAgain)}
@@ -1871,8 +1770,7 @@ export function MonasAlbumPage() {
                   <span className="text-white/60 text-xs">No volver a mostrar</span>
                 </button>
               </div>
-
-              {/* Close button */}
+              {}
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={handleCloseWelcome}

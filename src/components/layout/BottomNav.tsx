@@ -1,10 +1,8 @@
-import React from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { motion } from "motion/react";
 import { Compass, Users, MessageCircle, MapPin, User, Heart } from 'lucide-react';
-import { GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../../data/mockData';
-import { useApp } from '../../context/AppContext';
-
+import { GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../../types/mockData';
+import { useApp } from '../../store/AppContext';
 const navItems = [
   { path: '/home',        icon: Compass,       label: 'Descubrir' },
   { path: '/matches',     icon: Heart,         label: 'Matching'  },
@@ -13,14 +11,21 @@ const navItems = [
   { path: '/chat',        icon: MessageCircle, label: 'Chat'      },
   { path: '/profile',     icon: User,          label: 'Perfil'    },
 ];
-
 export function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { notifications } = useApp();
-
+  const { notifications, isDark } = useApp();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0A192F]/97 backdrop-blur-md border-t border-gray-100/80 dark:border-[#233554]/80">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-xl dark:bg-[#0A192F]/97 dark:border-t dark:border-[#233554]/80"
+      style={isDark ? {} : {
+        background: 'rgba(253, 252, 248, 0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(10, 25, 47, 0.06)',
+        boxShadow: '0 -2px 20px rgba(10, 25, 47, 0.07)',
+      }}
+    >
       <div className="max-w-lg mx-auto flex items-center justify-around px-1 py-2 safe-area-pb">
         {navItems.map(({ path, icon: Icon, label }) => {
           const isActive =
@@ -34,7 +39,7 @@ export function BottomNav() {
               className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 active:scale-90 min-w-[48px]"
             >
               <div className="relative">
-                {/* Gold glow pill for active item */}
+                {}
                 {isActive && (
                   <motion.div
                     layoutId="activeNavPill"
@@ -47,7 +52,7 @@ export function BottomNav() {
                   <Icon
                     size={20}
                     strokeWidth={isActive ? 2.5 : 1.8}
-                    style={isActive ? { color: GOLD_LIGHT } : { color: '#9CA3AF' }}
+                    style={isActive ? { color: GOLD_LIGHT } : { color: isDark ? '#9CA3AF' : '#6E7A8A' }}
                   />
                   {path === '/chat' && notifications > 0 && (
                     <span
@@ -61,11 +66,11 @@ export function BottomNav() {
               </div>
               <span
                 className="text-[10px] font-medium transition-colors"
-                style={isActive ? { color: GOLD_LIGHT, fontWeight: 700 } : { color: '#9CA3AF' }}
+                style={isActive ? { color: GOLD_LIGHT, fontWeight: 700 } : { color: isDark ? '#9CA3AF' : '#6E7A8A' }}
               >
                 {label}
               </span>
-              {/* Gold dot indicator under active */}
+              {}
               {isActive && (
                 <motion.div
                   layoutId="activeNavDot"

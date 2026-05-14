@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import * as React from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -9,15 +10,12 @@ import {
   Music, Lightbulb, Palette, Sparkles, Sun, Moon,
   LocateFixed, Locate, AlertTriangle, CheckCircle2, Loader2, AlertCircle,
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { events, GOLD_GRADIENT, GOLD_LIGHT, GRADIENT } from '../data/mockData';
+import { useApp } from '../store/AppContext';
+import { events, GOLD_GRADIENT, GOLD_LIGHT, GRADIENT } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-import campusMap from '../assets/campus_aerial_view.png';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import campusMap from '../assets/campus_map.png';
 type LucideIconType = React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
-
 interface Landmark {
   id: string;
   name: string;
@@ -28,16 +26,12 @@ interface Landmark {
   color: string;
   type: 'building' | 'food' | 'sport' | 'nature' | 'entry';
 }
-
-// ── Campus geographic bounds (ECI Bogotá) ─────────────────────────────────────
 const CAMPUS_BOUNDS = {
   north: 4.9800,
   south: 4.9722,
   east:  -74.0418,
   west:  -74.0490,
 };
-
-/** Convert GPS coordinates → map image % position */
 function coordsToMapPct(lat: number, lng: number) {
   const x = ((lng - CAMPUS_BOUNDS.west) / (CAMPUS_BOUNDS.east - CAMPUS_BOUNDS.west)) * 100;
   const y = ((CAMPUS_BOUNDS.north - lat) / (CAMPUS_BOUNDS.north - CAMPUS_BOUNDS.south)) * 100;
@@ -46,8 +40,6 @@ function coordsToMapPct(lat: number, lng: number) {
     y: Math.max(2, Math.min(98, y)),
   };
 }
-
-/** Check if coordinates are inside ECI campus perimeter */
 function isOnCampus(lat: number, lng: number): boolean {
   return (
     lat >= CAMPUS_BOUNDS.south &&
@@ -56,8 +48,6 @@ function isOnCampus(lat: number, lng: number): boolean {
     lng <= CAMPUS_BOUNDS.east
   );
 }
-
-/** Detect the nearest landmark zone for a map % position */
 function detectZone(mapX: number, mapY: number, landmarks: Landmark[]): string {
   let closest = landmarks[0];
   let minDist = Infinity;
@@ -73,8 +63,6 @@ function detectZone(mapX: number, mapY: number, landmarks: Landmark[]): string {
   }
   return minDist < 18 ? `Cerca de ${closest.name}` : 'Campus ECI';
 }
-
-// ── Campus landmarks ───────────────────────────────────────────────────────────
 const LANDMARKS: Landmark[] = [
   { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 73, y: 50, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 68, y: 41, Icon: Building2,      color: '#3B82F6', type: 'building' },
@@ -97,8 +85,6 @@ const LANDMARKS: Landmark[] = [
   { id: 'entrada-p', name: 'Entrada Peatonal',  shortName: 'Peat.',   x: 90, y: 27, Icon: Navigation,     color: '#475569', type: 'entry'    },
   { id: 'entrada-v', name: 'Entrada Vehicular', shortName: 'Veh.',    x: 89, y: 72, Icon: Car,            color: '#475569', type: 'entry'    },
 ];
-
-// ── Event-to-landmark mapping ─────────────────────────────────────────────────
 const EVENT_LOCATION: Record<string, string> = {
   'e1': 'bloque-d',
   'e2': 'cafe-planet',
@@ -107,29 +93,23 @@ const EVENT_LOCATION: Record<string, string> = {
   'e5': 'nativos',
   'e6': 'bloque-l',
 };
-
 const FILTERS = [
   { key: 'all',   label: 'Todo',     Icon: Map      },
   { key: 'event', label: 'Eventos',  Icon: MapPin   },
   { key: 'food',  label: 'Comida',   Icon: Coffee   },
   { key: 'sport', label: 'Deporte',  Icon: Dumbbell },
 ] as const;
-
 function EventPinIcon({ emoji, size = 14, color = 'white' }: { emoji: string; size?: number; color?: string }) {
   return <EmojiIcon emoji={emoji} size={size} color={color} strokeWidth={2.2} />;
 }
-
-// ── Geo status banner ─────────────────────────────────────────────────────────
 function GeoBanner({
   isDark, geo
 }: { isDark: boolean; geo: ReturnType<typeof useApp>['geo'] }) {
   if (!geo.enabled) return null;
-
   let bg: string;
   let Icon: React.ReactNode;
   let text: string;
   let subtext: string;
-
   if (geo.loading) {
     bg = isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.10)';
     Icon = <Loader2 size={13} color="#06B6D4" className="animate-spin" />;
@@ -153,7 +133,6 @@ function GeoBanner({
   } else {
     return null;
   }
-
   return (
     <motion.div
       initial={{ height: 0, opacity: 0 }}
@@ -184,28 +163,22 @@ function GeoBanner({
     </motion.div>
   );
 }
-
 export function CampusMapPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme, currentUser, geo, updateGeo, toggleGeo } = useApp();
-
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'event' | 'food' | 'sport'>('all');
-
   const [isMobile, setIsMobile] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const watchIdRef = useRef<number | null>(null);
-
-  // ── Responsive detection ───────────────────────────────────────────────────
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-
   useLayoutEffect(() => {
     if (!isMobile) return;
     const update = () => {
@@ -218,29 +191,23 @@ export function CampusMapPage() {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, [isMobile]);
-
-  // ── Geolocation watchPosition lifecycle ───────────────────────────────────
   useEffect(() => {
     if (!geo.enabled) {
-      // Clear any active watch
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
       return;
     }
-
     if (!('geolocation' in navigator)) {
       updateGeo({ loading: false, error: 'Tu dispositivo no soporta GPS' });
       return;
     }
-
     const onSuccess = (pos: GeolocationPosition) => {
       const { latitude: lat, longitude: lng, accuracy } = pos.coords;
       const onCampus = isOnCampus(lat, lng);
       const { x: mapX, y: mapY } = coordsToMapPct(lat, lng);
       const detectedZone = onCampus ? detectZone(mapX, mapY, LANDMARKS) : null;
-
       updateGeo({
         loading: false,
         lat, lng, accuracy,
@@ -251,7 +218,6 @@ export function CampusMapPage() {
         error: null,
       });
     };
-
     const onError = (err: GeolocationPositionError) => {
       const messages: Record<number, string> = {
         1: 'Permiso de ubicación denegado',
@@ -265,15 +231,12 @@ export function CampusMapPage() {
         detectedZone: null,
       });
     };
-
     updateGeo({ loading: true, error: null });
-
     watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
       timeout: 15000,
       maximumAge: 5000,
     });
-
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
@@ -281,13 +244,10 @@ export function CampusMapPage() {
       }
     };
   }, [geo.enabled]);
-
-  // ── Event helpers ──────────────────────────────────────────────────────────
   const mappedEvents = events.filter(ev => EVENT_LOCATION[ev.id]);
   const getEventsAt = useCallback((lmId: string) =>
     mappedEvents.filter(e => EVENT_LOCATION[e.id] === lmId), [mappedEvents]);
   const hasEvent = (lmId: string) => getEventsAt(lmId).length > 0;
-
   const isVisible = (lm: Landmark) => {
     if (activeFilter === 'all')   return true;
     if (activeFilter === 'food')  return lm.type === 'food';
@@ -295,24 +255,17 @@ export function CampusMapPage() {
     if (activeFilter === 'event') return hasEvent(lm.id);
     return true;
   };
-
   const handlePin = (lm: Landmark) => {
     setSelectedLandmark(prev => prev?.id === lm.id ? null : lm);
     setEventsOpen(false);
   };
-
   const selectedEvents = selectedLandmark ? getEventsAt(selectedLandmark.id) : [];
   const popupLeft = selectedLandmark ? selectedLandmark.x < 55 : true;
-
-  // ── User pin: solo visible cuando GPS está activo ──────────────────────────
   const USER_PIN_DEFAULT = { x: 87, y: 30 };
   const userPin = (geo.enabled && geo.onCampus && geo.mapX !== null && geo.mapY !== null)
     ? { x: geo.mapX, y: geo.mapY }
     : USER_PIN_DEFAULT;
-  // Mostrar pin SOLO cuando GPS está encendido (ya sea buscando, en campus o fuera)
   const showUserPin = geo.enabled;
-
-  // ── GPS toggle button config ───────────────────────────────────────────────
   const geoButtonConfig = () => {
     if (!geo.enabled) return { icon: <Locate size={16} />, color: isDark ? '#475569' : '#9CA3AF', bg: isDark ? '#172A45' : '#F3F4F6', label: 'Activar GPS' };
     if (geo.loading)  return { icon: <Loader2 size={16} className="animate-spin" />, color: '#06B6D4', bg: isDark ? '#0C2A45' : '#E0F7FA', label: 'Buscando…' };
@@ -321,8 +274,6 @@ export function CampusMapPage() {
     return { icon: <LocateFixed size={16} />, color: '#10B981', bg: isDark ? '#0D2A1E' : '#ECFDF5', label: 'GPS activo', pulse: true };
   };
   const gbc = geoButtonConfig();
-
-  // ── Shared map content ─────────────────────────────────────────────────────
   const renderMapContent = () => (
     <>
       <img
@@ -338,17 +289,14 @@ export function CampusMapPage() {
         }}
         draggable={false}
       />
-
       <div style={{ position: 'absolute', inset: 0 }}>
-
         {selectedLandmark && (
           <div
             style={{ position: 'absolute', inset: 0, zIndex: 5 }}
             onClick={() => setSelectedLandmark(null)}
           />
         )}
-
-        {/* ── User location pin ── */}
+        {}
         <AnimatePresence>
           {showUserPin && (
             <motion.div
@@ -371,7 +319,7 @@ export function CampusMapPage() {
               }}
             >
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* Outer pulsing ring — teal when on campus, amber when GPS off */}
+                {}
                 <motion.div
                   animate={{ scale: [1, 1.7, 1], opacity: [0.6, 0, 0.6] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -394,7 +342,7 @@ export function CampusMapPage() {
                     zIndex: 0,
                   }}
                 />
-                {/* GPS accuracy circle when on campus */}
+                {}
                 {geo.enabled && geo.onCampus && geo.accuracy && geo.accuracy < 60 && (
                   <div style={{
                     position: 'absolute',
@@ -406,7 +354,7 @@ export function CampusMapPage() {
                     zIndex: 0,
                   }} />
                 )}
-                {/* Avatar */}
+                {}
                 <div style={{
                   width: 28, height: 28,
                   borderRadius: '50%',
@@ -448,13 +396,11 @@ export function CampusMapPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
         {LANDMARKS.filter(isVisible).map(lm => {
           const evHere = getEventsAt(lm.id);
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
           const { Icon } = lm;
-
           return (
             <button
               key={lm.id}
@@ -536,7 +482,6 @@ export function CampusMapPage() {
                     </div>
                   </div>
                 )}
-
                 <span style={{
                   fontSize: 8, fontWeight: 900,
                   color: hasEv ? GOLD_LIGHT : (isDark ? '#E2E8F0' : '#1E293B'),
@@ -553,8 +498,7 @@ export function CampusMapPage() {
             </button>
           );
         })}
-
-        {/* ── Popup card for selected landmark ── */}
+        {}
         <AnimatePresence>
           {selectedLandmark && (
             <motion.div
@@ -606,7 +550,6 @@ export function CampusMapPage() {
                   <X size={10} />
                 </button>
               </div>
-
               {selectedEvents.length > 0 ? (
                 <div className="px-3 py-2">
                   {selectedEvents.map(ev => (
@@ -649,7 +592,6 @@ export function CampusMapPage() {
       </div>
     </>
   );
-
   return (
     <div
       className="flex flex-col relative"
@@ -661,8 +603,7 @@ export function CampusMapPage() {
       }}
     >
       <DoodleBackground isDark={isDark} opacity={isDark ? 0.68 : 0.50} />
-
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {}
       <header
         className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b relative"
         style={{
@@ -679,7 +620,6 @@ export function CampusMapPage() {
         >
           <ArrowLeft size={20} />
         </button>
-
         <div className="flex-1 min-w-0">
           <h1 className="font-black text-gray-900 dark:text-white text-sm flex items-center gap-2 flex-wrap">
             <Map size={14} style={{ color: GOLD_LIGHT }} />
@@ -696,8 +636,7 @@ export function CampusMapPage() {
             Escuela Colombiana de Ingeniería · Bogotá
           </p>
         </div>
-
-        {/* GPS toggle button */}
+        {}
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={toggleGeo}
@@ -723,7 +662,7 @@ export function CampusMapPage() {
               : '0 1px 4px rgba(0,0,0,0.10)',
           }}
         >
-          {/* Outer pulse ring — only when active and no error */}
+          {}
           {geo.enabled && !geo.error && (
             <motion.span
               animate={{ scale: [1, 1.55, 1], opacity: [0.55, 0, 0.55] }}
@@ -737,13 +676,11 @@ export function CampusMapPage() {
               }}
             />
           )}
-
-          {/* Icon */}
+          {}
           <span className="flex-shrink-0 flex items-center justify-center" style={{ width: 20, height: 20 }}>
             {gbc.icon}
           </span>
-
-          {/* Label — only when enabled */}
+          {}
           <AnimatePresence>
             {geo.enabled && (
               <motion.span
@@ -764,8 +701,7 @@ export function CampusMapPage() {
               </motion.span>
             )}
           </AnimatePresence>
-
-          {/* Status dot */}
+          {}
           {geo.enabled && !geo.loading && !geo.error && (
             <motion.span
               initial={{ scale: 0 }}
@@ -775,8 +711,7 @@ export function CampusMapPage() {
             />
           )}
         </motion.button>
-
-        {/* Avatar */}
+        {}
         <button
           onClick={() => navigate('/profile')}
           className="w-9 h-9 rounded-full overflow-hidden border-2 shadow-sm active:scale-95 transition-transform flex-shrink-0"
@@ -788,8 +723,7 @@ export function CampusMapPage() {
             className="w-full h-full object-cover"
           />
         </button>
-
-        {/* Theme toggle */}
+        {}
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={toggleTheme}
@@ -804,8 +738,7 @@ export function CampusMapPage() {
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </motion.button>
       </header>
-
-      {/* ── Filter chips ───────────────────────────────────────────────────── */}
+      {}
       <div
         className="flex-shrink-0 flex gap-2 px-4 py-2.5 overflow-x-auto scrollbar-hide border-b relative"
         style={{
@@ -829,8 +762,7 @@ export function CampusMapPage() {
             {label}
           </button>
         ))}
-
-        {/* Geo quick-info chip */}
+        {}
         {geo.enabled && (
           <div
             className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ml-auto"
@@ -854,8 +786,7 @@ export function CampusMapPage() {
           </div>
         )}
       </div>
-
-      {/* ── Geo status banner ──────────────────────────────────────────────── */}
+      {}
       <div
         className="flex-shrink-0 relative"
         style={{
@@ -867,8 +798,7 @@ export function CampusMapPage() {
           <GeoBanner isDark={isDark} geo={geo} />
         </AnimatePresence>
       </div>
-
-      {/* ── Map area ───────────────────────────────────────────────────────── */}
+      {}
       {isMobile ? (
         <div
           ref={mapContainerRef}
@@ -897,8 +827,7 @@ export function CampusMapPage() {
           </div>
         </div>
       )}
-
-      {/* ── Bottom events pill / drawer ── */}
+      {}
       <div
         className="flex-shrink-0 border-t relative"
         style={{
@@ -927,7 +856,6 @@ export function CampusMapPage() {
               : <ChevronUp size={14} style={{ color: GOLD_LIGHT }} />}
           </div>
         </button>
-
         <AnimatePresence>
           {eventsOpen && (
             <motion.div

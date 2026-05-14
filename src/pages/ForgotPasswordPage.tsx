@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -6,24 +7,20 @@ import {
   Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle, KeyRound,
   CheckCircle2,
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { GRADIENT, PINK } from '../data/mockData';
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
-
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
-
 const OTP_DURATION     = 600;
 const RESEND_COOLDOWN  = 30;
 const MAX_SEND_ATTEMPTS = 3;
 const SEND_BLOCK_SECS   = 120;
-
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60).toString().padStart(2, '0');
   const s = (secs % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
 }
-
 function getStrength(p: string) {
   if (!p) return { label: '', color: '#E5E7EB', pct: 0 };
   if (p.length < 8) return { label: 'Débil', color: '#EF4444', pct: 25 };
@@ -31,12 +28,9 @@ function getStrength(p: string) {
   if (/[^A-Za-z0-9]/.test(p)) return { label: 'Excelente', color: '#10B981', pct: 100 };
   return { label: 'Buena', color: TEAL, pct: 80 };
 }
-
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useApp();
-
-  // ── Phase 1: email ─────────────────────────────────────────────────────────
   const [phase, setPhase] = useState<'email' | 'reset' | 'success'>('email');
   const [email, setEmail]       = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
@@ -44,8 +38,6 @@ export function ForgotPasswordPage() {
   const [sendAttempts, setSendAttempts] = useState(0);
   const [blockCooldown, setBlockCooldown] = useState(0);
   const [statusMsg, setStatusMsg] = useState('');
-
-  // ── Phase 2: reset ─────────────────────────────────────────────────────────
   const [code, setCode]           = useState(['', '', '', '', '', '']);
   const [otpTimeLeft, setOtpTimeLeft] = useState(OTP_DURATION);
   const [otpExpired, setOtpExpired]   = useState(false);
@@ -57,24 +49,18 @@ export function ForgotPasswordPage() {
   const [codeError, setCodeError]           = useState('');
   const [resetLoading, setResetLoading]     = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
-
   const emailValid = email.toLowerCase().endsWith('@mail.escuelaing.edu.co') && email.includes('@');
   const emailError = emailTouched && !emailValid ? 'Introduce un correo válido de la institución.' : '';
-
   const strength   = getStrength(newPassword);
   const codeStr    = code.join('');
   const codeValid  = /^\d{6}$/.test(codeStr);
   const pwdMatch   = newPassword === confirmPwd && newPassword.length >= 8;
   const resetValid = codeValid && pwdMatch && !otpExpired;
-
-  // Block cooldown timer
   useEffect(() => {
     if (blockCooldown <= 0) return;
     const t = setInterval(() => setBlockCooldown(s => Math.max(s - 1, 0)), 1000);
     return () => clearInterval(t);
   }, [blockCooldown]);
-
-  // OTP timer
   useEffect(() => {
     if (phase !== 'reset' || otpTimeLeft <= 0) return;
     const t = setInterval(() => {
@@ -85,39 +71,28 @@ export function ForgotPasswordPage() {
     }, 1000);
     return () => clearInterval(t);
   }, [phase, otpTimeLeft]);
-
-  // Resend cooldown
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setInterval(() => setResendCooldown(s => Math.max(s - 1, 0)), 1000);
     return () => clearInterval(t);
   }, [resendCooldown]);
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSend = async () => {
     if (!emailValid || sendLoading || blockCooldown > 0) return;
     setSendLoading(true);
     await new Promise(r => setTimeout(r, 1200));
     setSendLoading(false);
-
     const nextAttempts = sendAttempts + 1;
     setSendAttempts(nextAttempts);
-
-    // Always show the same neutral message (no account enumeration)
     setStatusMsg('Si existe una cuenta asociada a ese correo, hemos enviado instrucciones para restablecer la contraseña.');
-
     if (nextAttempts >= MAX_SEND_ATTEMPTS) {
       setBlockCooldown(SEND_BLOCK_SECS);
     }
-
-    // Transition to reset phase (demo)
     setPhase('reset');
     setOtpTimeLeft(OTP_DURATION);
     setOtpExpired(false);
     setResendCooldown(RESEND_COOLDOWN);
     setTimeout(() => codeRefs.current[0]?.focus(), 300);
   };
-
   const handleResend = () => {
     if (resendCooldown > 0) return;
     setCode(['', '', '', '', '', '']);
@@ -127,7 +102,6 @@ export function ForgotPasswordPage() {
     setResendCooldown(RESEND_COOLDOWN);
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
   };
-
   const handleCodeChange = (val: string, idx: number) => {
     const digit = val.replace(/\D/g, '').slice(-1);
     const next = [...code]; next[idx] = digit; setCode(next);
@@ -147,7 +121,6 @@ export function ForgotPasswordPage() {
     setCodeError('');
     codeRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
-
   const handleReset = async () => {
     if (!resetValid || resetLoading) return;
     if (otpExpired) { setCodeError('El código ha expirado. Solicita uno nuevo.'); return; }
@@ -157,28 +130,21 @@ export function ForgotPasswordPage() {
     setResetLoading(false);
     setPhase('success');
   };
-
   const handleBack = () => {
     if (phase === 'reset') { setPhase('email'); return; }
     navigate('/login');
   };
-
-  // ── Shared input styles ────────────────────────────────────────────────────
   const inputBase = `w-full py-3.5 rounded-xl border transition-all focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 bg-white dark:bg-[#112240]`;
-
   return (
-    <div className="min-h-screen bg-[#F0F7FF] dark:bg-[#0A192F] transition-colors duration-300 flex flex-col md:items-center md:justify-center relative overflow-hidden">
-
-      {/* Background blobs — desktop only */}
+    <div className="min-h-screen transition-colors duration-300 flex flex-col md:items-center md:justify-center relative overflow-hidden">
+      {}
       <div className="hidden md:block pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.07]" style={{ background: GRADIENT }} />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
       </div>
-
-      {/* Card */}
-      <div className="relative w-full md:max-w-md md:my-10 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 bg-[#F0F7FF] dark:bg-[#0D1F3C] md:bg-white md:dark:bg-[#112240] transition-colors duration-300">
-
-        {/* Top bar */}
+      {}
+      <div className="relative w-full md:max-w-md md:my-10 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300">
+        {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
           <button
             onClick={handleBack}
@@ -195,13 +161,11 @@ export function ForgotPasswordPage() {
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
-
-        {/* Content */}
+        {}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
             <AnimatePresence mode="wait">
-
-              {/* ══ PHASE: EMAIL ══════════════════════════════════════════════ */}
+              {}
               {phase === 'email' && (
                 <motion.div
                   key="email"
@@ -210,7 +174,7 @@ export function ForgotPasswordPage() {
                   exit={{ opacity: 0, x: -30 }}
                   transition={{ duration: 0.25 }}
                 >
-                  {/* Header */}
+                  {}
                   <div className="text-center mb-8 mt-2">
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
                       <KeyRound size={28} color="white" strokeWidth={2} />
@@ -220,8 +184,7 @@ export function ForgotPasswordPage() {
                       Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
                     </p>
                   </div>
-
-                  {/* Email field */}
+                  {}
                   <div className="mb-5">
                     <label htmlFor="fp-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                       Correo institucional
@@ -257,8 +220,7 @@ export function ForgotPasswordPage() {
                         </p>
                       )}
                     </div>
-
-                    {/* Format hint — interactive */}
+                    {}
                     <p className="mt-1.5 text-[11px] transition-colors duration-200"
                       style={{
                         color: email.length === 0
@@ -273,8 +235,7 @@ export function ForgotPasswordPage() {
                       <span className="font-medium">@mail.escuelaing.edu.co</span>
                     </p>
                   </div>
-
-                  {/* Attempts warning */}
+                  {}
                   {sendAttempts >= 2 && sendAttempts < MAX_SEND_ATTEMPTS && blockCooldown === 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: -8 }}
@@ -288,8 +249,7 @@ export function ForgotPasswordPage() {
                       </p>
                     </motion.div>
                   )}
-
-                  {/* Block cooldown */}
+                  {}
                   {blockCooldown > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: -8 }}
@@ -304,8 +264,7 @@ export function ForgotPasswordPage() {
                       </p>
                     </motion.div>
                   )}
-
-                  {/* Send button */}
+                  {}
                   <motion.button
                     onClick={handleSend}
                     disabled={!emailValid || sendLoading || blockCooldown > 0}
@@ -330,7 +289,6 @@ export function ForgotPasswordPage() {
                       </>
                     )}
                   </motion.button>
-
                   <p className="text-center text-sm text-gray-400 mt-6">
                     ¿Recordaste tu contraseña?{' '}
                     <button onClick={() => navigate('/login')} className="font-semibold" style={{ color: PINK }}>
@@ -339,8 +297,7 @@ export function ForgotPasswordPage() {
                   </p>
                 </motion.div>
               )}
-
-              {/* ══ PHASE: RESET ══════════════════════════════════════════════ */}
+              {}
               {phase === 'reset' && (
                 <motion.div
                   key="reset"
@@ -349,14 +306,13 @@ export function ForgotPasswordPage() {
                   exit={{ opacity: 0, x: -30 }}
                   transition={{ duration: 0.25 }}
                 >
-                  {/* Header */}
+                  {}
                   <div className="text-center mb-6 mt-2">
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
                       <ShieldCheck size={28} color="white" strokeWidth={2} />
                     </div>
                     <h1 className="text-gray-900 dark:text-white">Restablecer contraseña</h1>
-
-                    {/* Neutral status message (no account enumeration) */}
+                    {}
                     {statusMsg && (
                       <motion.p
                         initial={{ opacity: 0, y: 4 }}
@@ -369,8 +325,7 @@ export function ForgotPasswordPage() {
                       </motion.p>
                     )}
                   </div>
-
-                  {/* OTP timer */}
+                  {}
                   <div className="flex justify-center mb-5">
                     <div
                       className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
@@ -389,8 +344,7 @@ export function ForgotPasswordPage() {
                       {otpExpired ? 'Código expirado' : `Válido por ${formatTime(otpTimeLeft)}`}
                     </div>
                   </div>
-
-                  {/* 6-digit OTP inputs */}
+                  {}
                   <div className="mb-1">
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">
                       Código de verificación
@@ -424,8 +378,7 @@ export function ForgotPasswordPage() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Code error */}
+                  {}
                   <div className="min-h-[22px] mt-1.5 mb-3 text-center" aria-live="polite">
                     {codeError && (
                       <motion.p
@@ -437,8 +390,7 @@ export function ForgotPasswordPage() {
                       </motion.p>
                     )}
                   </div>
-
-                  {/* Resend */}
+                  {}
                   <div className="text-center mb-5">
                     {resendCooldown > 0 ? (
                       <p className="text-xs text-gray-400">
@@ -456,8 +408,7 @@ export function ForgotPasswordPage() {
                       </button>
                     )}
                   </div>
-
-                  {/* New password */}
+                  {}
                   <div className="space-y-3 mb-6">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -487,8 +438,7 @@ export function ForgotPasswordPage() {
                           {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
                       </div>
-
-                      {/* ── Barra de seguridad de contraseña ── */}
+                      {}
                       {newPassword.length > 0 && (
                         <div className="mt-2">
                           <div className="flex items-center justify-between mb-1">
@@ -513,10 +463,8 @@ export function ForgotPasswordPage() {
                           </div>
                         </div>
                       )}
-
                     </div>
-
-                    {/* Confirm password */}
+                    {}
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Confirmar contraseña
@@ -560,8 +508,7 @@ export function ForgotPasswordPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Submit */}
+                  {}
                   <motion.button
                     onClick={handleReset}
                     disabled={!resetValid || resetLoading}
@@ -587,8 +534,7 @@ export function ForgotPasswordPage() {
                   </motion.button>
                 </motion.div>
               )}
-
-              {/* ══ PHASE: SUCCESS ════════════════════════════════════════════ */}
+              {}
               {phase === 'success' && (
                 <motion.div
                   key="success"
@@ -597,7 +543,7 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.3, type: 'spring', bounce: 0.35 }}
                   className="flex flex-col items-center justify-center text-center py-12"
                 >
-                  {/* Animated check */}
+                  {}
                   <motion.div
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -607,14 +553,12 @@ export function ForgotPasswordPage() {
                   >
                     <CheckCircle2 size={40} color="white" strokeWidth={2.5} />
                   </motion.div>
-
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                     <h1 className="text-gray-900 dark:text-white mb-3">¡Contraseña actualizada!</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs mx-auto" aria-live="assertive">
                       Contraseña actualizada. Inicia sesión con tu nueva contraseña.
                     </p>
                   </motion.div>
-
                   <motion.button
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -628,7 +572,6 @@ export function ForgotPasswordPage() {
                   </motion.button>
                 </motion.div>
               )}
-
             </AnimatePresence>
           </div>
         </div>

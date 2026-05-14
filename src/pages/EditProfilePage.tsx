@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import * as React from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Camera, Check, X, Upload } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { GRADIENT, PINK, interestOptions } from '../data/mockData';
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK, interestOptions } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 
 const faculties = [
@@ -72,9 +73,8 @@ export function EditProfilePage() {
   if (!currentUser) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0D0F1C] pb-8">
-      {/* Header */}
-      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 z-10 border-b border-gray-100 dark:border-[#2A2D4A]">
+    <div className="min-h-screen pb-8">
+      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-[57px] z-10 border-b border-gray-100 dark:border-[#2A2D4A]">
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#1E2038] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#252844] transition-colors active:scale-90"
@@ -101,7 +101,6 @@ export function EditProfilePage() {
       </div>
 
       <div className="px-4 pt-6 max-w-lg mx-auto space-y-5">
-        {/* Avatar */}
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             <div
@@ -114,7 +113,6 @@ export function EditProfilePage() {
                 className="w-full h-full object-cover"
               />
             </div>
-            {/* Hidden file input */}
             <input
               ref={fileInputRef}
               type="file"
@@ -152,7 +150,6 @@ export function EditProfilePage() {
           )}
         </div>
 
-        {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Nombre completo
@@ -164,7 +161,6 @@ export function EditProfilePage() {
           />
         </div>
 
-        {/* Bio */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Bio
@@ -180,7 +176,6 @@ export function EditProfilePage() {
           <p className="text-right text-[10px] text-gray-400 mt-0.5">{bio.length}/200</p>
         </div>
 
-        {/* Faculty */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Facultad / Carrera
@@ -194,7 +189,6 @@ export function EditProfilePage() {
           </select>
         </div>
 
-        {/* Semester */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Semestre actual
@@ -218,7 +212,6 @@ export function EditProfilePage() {
           </div>
         </div>
 
-        {/* Interests */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Intereses ({selectedInterests.length}/8)
@@ -257,7 +250,6 @@ export function EditProfilePage() {
           </div>
         </div>
 
-        {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={isSaving || saved}

@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Bell, Shield, Eye, Moon, Globe, Trash2, ChevronRight, Sun, Smartphone, Volume2 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { GRADIENT, PINK } from '../data/mockData';
-
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK } from '../types/mockData';
 export function SettingsPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useApp();
-
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showActivity, setShowActivity] = useState(true);
   const [publicProfile, setPublicProfile] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
   const ToggleSwitch = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
     <button
       onClick={onChange}
@@ -27,7 +25,6 @@ export function SettingsPage() {
       />
     </button>
   );
-
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="mb-5">
       <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-1 mb-2">
@@ -38,11 +35,10 @@ export function SettingsPage() {
       </div>
     </div>
   );
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0D0F1C] pb-8">
-      {/* Header */}
-      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 z-10 border-b border-gray-100 dark:border-[#2A2D4A]">
+    <div className="min-h-screen pb-8">
+      {}
+      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-[57px] z-10 border-b border-gray-100 dark:border-[#2A2D4A]">
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#1E2038] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#252844] transition-colors active:scale-90"
@@ -54,9 +50,8 @@ export function SettingsPage() {
           <p className="text-xs text-gray-400">Ajusta tu experiencia</p>
         </div>
       </div>
-
       <div className="px-4 pt-5 max-w-lg mx-auto">
-        {/* Appearance */}
+        {}
         <Section title="Apariencia">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <div
@@ -84,8 +79,7 @@ export function SettingsPage() {
             <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
           </div>
         </Section>
-
-        {/* Notifications */}
+        {}
         <Section title="Notificaciones">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <div
@@ -118,8 +112,7 @@ export function SettingsPage() {
             <ToggleSwitch value={soundEnabled} onChange={() => setSoundEnabled(!soundEnabled)} />
           </div>
         </Section>
-
-        {/* Privacy */}
+        {}
         <Section title="Privacidad">
           <div className="flex items-center gap-3 px-4 py-3.5">
             <div
@@ -148,8 +141,7 @@ export function SettingsPage() {
             <ToggleSwitch value={showActivity} onChange={() => setShowActivity(!showActivity)} />
           </div>
         </Section>
-
-        {/* Danger Zone */}
+        {}
         <Section title="Zona de peligro">
           {showDeleteConfirm ? (
             <div className="p-4">
@@ -184,7 +176,6 @@ export function SettingsPage() {
             </button>
           )}
         </Section>
-
         <p className="text-center text-[11px] text-gray-400 mt-4">
           patrici.a v1.0.0 · Campus Social ECI
         </p>

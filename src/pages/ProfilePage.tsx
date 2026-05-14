@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, Shield, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { monas, achievements, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../data/mockData';
+import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, Shield, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
+import { useApp } from '../store/AppContext';
+import { monas, achievements, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
-// ── Mock QR Code generator ────────────────────────────────────────────────────
 function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
   const N = 21;
   const cell = size / N;
-
   const drawFinder = (mat: boolean[][], res: boolean[][], r0: number, c0: number) => {
     for (let dr = 0; dr < 7; dr++) {
       for (let dc = 0; dc < 7; dc++) {
@@ -22,26 +19,19 @@ function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
       }
     }
   };
-
   const mat = Array.from({ length: N }, () => Array(N).fill(false) as boolean[]);
   const res = Array.from({ length: N }, () => Array(N).fill(false) as boolean[]);
-
   drawFinder(mat, res, 0, 0);
   drawFinder(mat, res, 0, 14);
   drawFinder(mat, res, 14, 0);
-
-  // Separators
   for (let i = 0; i < 8; i++) {
     [7, 13].forEach(row => { if (i < N) { mat[row][i] = false; res[row][i] = true; } });
     [7, 13].forEach(col => { if (i < N) { mat[i][col] = false; res[i][col] = true; } });
   }
-  // Timing
   for (let i = 8; i <= 12; i++) {
     mat[6][i] = i % 2 === 0; res[6][i] = true;
     mat[i][6] = i % 2 === 0; res[i][6] = true;
   }
-
-  // Data modules (pseudo-random from seed)
   let h = seed.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0x7fffffff, 7);
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
@@ -51,7 +41,6 @@ function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
       }
     }
   }
-
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <rect width={size} height={size} fill="white" rx={8} />
@@ -73,37 +62,28 @@ function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
     </svg>
   );
 }
-
-// Rarity → visual config (matches MonasAlbumPage palette)
 const RARITY_CFG = {
   común:      { bg: 'linear-gradient(160deg, #0F2450 0%, #1D4ED8 100%)', border: '#3B82F6', glow: 'rgba(59,130,246,0.5)',   textColor: '#BFDBFE', stars: 1 },
   raro:       { bg: 'linear-gradient(160deg, #0C2340 0%, #0369A1 100%)', border: '#06B6D4', glow: 'rgba(6,182,212,0.55)',  textColor: '#A5F3FC', stars: 2 },
   épico:      { bg: 'linear-gradient(160deg, #1E1B4B 0%, #6D28D9 100%)', border: '#8B5CF6', glow: 'rgba(139,92,246,0.6)', textColor: '#DDD6FE', stars: 3 },
   legendario: { bg: 'linear-gradient(160deg, #1C1107 0%, #92400E 100%)', border: '#F59E0B', glow: 'rgba(245,158,11,0.7)', textColor: '#FDE68A', stars: 4 },
 } as const;
-
 export function ProfilePage() {
   const navigate = useNavigate();
   const { currentUser, logout } = useApp();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-
   if (!currentUser) return null;
-
   const unlockedMonas = monas.filter(m => m.unlocked);
   const xpForNextLevel = 5000;
   const xpPercent = (currentUser.xp / xpForNextLevel) * 100;
   const unreadNotifications = notifications.filter(n => !n.read).length;
-
-  // Campus ranking data
   const campusRank = rankingUsers.findIndex(u => u.isCurrentUser) + 1;
   const topThree   = rankingUsers.slice(0, 3);
-
   const handleLogout = () => {
     logout();
     navigate('/');
   };
-
   const handleShareQR = async () => {
     const url = `${window.location.origin}/profile?user=${currentUser.id}`;
     if (typeof navigator.share === 'function') {
@@ -113,14 +93,22 @@ export function ProfilePage() {
     setShowQRModal(false);
     setTimeout(() => alert('¡Enlace copiado al portapapeles!'), 100);
   };
-
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-4 flex items-center justify-between">
-        <h1 className="text-gray-900 dark:text-white">Mi Perfil</h1>
+      {}
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-gray-600 dark:text-gray-400"
+            style={{ background: 'rgba(10,25,47,0.07)' }}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <h1 className="text-gray-900 dark:text-white">Mi Perfil</h1>
+        </div>
         <div className="flex items-center gap-2">
-          {/* Notifications button */}
+          {}
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => navigate('/notifications')}
@@ -138,7 +126,7 @@ export function ProfilePage() {
               </motion.div>
             )}
           </motion.button>
-          {/* QR share button */}
+          {}
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setShowQRModal(true)}
@@ -155,8 +143,7 @@ export function ProfilePage() {
           </button>
         </div>
       </div>
-
-      {/* Profile Card */}
+      {}
       <div className="px-5 mb-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -212,8 +199,7 @@ export function ProfilePage() {
               </div>
             </div>
           </div>
-
-          {/* Interests */}
+          {}
           <div className="flex flex-wrap gap-1.5 mt-4">
             {currentUser.interests.map(interest => (
               <span
@@ -227,10 +213,30 @@ export function ProfilePage() {
           </div>
         </motion.div>
       </div>
-
-      {/* Stats Grid */}
+      {}
       <div className="px-5 mb-4">
-        <div className="grid grid-cols-2 gap-3">
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate('/schedule')}
+          className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left shadow-sm"
+          style={{ background: 'linear-gradient(135deg, #0A192F 0%, #112240 100%)', border: '1.5px solid rgba(6,182,212,0.25)' }}
+        >
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(6,182,212,0.15)' }}
+          >
+            <CalendarDays size={20} color={TEAL} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Mi Horario</p>
+            <p className="text-xs mt-0.5" style={{ color: '#4A6080' }}>Gestiona tu disponibilidad semanal</p>
+          </div>
+          <ChevronRight size={16} style={{ color: TEAL }} />
+        </motion.button>
+      </div>
+      {}
+      <div className="px-5 mb-4">
+        <div className="grid grid-cols-4 gap-2">
           {[
             { icon: Heart, value: currentUser.socialImpact.toLocaleString(), label: 'Impacto Social', color: PINK },
             { icon: Zap, value: `${currentUser.xp.toLocaleString()} XP`, label: 'Puntos XP', color: ORANGE },
@@ -239,19 +245,16 @@ export function ProfilePage() {
           ].map(stat => (
             <div
               key={stat.label}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm"
+              className="bg-white dark:bg-[#112240] rounded-2xl p-3 shadow-sm flex flex-col items-center text-center"
             >
-              <div className="flex items-center gap-2 mb-1">
-                <stat.icon size={18} style={{ color: stat.color }} />
-              </div>
-              <p className="font-bold text-gray-900 dark:text-white">{stat.value}</p>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">{stat.label}</p>
+              <stat.icon size={16} style={{ color: stat.color }} className="mb-1" />
+              <p className="font-bold text-gray-900 dark:text-white text-sm">{stat.value}</p>
+              <p className="text-[9px] text-gray-400 uppercase tracking-wide leading-tight mt-0.5">{stat.label}</p>
             </div>
           ))}
         </div>
       </div>
-
-      {/* Faculty Rank */}
+      {}
       <div className="px-5 mb-4">
         <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm flex items-center gap-4">
           <div
@@ -270,8 +273,7 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* ── CAMPUS RANKING CARD ── */}
+      {}
       <div className="px-5 mb-4">
         <motion.button
           whileHover={{ scale: 1.015 }}
@@ -284,7 +286,7 @@ export function ProfilePage() {
             boxShadow: '0 4px 20px rgba(217,119,6,0.2)',
           }}
         >
-          {/* Shimmer */}
+          {}
           <motion.div
             className="absolute inset-0 pointer-events-none"
             animate={{ x: ['-100%', '200%'] }}
@@ -317,8 +319,7 @@ export function ProfilePage() {
           </div>
         </motion.button>
       </div>
-
-      {/* Wellness Support */}
+      {}
       <div className="px-5 mb-4">
         <div
           className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
@@ -335,8 +336,7 @@ export function ProfilePage() {
           <ChevronRight size={18} color="white" />
         </div>
       </div>
-
-      {/* Patricias Album */}
+      {}
       <div className="px-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -351,8 +351,7 @@ export function ProfilePage() {
             Ver Álbum <ChevronRight size={12} />
           </button>
         </div>
-
-        {/* Patricia cards grid - rarity-based dark gradients */}
+        {}
         <div className="grid grid-cols-10 gap-1">
           {monas.slice(0, 10).map((mona) => {
             const cfg = RARITY_CFG[mona.rarity];
@@ -410,8 +409,7 @@ export function ProfilePage() {
             );
           })}
         </div>
-
-        {/* Quick scan CTA */}
+        {}
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/monas')}
@@ -425,8 +423,7 @@ export function ProfilePage() {
           Escanear QR para desbloquear más patricias
         </motion.button>
       </div>
-
-      {/* Recent Achievements */}
+      {}
       <div className="px-5 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-gray-800 dark:text-white">Hitos Recientes</h3>
@@ -466,20 +463,18 @@ export function ProfilePage() {
           ))}
         </div>
       </div>
-
-      {/* Settings / Logout */}
+      {}
       <div className="px-5 mb-4">
         <div className="bg-white dark:bg-[#112240] rounded-2xl shadow-sm overflow-hidden">
           {[
             { icon: Edit2, label: 'Editar Perfil', action: () => navigate('/edit-profile') },
-            { icon: Shield, label: 'Privacidad y Seguridad', action: () => navigate('/settings') },
             { icon: Settings, label: 'Configuración', action: () => navigate('/settings') },
           ].map((item, i) => (
             <button
               key={item.label}
               onClick={item.action}
               className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 dark:hover:bg-[#172A45] transition-colors"
-              style={{ borderBottom: i < 2 ? '1px solid #F3F4F6' : 'none' }}
+              style={{ borderBottom: i < 1 ? '1px solid #F3F4F6' : 'none' }}
             >
               <item.icon size={18} className="text-gray-400" />
               <span className="flex-1 text-sm text-gray-700 dark:text-gray-300">{item.label}</span>
@@ -488,8 +483,7 @@ export function ProfilePage() {
           ))}
         </div>
       </div>
-
-      {/* Logout */}
+      {}
       <div className="px-5">
         {showLogoutConfirm ? (
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4">
@@ -520,8 +514,7 @@ export function ProfilePage() {
           </button>
         )}
       </div>
-
-      {/* ── QR PROFILE MODAL ── */}
+      {}
       <AnimatePresence>
         {showQRModal && (
           <>
@@ -531,17 +524,17 @@ export function ProfilePage() {
               onClick={() => setShowQRModal(false)}
             />
             <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl overflow-hidden"
-              style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.08)', borderBottom: 'none' }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 rounded-3xl overflow-hidden max-h-[88vh] overflow-y-auto"
+              style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.08)' }}
             >
-              {/* Gold header bar */}
+              {}
               <div className="h-1 w-full" style={{ background: GOLD_GRADIENT }} />
               <div className="p-6 flex flex-col items-center">
-                {/* Close btn */}
+                {}
                 <div className="w-full flex justify-between items-center mb-5">
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
@@ -551,16 +544,14 @@ export function ProfilePage() {
                     <X size={16} className="text-white" />
                   </button>
                 </div>
-
-                {/* QR Code */}
+                {}
                 <div
                   className="p-4 rounded-2xl mb-4"
                   style={{ background: 'white', boxShadow: `0 0 40px rgba(245,158,11,0.3)` }}
                 >
                   <MockQRCode seed={currentUser.id} size={190} />
                 </div>
-
-                {/* User info under QR */}
+                {}
                 <div className="text-center mb-5">
                   <p className="text-white font-black text-base">{currentUser.name}</p>
                   <p className="text-blue-400 text-xs">{currentUser.faculty} · Niv. {currentUser.level}</p>
@@ -572,8 +563,7 @@ export function ProfilePage() {
                     <span className="text-[10px] text-white/50">#{campusRank} campus</span>
                   </div>
                 </div>
-
-                {/* Share button */}
+                {}
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={handleShareQR}

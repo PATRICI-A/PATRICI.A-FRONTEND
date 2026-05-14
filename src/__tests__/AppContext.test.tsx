@@ -1,36 +1,75 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
-import { AppProvider, useApp } from '../context/AppContext';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { AppProvider, useApp } from '../store/AppContext';
 
-function TestConsumer() {
-  const { isDark, isLoggedIn, currentUser, notifications } = useApp();
+function ThemeConsumer() {
+  const { isDark, toggleTheme } = useApp();
   return (
     <div>
-      <span data-testid="isDark">{String(isDark)}</span>
-      <span data-testid="isLoggedIn">{String(isLoggedIn)}</span>
-      <span data-testid="currentUser">{currentUser ? currentUser.name : 'null'}</span>
-      <span data-testid="notifications">{notifications}</span>
+      <span data-testid="theme">{isDark ? 'dark' : 'light'}</span>
+      <button onClick={toggleTheme}>toggle</button>
+    </div>
+  );
+}
+
+function AuthConsumer() {
+  const { isLoggedIn, currentUser } = useApp();
+  return (
+    <div>
+      <span data-testid="logged">{String(isLoggedIn)}</span>
+      <span data-testid="user">{currentUser?.name ?? 'none'}</span>
     </div>
   );
 }
 
 describe('AppContext', () => {
-  it('provides default values', () => {
-    const { getByTestId } = render(
-      <AppProvider>
-        <TestConsumer />
-      </AppProvider>
-    );
-
-    expect(getByTestId('isDark').textContent).toBe('false');
-    expect(getByTestId('isLoggedIn').textContent).toBe('false');
-    expect(getByTestId('currentUser').textContent).toBe('null');
-    expect(getByTestId('notifications').textContent).toBe('3');
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('dark');
   });
 
-  it('throws error when used outside AppProvider', () => {
-    expect(() => {
-      render(<TestConsumer />);
-    }).toThrow('useApp must be used within AppProvider');
+  it('renders children inside the provider', () => {
+    render(
+      <AppProvider>
+        <span data-testid="child">ok</span>
+      </AppProvider>
+    );
+    expect(screen.getByTestId('child')).toBeInTheDocument();
+  });
+
+  it('starts in light mode by default', () => {
+    render(
+      <AppProvider>
+        <ThemeConsumer />
+      </AppProvider>
+    );
+    expect(screen.getByTestId('theme').textContent).toBe('light');
+  });
+
+  it('toggles to dark mode and adds class to html', () => {
+    render(
+      <AppProvider>
+        <ThemeConsumer />
+      </AppProvider>
+    );
+    fireEvent.click(screen.getByText('toggle'));
+    expect(screen.getByTestId('theme').textContent).toBe('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('starts logged in with the mock user', () => {
+    render(
+      <AppProvider>
+        <AuthConsumer />
+      </AppProvider>
+    );
+    expect(screen.getByTestId('logged').textContent).toBe('true');
+    expect(screen.getByTestId('user').textContent).toBe('Patricia S.');
+  });
+
+  it('throws when useApp is used outside provider', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => render(<ThemeConsumer />)).toThrow('useApp must be used within AppProvider');
+    spy.mockRestore();
   });
 });

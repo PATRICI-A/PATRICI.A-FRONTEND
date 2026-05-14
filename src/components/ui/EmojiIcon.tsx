@@ -1,12 +1,4 @@
-/**
- * EmojiIcon — converts app emojis into monochrome Lucide icons.
- *
- * Usage:
- *   <EmojiIcon emoji={ev.emoji} size={20} color="#06B6D4" />
- *
- * Falls back to <Sparkles> for unknown emojis.
- */
-import React from 'react';
+import * as React from 'react';
 import {
   Cpu, Monitor, Zap, Radio,
   Leaf, Droplets, TreePine,
@@ -23,17 +15,13 @@ import {
   Camera, Search, LayoutGrid, Mountain, ChefHat, Clock, Gamepad2,
   Target, BarChart2, CheckCircle, HandHeart,
 } from 'lucide-react';
-
 type LucideIcon = React.ComponentType<{
   size?: number;
   color?: string;
   strokeWidth?: number;
   className?: string;
 }>;
-
-// ── Emoji → Lucide icon mapping ────────────────────────────────────────────
 const EMOJI_MAP: Array<[string[], LucideIcon]> = [
-  // Tech
   [['💻', '🖥️', '⌨️'],               Monitor       ],
   [['🤖', '🧬'],                       Cpu           ],
   [['📡', '📶'],                       Radio         ],
@@ -44,8 +32,6 @@ const EMOJI_MAP: Array<[string[], LucideIcon]> = [
   [['🔍', '🔎'],                       Search        ],
   [['🪟'],                             LayoutGrid    ],
   [['🎮', '🕹️'],                       Gamepad2      ],
-
-  // Academic
   [['🎓', '🏫'],                       GraduationCap ],
   [['📚', '📖', '📕', '📗'],           BookOpen      ],
   [['📘', '📙', '📔', '📒'],           BookMarked    ],
@@ -54,8 +40,6 @@ const EMOJI_MAP: Array<[string[], LucideIcon]> = [
   [['💡'],                             Lightbulb     ],
   [['🎯'],                             Target        ],
   [['📊', '📈', '📉'],                 BarChart2     ],
-
-  // Social
   [['🤝', '🤜', '🤛', '👥', '👫'],   Users         ],
   [['😄', '😁'],                       SmilePlus     ],
   [['🤩', '😊'],                       Smile         ],
@@ -65,16 +49,12 @@ const EMOJI_MAP: Array<[string[], LucideIcon]> = [
   [['📢', '📣', '🔊'],                Megaphone     ],
   [['💬', '🗣️'],                      MessageSquare ],
   [['🔔', '🔕'],                       Bell          ],
-
-  // Culture / art
   [['🎵', '🎶', '🎸', '🎷', '🎺'],          Music         ],
   [['🎧', '🎤'],                       Headphones    ],
   [['🎨', '🖌️', '🖼️'],                Palette       ],
   [['🎬', '🎥', '📽️', '🎞️'],          Film          ],
   [['💃', '🕺'],                       Music         ],
   [['🦚', '🎭'],                       Library       ],
-
-  // Sport / wellness
   [['⚽', '🏀', '🎾', '🏈'],          Activity      ],
   [['💪', '🏋️', '🤸'],                Dumbbell      ],
   [['🏃', '🚴', '🤾'],                Activity      ],
@@ -85,8 +65,6 @@ const EMOJI_MAP: Array<[string[], LucideIcon]> = [
   [['🏔️', '⛰️', '🏕️'],                Mountain      ],
   [['👨‍🍳', '🧑‍🍳', '🍳'],               ChefHat       ],
   [['⏱', '⏰', '⏳', '🕐'],           Clock         ],
-
-  // Campus / location
   [['🏟️', '🏛️', '🏣', '🏢', '🏬'],  Building2     ],
   [['📍', '📌', '🗺️'],                MapPin        ],
   [['🚗', '🚙', '🚘'],                Car           ],
@@ -98,8 +76,6 @@ const EMOJI_MAP: Array<[string[], LucideIcon]> = [
   [['☕', '🍵', '🧃'],                 Coffee        ],
   [['🍽️', '🥗', '🍜'],                UtensilsCrossed],
   [['🍔', '🍕', '🌮', '🌯'],          ShoppingBag   ],
-
-  // Gamification
   [['⭐', '🌟', '✨', '💫'],           Star          ],
   [['🎆', '🎇', '🎉'],                Sparkles      ],
   [['👑', '🎩'],                       Crown         ],
@@ -107,18 +83,13 @@ const EMOJI_MAP: Array<[string[], LucideIcon]> = [
   [['🔥', '🌋'],                       Flame         ],
   [['✅', '☑️'],                       CheckCircle   ],
   [['🆘'],                             HeartPulse    ],
-
-  // Misc
   [['🔧', '🔩', '⚙️'],                Wrench        ],
   [['🏗️', '⛏️'],                       HardHat       ],
   [['🌙', '😴'],                       Moon          ],
   [['☀️', '🌤️'],                       Sun           ],
-
-  // Monas / animal emojis → generic star
   [['🐾', '🐶', '🐱', '🐻', '🦊'],   Star          ],
   [['🐛', '🐞', '🦋'],                Leaf          ],
 ];
-
 export interface EmojiIconProps {
   emoji: string;
   size?: number;
@@ -126,7 +97,6 @@ export interface EmojiIconProps {
   strokeWidth?: number;
   className?: string;
 }
-
 export function EmojiIcon({
   emoji,
   size = 16,
@@ -146,7 +116,6 @@ export function EmojiIcon({
       );
     }
   }
-  // Fallback for unmapped emojis
   return (
     <Sparkles
       size={size}

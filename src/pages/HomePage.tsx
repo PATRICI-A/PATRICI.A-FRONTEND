@@ -1,125 +1,85 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, Zap, Heart, Users, BookOpen, Star, Sparkles, Lock, Flame, Bell, LocateFixed, Navigation } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { parches, matchUsers, vibraCategories, events, monas, notifications, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD } from '../data/mockData';
+import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
+import { useApp } from '../store/AppContext';
+import { parches, matchUsers, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
 export function HomePage() {
   const navigate = useNavigate();
   const { currentUser, isDark, geo } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
-
   const handleQuickConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
     const status = connectionStates[userId] || currentStatus || 'none';
     if (status === 'none') {
       setConnectionStates(prev => ({ ...prev, [userId]: 'pending' }));
     }
   };
-
   const getConnectionStatus = (userId: string, originalStatus?: 'none' | 'pending' | 'connected') => {
     return connectionStates[userId] || originalStatus || 'none';
   };
-
   const featuredEvent = events[0];
   const topParches = parches.slice(0, 3);
   const topMatches = matchUsers.slice(0, 4);
-
-  // Album stats
   const unlockedMonas = monas.filter(m => m.unlocked);
   const totalMonas = monas.length;
   const albumPercent = Math.round((unlockedMonas.length / totalMonas) * 100);
   const recentMonas = unlockedMonas.slice(-4);
   const nextMona = monas.find(m => !m.unlocked);
-
-  // Notifications count
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      {/* Greeting & Search */}
-      <div className="px-5 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <p className="text-sm text-gray-500 dark:text-gray-400">¡Hola, {currentUser?.name?.split(' ')[0]}!</p>
-            <h1 className="text-gray-900 dark:text-white">¿Qué vibra hoy?</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Notifications button */}
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              onClick={() => navigate('/notifications')}
-              className="relative w-10 h-10 rounded-full bg-white dark:bg-[#112240] shadow-sm flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#172A45] transition-all active:scale-90"
-            >
-              <Bell size={18} />
-              {unreadNotifications > 0 && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: GRADIENT }}
-                >
-                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                </motion.div>
-              )}
-            </motion.button>
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
-              style={{ background: GRADIENT }}
-            >
-              {currentUser?.level}
-            </div>
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-10 h-10 rounded-full overflow-hidden border-2 border-white dark:border-[#0A192F] shadow-md active:scale-95 transition-transform"
-            >
-              <img
-                src={currentUser?.avatar}
-                alt={currentUser?.name}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          </div>
+      {}
+      <div className="px-5 pt-5 pb-4">
+        <div className="mb-4">
+          <p className="text-base text-gray-400 dark:text-gray-500 mb-0.5">
+            {new Date().getHours() < 12 ? 'Buenos días' : new Date().getHours() < 18 ? 'Buenas tardes' : 'Buenas noches'} 👋
+          </p>
+          <h1 className="text-gray-900 dark:text-white">¿Qué vibra hoy?</h1>
         </div>
-
         <div className="relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="¿Qué parche buscas hoy?"
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-100 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#1D4ED8] transition-all text-sm shadow-sm"
+            className="w-full pl-10 pr-4 py-3 rounded-2xl text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none transition-all text-sm"
+            style={{
+              background: isDark ? 'rgba(17,34,64,0.9)' : 'rgba(253,252,248,0.9)',
+              boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.2)' : '0 2px 12px rgba(10,25,47,0.08)',
+              border: isDark ? '1px solid rgba(30,58,95,0.5)' : '1px solid rgba(10,25,47,0.07)',
+            }}
           />
         </div>
       </div>
-
-      {/* ════════════════════════════════════════════════════════════════════
-          ★  ÁLBUM DE MONAS  — Funcionalidad estrella  ★
-          ════════════════════════════════════════════════════════════════════ */}
+      {}
       <section className="px-5 mb-6">
         <motion.button
           whileHover={{ scale: 1.015 }}
           whileTap={{ scale: 0.985 }}
           onClick={() => navigate('/monas')}
           className="w-full rounded-3xl overflow-hidden text-left relative"
-          style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #1A3A5C 40%, #0D2847 100%)',
-            boxShadow: '0 8px 32px rgba(245,158,11,0.25), 0 2px 8px rgba(0,0,0,0.4)',
-            border: '1.5px solid rgba(245,158,11,0.3)',
+          style={isDark ? {
+            background: 'linear-gradient(135deg, #0F1923 0%, #1C2E3E 40%, #0D1F30 100%)',
+            boxShadow: '0 8px 32px rgba(245,158,11,0.22), 0 2px 8px rgba(0,0,0,0.5)',
+            border: '1.5px solid rgba(245,158,11,0.28)',
+          } : {
+            background: 'linear-gradient(135deg, #FDFCF8 0%, #F7F4ED 50%, #F0EAD8 100%)',
+            boxShadow: '0 8px 40px rgba(212,137,10,0.18), 0 2px 12px rgba(10,25,47,0.08)',
+            border: '1.5px solid rgba(212,137,10,0.22)',
           }}
         >
-          {/* Shimmering background strip */}
+          {}
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              backgroundImage: 'repeating-linear-gradient(60deg, transparent, transparent 20px, rgba(245,158,11,0.08) 20px, rgba(245,158,11,0.08) 22px)',
+              backgroundImage: isDark
+                ? 'repeating-linear-gradient(60deg, transparent, transparent 20px, rgba(245,158,11,0.06) 20px, rgba(245,158,11,0.06) 22px)'
+                : 'repeating-linear-gradient(60deg, transparent, transparent 24px, rgba(212,137,10,0.05) 24px, rgba(212,137,10,0.05) 26px)',
             }}
           />
-
           <div className="relative p-4">
-            {/* Header row */}
+            {}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div
@@ -129,7 +89,7 @@ export function HomePage() {
                   <Sparkles size={18} className="text-white" />
                 </div>
                 <div>
-                  <p className="font-black text-white text-sm leading-tight">Álbum de Patricias</p>
+                  <p className="font-black text-sm leading-tight" style={{ color: isDark ? '#FFFFFF' : '#0A192F' }}>⭐ Álbum de Patricias</p>
                   <p className="text-[10px]" style={{ color: GOLD_LIGHT }}>patrici.a · Colección exclusiva</p>
                 </div>
               </div>
@@ -143,8 +103,7 @@ export function HomePage() {
                 <ChevronRight size={16} style={{ color: GOLD_LIGHT }} />
               </div>
             </div>
-
-            {/* Patricias preview row */}
+            {}
             <div className="flex items-center gap-1.5 mb-4">
               {recentMonas.map((mona, i) => (
                 <motion.div
@@ -159,7 +118,7 @@ export function HomePage() {
                   }}
                 >
                   <EmojiIcon emoji={mona.emoji} size={16} color="white" strokeWidth={2} />
-                  {/* Rarity dot */}
+                  {}
                   <div
                     className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#0A192F]"
                     style={{
@@ -170,7 +129,7 @@ export function HomePage() {
                   />
                 </motion.div>
               ))}
-              {/* Locked preview */}
+              {}
               {nextMona && (
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -179,7 +138,7 @@ export function HomePage() {
                   <Lock size={14} style={{ color: GOLD_LIGHT, opacity: 0.5 }} />
                 </div>
               )}
-              {/* "+N more" pill */}
+              {}
               {totalMonas - recentMonas.length - 1 > 0 && (
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -191,14 +150,13 @@ export function HomePage() {
                 </div>
               )}
             </div>
-
-            {/* Progress bar */}
+            {}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <span className="text-[10px] text-gray-400">Progreso del álbum</span>
+                <span className="text-[10px]" style={{ color: isDark ? '#9CA3AF' : 'rgba(10,25,47,0.5)' }}>Progreso del álbum</span>
                 <span className="text-[10px] font-black" style={{ color: GOLD_LIGHT }}>{albumPercent}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,25,47,0.1)' }}>
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${albumPercent}%` }}
@@ -208,24 +166,23 @@ export function HomePage() {
                 />
               </div>
               {nextMona && (
-                <p className="text-[9px] text-gray-500 mt-1.5">
+                <p className="text-[9px] mt-1.5" style={{ color: isDark ? '#6B7280' : 'rgba(10,25,47,0.45)' }}>
                   Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.condition}
                 </p>
               )}
             </div>
           </div>
-
-          {/* Bottom CTA */}
+          {}
           <div
             className="px-4 py-3 flex items-center justify-between"
             style={{
-              background: 'rgba(245,158,11,0.12)',
-              borderTop: '1px solid rgba(245,158,11,0.2)',
+              background: isDark ? 'rgba(245,158,11,0.10)' : 'rgba(212,137,10,0.07)',
+              borderTop: isDark ? '1px solid rgba(245,158,11,0.18)' : '1px solid rgba(212,137,10,0.15)',
             }}
           >
             <div className="flex items-center gap-2">
               <BookOpen size={13} style={{ color: GOLD_LIGHT }} />
-              <span className="text-[11px] font-bold" style={{ color: GOLD_LIGHT }}>
+              <span className="text-[11px] font-bold" style={{ color: isDark ? GOLD_LIGHT : '#92600A' }}>
                 Escanea sobres QR para desbloquear patricias
               </span>
             </div>
@@ -233,13 +190,9 @@ export function HomePage() {
           </div>
         </motion.button>
       </section>
-
-      {/* ════════════════════════════════════════════════════════════════════
-          ★  GEOLOCALIZACIÓN  — Parches y personas cerca  ★
-          ════════════════════════════════════════════════════════════════════ */}
+      {}
       <section className="px-5 mb-6">
         {!geo.enabled ? (
-          // CTA cuando GPS está desactivado
           <motion.button
             whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
@@ -270,7 +223,6 @@ export function HomePage() {
             </div>
           </motion.button>
         ) : geo.onCampus ? (
-          // Mostrar parches cercanos cuando está en campus
           <div>
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -281,7 +233,7 @@ export function HomePage() {
                   >
                     <Navigation size={12} color="#10B981" />
                   </div>
-                  <h2 className="text-gray-800 dark:text-white text-sm font-semibold">Cerca de ti ahora</h2>
+                  <h2 className="text-gray-800 dark:text-white font-semibold">Cerca de ti ahora</h2>
                 </div>
                 <p className="text-xs text-gray-400 flex items-center gap-1">
                   <LocateFixed size={10} className="text-green-500" />
@@ -296,7 +248,6 @@ export function HomePage() {
                 Ver mapa <ChevronRight size={12} />
               </button>
             </div>
-
             <div className="space-y-2">
               {topParches.slice(0, 2).map((parche, i) => (
                 <motion.div
@@ -305,8 +256,12 @@ export function HomePage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
                   onClick={() => navigate(`/parches/${parche.id}`)}
-                  className="bg-white dark:bg-[#112240] rounded-xl p-3 flex items-center gap-3 shadow-sm cursor-pointer active:scale-[0.98] transition-all border"
-                  style={{ borderColor: 'rgba(16,185,129,0.2)' }}
+                  className="rounded-2xl p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-all"
+                  style={{
+                    background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
+                    boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
+                    border: '1px solid rgba(16,185,129,0.2)',
+                  }}
                 >
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -345,7 +300,6 @@ export function HomePage() {
             </div>
           </div>
         ) : (
-          // GPS activado pero fuera del campus
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -370,16 +324,13 @@ export function HomePage() {
           </motion.div>
         )}
       </section>
-
-      {/* Vibra Categories */}
+      {}
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-gray-800 dark:text-white text-sm font-semibold">Explora por Vibras</h2>
-          <span className="text-xs text-gray-400">Categorías curadas</span>
+          <h2 className="text-gray-800 dark:text-white font-semibold">🌈 Explora por Vibras</h2>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {vibraCategories.map(vibra => {
-            // Mapear vibras a categorías de parches
             const categoryMap: Record<string, string> = {
               'Live Music': 'Música',
               'Outdoor': 'Deporte',
@@ -388,7 +339,6 @@ export function HomePage() {
               'Gaming': 'Tecnología',
               'Arte': 'Arte',
             };
-
             return (
               <button
                 key={vibra.id}
@@ -407,7 +357,7 @@ export function HomePage() {
                   }}
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                  <EmojiIcon emoji={vibra.emoji} size={20} color="white" strokeWidth={2} />
+                  <span style={{ fontSize: '22px', lineHeight: 1 }}>{vibra.emoji}</span>
                   <span className="text-white text-[11px] font-semibold">{vibra.name}</span>
                 </div>
               </button>
@@ -415,12 +365,11 @@ export function HomePage() {
           })}
         </div>
       </section>
-
-      {/* Perfect Match */}
+      {}
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-gray-800 dark:text-white text-sm font-semibold">Perfect Match</h2>
+            <h2 className="text-gray-800 dark:text-white font-semibold">🎯 Perfect Match</h2>
             <p className="text-xs text-gray-400">Personas con tu misma sintonía</p>
           </div>
           <button
@@ -430,7 +379,6 @@ export function HomePage() {
             Ver todos <ChevronRight size={12} />
           </button>
         </div>
-
         <div className="grid grid-cols-2 gap-3">
           {topMatches.slice(0, 4).map((user, i) => (
             <motion.div
@@ -439,14 +387,28 @@ export function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               onClick={() => navigate(`/user/${user.id}`)}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-3 flex flex-col items-center shadow-sm cursor-pointer active:scale-[0.98] transition-all"
+              className="rounded-2xl p-3 flex flex-col items-center cursor-pointer active:scale-[0.98] transition-all"
+              style={{
+                background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
+                boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
+                border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
+              }}
             >
               <div className="relative mb-2">
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-20 h-20 rounded-xl object-cover"
-                />
+                <div
+                  className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)' }}
+                >
+                  <span className="text-white font-bold text-2xl select-none">
+                    {user.name.charAt(0)}
+                  </span>
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={e => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </div>
                 <div
                   className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white shadow"
                   style={{ background: TEAL_GRADIENT }}
@@ -504,20 +466,18 @@ export function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* University Pulse */}
+      {}
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-gray-800 dark:text-white text-sm font-semibold">University Pulse</h2>
+            <h2 className="text-gray-800 dark:text-white font-semibold">📅 Eventos</h2>
             <p className="text-xs text-gray-400">Lo que está pasando en el campus</p>
           </div>
           <button onClick={() => navigate('/events')} className="text-xs font-semibold flex items-center gap-1" style={{ color: PINK }}>
             Ver más <ChevronRight size={12} />
           </button>
         </div>
-
-        {/* Featured Event */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -554,11 +514,9 @@ export function HomePage() {
             </div>
           </div>
         </motion.div>
-
-        {/* ── Carousel: events + parches ── */}
+        {}
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
-
-          {/* Event cards (skip featured) */}
+          {}
           {events.slice(1).map(event => (
             <motion.button
               key={event.id}
@@ -574,7 +532,7 @@ export function HomePage() {
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             >
-              {/* Gradient cover */}
+              {}
               <div className="h-16 flex items-center justify-center relative" style={{ background: event.coverGradient }}>
                 <EmojiIcon emoji={event.emoji} size={26} color="white" strokeWidth={2} />
                 {event.official && (
@@ -586,7 +544,7 @@ export function HomePage() {
                   <Users size={7} /> {event.attendees}
                 </div>
               </div>
-              {/* Info */}
+              {}
               <div className="p-2.5">
                 <p className="text-[11px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{event.title}</p>
                 <p className="text-[9px] text-gray-400 flex items-center gap-1 mb-1.5">
@@ -606,8 +564,7 @@ export function HomePage() {
               </div>
             </motion.button>
           ))}
-
-          {/* Parche cards */}
+          {}
           {parches.slice(0, 5).map(parche => (
             <motion.button
               key={`p-${parche.id}`}
@@ -623,7 +580,7 @@ export function HomePage() {
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             >
-              {/* Color cover */}
+              {}
               <div className="h-16 flex items-center justify-center relative" style={{ background: parche.coverColor }}>
                 <EmojiIcon emoji={parche.emoji} size={26} color="white" strokeWidth={2} />
                 {parche.trending && (
@@ -635,7 +592,7 @@ export function HomePage() {
                   {parche.type === 'public' ? '🌐' : '🔒'}
                 </div>
               </div>
-              {/* Info */}
+              {}
               <div className="p-2.5">
                 <p className="text-[11px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{parche.name}</p>
                 <p className="text-[9px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-tight mb-1.5">{parche.description.slice(0, 52)}...</p>
@@ -650,8 +607,7 @@ export function HomePage() {
               </div>
             </motion.button>
           ))}
-
-          {/* "Ver todos" card */}
+          {}
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -673,20 +629,18 @@ export function HomePage() {
           </motion.button>
         </div>
       </section>
-
-      {/* Parches Sugeridos */}
+      {}
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-gray-800 dark:text-white text-sm font-semibold">Parches Sugeridos</h2>
+            <h2 className="text-gray-800 dark:text-white font-semibold">🤝 Parches Sugeridos</h2>
             <p className="text-xs text-gray-400">Basados en tus intereses</p>
           </div>
           <button onClick={() => navigate('/parches')} className="text-xs font-semibold flex items-center gap-1" style={{ color: PINK }}>
             Ver todos <ChevronRight size={12} />
           </button>
         </div>
-
-        {/* Featured Parche */}
+        {}
         {topParches[0] && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -733,14 +687,18 @@ export function HomePage() {
             </div>
           </motion.div>
         )}
-
-        {/* Grid parches */}
+        {}
         <div className="grid grid-cols-2 gap-3">
           {topParches.slice(1, 3).map(parche => (
             <button
               key={parche.id}
               onClick={() => navigate(`/parches/${parche.id}`)}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 text-left shadow-sm active:scale-[0.98] transition-all"
+              className="rounded-2xl p-4 text-left active:scale-[0.98] transition-all"
+              style={{
+                background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
+                boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
+                border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
+              }}
             >
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-2"
@@ -758,14 +716,18 @@ export function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* Nuevo Parche badge */}
+      {}
       <section className="px-5 mb-4">
         {parches.slice(4, 5).map(parche => (
           <button
             key={parche.id}
             onClick={() => navigate(`/parches/${parche.id}`)}
-            className="w-full bg-white dark:bg-[#112240] rounded-2xl p-4 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-all"
+            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-all"
+            style={{
+              background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
+              boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
+              border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
+            }}
           >
             <div className="relative">
               <img
@@ -786,8 +748,7 @@ export function HomePage() {
           </button>
         ))}
       </section>
-
-      {/* FAB */}
+      {}
       <button
         onClick={() => navigate('/parches/create')}
         className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"

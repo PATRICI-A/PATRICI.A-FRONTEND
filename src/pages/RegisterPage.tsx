@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -8,17 +9,14 @@ import {
   Trophy, Palette, Compass, UtensilsCrossed, Leaf, Gamepad2,
   Music, Heart, ChevronRight,
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { GRADIENT, PINK } from '../data/mockData';
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { DoodleBackground } from '../components/ui/DoodleBackground';
-
-// ── Constants ──────────────────────────────────────────────────────────────────
+import fondoClaro from '../assets/fondoClaroPATRICIA.png';
+import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
-
-// ── Interest categories ───────────────────────────────────────────────────────
 const interestCategories = [
   {
     id: 'sports',
@@ -112,8 +110,6 @@ const interestCategories = [
     ],
   },
 ];
-
-// ── Other constants ───────────────────────────────────────────────────────────
 const pregradoPrograms = [
   'Ingeniería Civil',
   'Ingeniería de Sistemas',
@@ -128,7 +124,6 @@ const pregradoPrograms = [
   'Economía',
   'Matemáticas',
 ];
-
 const maestriaPrograms = [
   'Maestría en Ingeniería Civil',
   'Maestría en Ingeniería de Sistemas',
@@ -142,41 +137,38 @@ const maestriaPrograms = [
   'Maestría en Desarrollo y Gerencia Integral de Proyectos',
   'Maestría en Ciencias Actuariales',
 ];
-
 const genderOptions = [
   { id: 'MALE',              label: 'Masculino',         emoji: '♂️' },
   { id: 'FEMALE',            label: 'Femenino',          emoji: '♀️' },
   { id: 'OTHER',             label: 'Otro',              emoji: '⚧️' },
   { id: 'PREFER_NOT_TO_SAY', label: 'Prefiero no decir', emoji: '🤐' },
 ];
-
 const OTP_DURATION    = 600;
 const MAX_ATTEMPTS    = 3;
 const RESEND_COOLDOWN = 30;
 const MIN_INTERESTS   = 3;
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
 function getPasswordStrength(p: string) {
-  if (!p) return { label: '', color: '#E5E7EB', pct: 0 };
-  if (p.length < 8) return { label: 'Débil', color: '#EF4444', pct: 25 };
-  if (!/[A-Z]/.test(p) || !/[0-9]/.test(p)) return { label: 'Regular', color: GOLD, pct: 55 };
-  if (/[^A-Za-z0-9]/.test(p)) return { label: 'Excelente', color: '#10B981', pct: 100 };
-  return { label: 'Buena', color: TEAL, pct: 80 };
+  if (!p) return { label: '', color: '#E5E7EB', pct: 0, hint: '' };
+  if (p.length < 8) return { label: 'Débil', color: '#EF4444', pct: 20, hint: 'Mínimo 8 caracteres' };
+  let score = 0;
+  if (/[A-Z]/.test(p)) score++;
+  if (/[0-9]/.test(p)) score++;
+  if (/[^A-Za-z0-9]/.test(p)) score++;
+  if (score === 0) return { label: 'Regular', color: GOLD, pct: 40, hint: 'Agrega mayúsculas y números' };
+  if (score === 1) return { label: 'Regular', color: GOLD, pct: 55, hint: 'Agrega mayúsculas, números y símbolos' };
+  if (score === 2) return { label: 'Buena',   color: TEAL,  pct: 75, hint: 'Agrega un símbolo (!@#$) para seguridad Alta' };
+  return             { label: 'Alta',    color: '#10B981', pct: 100, hint: '' };
 }
-
 function formatTime(secs: number) {
   const m = Math.floor(secs / 60).toString().padStart(2, '0');
   const s = (secs % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
 }
-
 function maskEmail(email: string) {
   const [user, domain] = email.split('@');
   if (!user || !domain) return email;
   return `${user.slice(0, 2)}${'*'.repeat(Math.max(user.length - 2, 3))}@${domain}`;
 }
-
-// ── InterestCategory component ────────────────────────────────────────────────
 function InterestCategory({
   cat, selected, onToggle, isDark,
 }: {
@@ -188,7 +180,6 @@ function InterestCategory({
   const [open, setOpen] = useState(false);
   const catSelected = cat.options.filter(o => selected.includes(`${cat.id}::${o}`));
   const Icon = cat.icon;
-
   return (
     <div
       className="rounded-2xl overflow-hidden transition-all duration-300"
@@ -200,20 +191,19 @@ function InterestCategory({
         boxShadow: catSelected.length > 0 ? `0 4px 20px ${cat.color}20` : 'none',
       }}
     >
-      {/* Header */}
+      {}
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 p-4 text-left transition-all"
       >
-        {/* Icon pill */}
+        {}
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: cat.gradient }}
         >
           <Icon size={18} color="white" strokeWidth={2} />
         </div>
-
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{cat.label}</p>
           {catSelected.length > 0 && (
@@ -222,8 +212,7 @@ function InterestCategory({
             </p>
           )}
         </div>
-
-        {/* Count badge */}
+        {}
         {catSelected.length > 0 && (
           <motion.div
             initial={{ scale: 0 }}
@@ -234,17 +223,15 @@ function InterestCategory({
             {catSelected.length}
           </motion.div>
         )}
-
         <motion.div
           animate={{ rotate: open ? 90 : 0 }}
           transition={{ duration: 0.2 }}
           className="flex-shrink-0"
         >
-          <ChevronRight size={16} className="text-gray-400" />
+          <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
         </motion.div>
       </button>
-
-      {/* Options */}
+      {}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -290,15 +277,14 @@ function InterestCategory({
     </div>
   );
 }
-
-// ── Main component ─────────────────────────────────────────────────────────────
 export function RegisterPage() {
   const navigate = useNavigate();
   const { login, isDark, toggleTheme } = useApp();
-
+  useEffect(() => {
+    document.documentElement.dataset.page = 'auth';
+    return () => { delete document.documentElement.dataset.page; };
+  }, []);
   const [step, setStep] = useState(1);
-
-  // Step 1
   const [firstName, setFirstName]               = useState('');
   const [lastName, setLastName]                 = useState('');
   const [email, setEmail]                       = useState('');
@@ -309,52 +295,31 @@ export function RegisterPage() {
   const [showPassword, setShowPassword]         = useState(false);
   const [showConfirm, setShowConfirm]           = useState(false);
   const [touched, setTouched]                   = useState<Record<string, boolean>>({});
-
-  // Step 2 – OTP
+  const [focused, setFocused]                   = useState('');
   const [code, setCode]               = useState(['', '', '', '', '', '']);
   const [otpTimeLeft, setOtpTimeLeft] = useState(OTP_DURATION);
   const [otpAttempts, setOtpAttempts] = useState(0);
   const [otpStatus, setOtpStatus]     = useState<'idle' | 'invalid' | 'expired' | 'locked'>('idle');
   const [resendCooldown, setResendCooldown] = useState(0);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
-
-  // Step 3 – Academic
-  const [programType, setProgramType] = useState<'pregrado' | 'maestria'>('pregrado');
   const [program, setProgram]     = useState('');
-  const [secondProgram, setSecondProgram] = useState('');
   const [semester, setSemester]   = useState('');
   const [studentId, setStudentId] = useState('');
-
-  // Step 4 – Interests
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors]       = useState<Record<string, string>>({});
-
   const pwStrength  = getPasswordStrength(password);
   const today       = new Date().toISOString().split('T')[0];
   const minBirthDate = new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0];
+  const maxBirthDate = new Date(new Date().setFullYear(new Date().getFullYear() - 15)).toISOString().split('T')[0];
   const emailValid  = email.toLowerCase().endsWith('@mail.escuelaing.edu.co');
-
-  // Age validation: user must be born before 2008 (minimum 18 years)
   const birthDateValid = (() => {
     if (!birthDate) return false;
-    const birth = new Date(birthDate);
-    const maxDate = new Date('2007-12-31'); // Last valid date (born before 2008)
-    const todayDate = new Date(today);
-
-    // Reject future dates
-    if (birth > todayDate) return false;
-
-    // Reject dates after 2007
-    if (birth > maxDate) return false;
-
-    // Must be within reasonable range (not more than 100 years ago)
+    if (birthDate > today) return false;
+    if (birthDate > maxBirthDate) return false;
     if (birthDate < minBirthDate) return false;
-
     return true;
   })();
-
   const step1Valid =
     firstName.trim().length >= 2 &&
     lastName.trim().length >= 2 &&
@@ -363,10 +328,7 @@ export function RegisterPage() {
     gender !== '' &&
     password.length >= 8 &&
     password === confirmPassword;
-
   const step3Valid = program !== '' && semester !== '' && /^\d{10}$/.test(studentId);
-
-  // OTP timer
   useEffect(() => {
     if (step !== 2 || otpTimeLeft <= 0) return;
     const t = setInterval(() => {
@@ -377,15 +339,11 @@ export function RegisterPage() {
     }, 1000);
     return () => clearInterval(t);
   }, [step, otpTimeLeft]);
-
-  // Resend cooldown
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setInterval(() => setResendCooldown(s => Math.max(s - 1, 0)), 1000);
     return () => clearInterval(t);
   }, [resendCooldown]);
-
-  // Real-time validations
   useEffect(() => {
     if (!touched.firstName) return;
     setErrors(e => ({ ...e, firstName: firstName.trim().length >= 2 ? '' : 'Mínimo 2 caracteres' }));
@@ -403,29 +361,19 @@ export function RegisterPage() {
     if (!birthDate) {
       setErrors(e => ({ ...e, birthDate: 'Ingresa tu fecha de nacimiento' }));
     } else if (!birthDateValid) {
-      const birth = new Date(birthDate);
-      const todayDate = new Date(today);
-      const maxDate = new Date('2007-12-31');
-
-      // Check if future date
-      if (birth > todayDate) {
-        setErrors(e => ({ ...e, birthDate: 'Debes tener mínimo 18 años para registrarte' }));
-      }
-      // Check if born after 2007
-      else if (birth > maxDate) {
-        setErrors(e => ({ ...e, birthDate: 'Debes tener mínimo 18 años para registrarte' }));
-      }
-      // Check if too old
-      else if (birthDate < minBirthDate) {
+      if (birthDate > today) {
+        setErrors(e => ({ ...e, birthDate: 'La fecha no puede ser futura' }));
+      } else if (birthDate > maxBirthDate) {
+        setErrors(e => ({ ...e, birthDate: 'Debes tener mínimo 15 años para registrarte' }));
+      } else if (birthDate < minBirthDate) {
         setErrors(e => ({ ...e, birthDate: 'Fecha inválida' }));
-      }
-      else {
-        setErrors(e => ({ ...e, birthDate: 'Debes tener mínimo 18 años para registrarte' }));
+      } else {
+        setErrors(e => ({ ...e, birthDate: 'Debes tener mínimo 15 años para registrarte' }));
       }
     } else {
       setErrors(e => ({ ...e, birthDate: '' }));
     }
-  }, [birthDate, touched.birthDate, birthDateValid, today, minBirthDate]);
+  }, [birthDate, touched.birthDate, birthDateValid, today, maxBirthDate, minBirthDate]);
   useEffect(() => {
     if (!touched.gender) return;
     setErrors(e => ({ ...e, gender: gender ? '' : 'Selecciona tu género' }));
@@ -442,10 +390,7 @@ export function RegisterPage() {
     if (!touched.studentId) return;
     setErrors(e => ({ ...e, studentId: /^\d{10}$/.test(studentId) ? '' : 'Debe tener exactamente 10 dígitos' }));
   }, [studentId, touched.studentId]);
-
   const markTouched = (field: string) => setTouched(t => ({ ...t, [field]: true }));
-
-  // OTP handlers
   const handleCodeChange = (val: string, idx: number) => {
     const digit = val.replace(/\D/g, '').slice(-1);
     const next = [...code]; next[idx] = digit; setCode(next);
@@ -470,8 +415,6 @@ export function RegisterPage() {
     setOtpStatus('idle'); setOtpAttempts(0); setResendCooldown(RESEND_COOLDOWN); setErrors({});
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
   };
-
-  // ── DEMO: acepta CUALQUIER código de 6 dígitos ────────────────────────────────
   const handleVerifyOtp = async () => {
     if (otpStatus === 'expired') {
       setErrors({ code: 'El código ha expirado. Por favor reenvía un nuevo código.' }); return;
@@ -486,19 +429,14 @@ export function RegisterPage() {
     setIsLoading(true);
     await new Promise(r => setTimeout(r, 800));
     setIsLoading(false);
-    // Demo: any 6-digit code is valid
     setOtpStatus('idle'); setErrors({});
     setStep(3);
   };
-
-  // Interests
   const toggleInterest = (key: string) => {
     setSelectedInterests(prev =>
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
-
-  // Navigation
   const handleNext = () => {
     if (step === 1) {
       setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
@@ -515,28 +453,18 @@ export function RegisterPage() {
     }
   };
   const handleBack = () => { if (step === 1) navigate('/'); else setStep(s => s - 1); };
-
   const handleFinish = async () => {
     if (selectedInterests.length < MIN_INTERESTS) {
       setErrors({ interests: `Selecciona al menos ${MIN_INTERESTS} intereses` }); return;
     }
     setIsLoading(true);
     await new Promise(r => setTimeout(r, 1500));
-
-    // Format program display based on type and double degree
-    let programDisplay = program;
-    if (programType === 'pregrado' && secondProgram) {
-      // Double degree: "Ingeniería Civil e Ingeniería Industrial"
-      programDisplay = `${program} e ${secondProgram}`;
-    }
-    // For maestría, the program already includes "Maestría en..."
-
     login({
       id: 'u1',
       name: `${firstName} ${lastName}`,
       email,
       avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
-      faculty: programDisplay,
+      faculty: program,
       semester: parseInt(semester),
       interests: selectedInterests,
       bio: '', socialImpact: 0, xp: 0, level: 1, activeParches: 0,
@@ -545,44 +473,41 @@ export function RegisterPage() {
     setIsLoading(false);
     navigate('/home');
   };
-
-  // Shared styles
   const inputBase = `w-full py-3 sm:py-3.5 rounded-xl border transition-all focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 bg-white dark:bg-[#112240]`;
   const inputBorder = (field: string, forceErr?: boolean) => {
+    if (focused === field) return 'border-gray-200 dark:border-[#233554] focus:border-[#06B6D4]';
     if (touched[field] && (errors[field] || forceErr)) return 'border-red-400 focus:border-red-500';
     if (touched[field] && !errors[field] && !forceErr) return 'border-emerald-400 focus:border-emerald-500';
     return 'border-gray-200 dark:border-[#233554] focus:border-[#06B6D4]';
   };
-
   const steps = ['Cuenta', 'Verificación', 'Perfil', 'Intereses'];
-
   return (
-    <div className="min-h-screen bg-[#F0F7FF] dark:bg-[#0A192F] transition-colors duration-300 flex flex-col md:items-center md:justify-center relative overflow-hidden">
-      <DoodleBackground isDark={isDark} />
-
-      {/* Desktop bg blobs */}
-      <div className="hidden md:block pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.07]" style={{ background: GRADIENT }} />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
-      </div>
-
-      {/* Card — full screen on mobile, centered card on desktop */}
-      <div className="relative w-full md:max-w-lg md:my-8 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 bg-[#F0F7FF] dark:bg-[#0D1F3C] transition-colors duration-300">
-
-        {/* Header */}
+    <div className="min-h-screen transition-colors duration-300 flex flex-col md:items-center md:justify-center relative">
+      {}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("${isDark ? fondoOscuro : fondoClaro}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+      />
+      {}
+      <div className="relative w-full md:max-w-lg md:my-8 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 transition-colors duration-300" style={{ zIndex: 1 }}>
+        {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
-          <button onClick={handleBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform">
+          <button onClick={handleBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-800 dark:text-gray-200 active:scale-90 transition-transform">
             <ArrowLeft size={18} />
           </button>
-          <button onClick={toggleTheme} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform">
+          <button onClick={toggleTheme} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-800 dark:text-gray-200 active:scale-90 transition-transform">
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
-
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col px-4 sm:px-6 md:px-8 pb-8 w-full">
-
-          {/* Stepper */}
+          {}
           <div className="mb-5 sm:mb-6 mt-1">
             <div className="flex items-center justify-between">
               {steps.map((s, i) => (
@@ -598,7 +523,7 @@ export function RegisterPage() {
                     >
                       {i + 1 < step ? <Check size={12} /> : i + 1}
                     </div>
-                    <span className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{s}</span>
+                    <span className="text-[9px] sm:text-[10px] text-gray-800 dark:text-gray-200 text-center leading-tight">{s}</span>
                   </div>
                   {i < steps.length - 1 && (
                     <div className="flex-1 h-0.5 mx-1 rounded-full bg-gray-200 dark:bg-[#233554] overflow-hidden mb-3">
@@ -609,10 +534,8 @@ export function RegisterPage() {
               ))}
             </div>
           </div>
-
           <AnimatePresence mode="wait">
-
-            {/* ══ STEP 1: CUENTA ══════════════════════════════════════════════ */}
+            {}
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="text-center mb-6">
@@ -620,56 +543,53 @@ export function RegisterPage() {
                     <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
                   </div>
                   <h1 className="text-gray-900 dark:text-white">Crea tu cuenta</h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Comienza tu viaje en patrici.a</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200">Comienza tu viaje en patrici.a</p>
                 </div>
-
                 <div className="space-y-3 sm:space-y-4">
-                  {/* Nombre + Apellidos — fila en sm+ */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Nombre</label>
                       <div className="relative">
-                        <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input value={firstName} onChange={e => setFirstName(e.target.value)} onBlur={() => markTouched('firstName')} placeholder="Tu nombre" className={`${inputBase} pl-10 pr-4 ${inputBorder('firstName')}`} />
-                        {touched.firstName && !errors.firstName && firstName.trim().length >= 2 && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
+                        <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        <input value={firstName} onChange={e => setFirstName(e.target.value)} onFocus={() => setFocused('firstName')} onBlur={() => { setFocused(''); markTouched('firstName'); }} placeholder="Tu nombre" className={`${inputBase} pl-10 pr-4 ${inputBorder('firstName')}`} />
+                        {touched.firstName && focused !== 'firstName' && !errors.firstName && firstName.trim().length >= 2 && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
                       </div>
-                      {touched.firstName && errors.firstName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.firstName}</p>}
+                      {touched.firstName && focused !== 'firstName' && errors.firstName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.firstName}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Apellidos</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Apellidos</label>
                       <div className="relative">
-                        <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input value={lastName} onChange={e => setLastName(e.target.value)} onBlur={() => markTouched('lastName')} placeholder="Tus apellidos" className={`${inputBase} pl-10 pr-4 ${inputBorder('lastName')}`} />
-                        {touched.lastName && !errors.lastName && lastName.trim().length >= 2 && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
+                        <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        <input value={lastName} onChange={e => setLastName(e.target.value)} onFocus={() => setFocused('lastName')} onBlur={() => { setFocused(''); markTouched('lastName'); }} placeholder="Tus apellidos" className={`${inputBase} pl-10 pr-4 ${inputBorder('lastName')}`} />
+                        {touched.lastName && focused !== 'lastName' && !errors.lastName && lastName.trim().length >= 2 && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
                       </div>
-                      {touched.lastName && errors.lastName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.lastName}</p>}
+                      {touched.lastName && focused !== 'lastName' && errors.lastName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.lastName}</p>}
                     </div>
                   </div>
-
-                  {/* Correo */}
+                  {}
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Correo institucional</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Correo institucional</label>
                     <div className="relative">
-                      <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} onBlur={() => markTouched('email')} placeholder="usuario@mail.escuelaing.edu.co" className={`${inputBase} pl-10 pr-4 text-sm ${inputBorder('email')}`} />
-                      {touched.email && emailValid && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
+                      <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} onFocus={() => setFocused('email')} onBlur={() => { setFocused(''); markTouched('email'); }} placeholder="usuario@mail.escuelaing.edu.co" className={`${inputBase} pl-10 pr-4 text-sm ${inputBorder('email')}`} />
+                      {touched.email && focused !== 'email' && emailValid && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
                     </div>
-                    {touched.email && errors.email && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.email}</p>}
-                    <p className="text-[10px] text-gray-400 mt-1">Solo correos @mail.escuelaing.edu.co</p>
+                    {touched.email && focused !== 'email' && errors.email && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.email}</p>}
+                    <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1">Solo correos @mail.escuelaing.edu.co</p>
                   </div>
-
-                  {/* Fecha + Género — fila en sm+ */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fecha de nacimiento</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Fecha de nacimiento</label>
                       <div className="relative">
-                        <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                        <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} onBlur={() => markTouched('birthDate')} min={minBirthDate} max={today} className={`${inputBase} pl-10 pr-2 ${inputBorder('birthDate')}`} />
+                        <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                        <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} onFocus={() => setFocused('birthDate')} onBlur={() => { setFocused(''); markTouched('birthDate'); }} min={minBirthDate} max={maxBirthDate} className={`${inputBase} pl-10 pr-2 ${inputBorder('birthDate')}`} />
                       </div>
-                      {touched.birthDate && errors.birthDate && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.birthDate}</p>}
+                      {touched.birthDate && focused !== 'birthDate' && errors.birthDate && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.birthDate}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Género</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Género</label>
                       <div className="grid grid-cols-2 gap-1.5">
                         {genderOptions.map(opt => (
                           <button key={opt.id} type="button" onClick={() => { setGender(opt.id); markTouched('gender'); }}
@@ -684,27 +604,25 @@ export function RegisterPage() {
                       {touched.gender && errors.gender && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.gender}</p>}
                     </div>
                   </div>
-
-                  {/* Contraseña + Confirmar — fila en sm+ */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Contraseña</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Contraseña</label>
                       <div className="relative">
-                        <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} onBlur={() => markTouched('password')} placeholder="Mín. 8 caracteres" className={`${inputBase} pl-10 pr-9 ${inputBorder('password')}`} />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showPassword ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                        <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setFocused('password')} onBlur={() => { setFocused(''); markTouched('password'); }} placeholder="Mín. 8 caracteres" className={`${inputBase} pl-10 pr-9 ${inputBorder('password')}`} />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">{showPassword ? <EyeOff size={14} /> : <Eye size={14} />}</button>
                       </div>
-                      {touched.password && errors.password && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.password}</p>}
+                      {touched.password && focused !== 'password' && errors.password && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.password}</p>}
                       {password.length > 0 && (
                         <div className="mt-2">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-medium" style={{ color: pwStrength.color }}>
                               {pwStrength.label}
                             </span>
-                            {password.length >= 8 && pwStrength.label !== 'Excelente' && (
-                              <span className="text-[9px] text-gray-400">
-                                {!/[A-Z]/.test(password) && 'Agrega mayúsculas'}
-                                {/[A-Z]/.test(password) && !/[^A-Za-z0-9]/.test(password) && 'Agrega símbolos para mayor seguridad'}
+                            {pwStrength.hint && (
+                              <span className="text-[9px] text-gray-600 dark:text-gray-400">
+                                {pwStrength.hint}
                               </span>
                             )}
                           </div>
@@ -720,18 +638,17 @@ export function RegisterPage() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Confirmar contraseña</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Confirmar contraseña</label>
                       <div className="relative">
-                        <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} onBlur={() => markTouched('confirmPassword')} placeholder="Repite tu contraseña" className={`${inputBase} pl-10 pr-9 ${inputBorder('confirmPassword')}`} />
-                        <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                        <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                        <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} onFocus={() => setFocused('confirmPassword')} onBlur={() => { setFocused(''); markTouched('confirmPassword'); }} placeholder="Repite tu contraseña" className={`${inputBase} pl-10 pr-9 ${inputBorder('confirmPassword')}`} />
+                        <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">{showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}</button>
                       </div>
-                      {confirmPassword.length > 0 && confirmPassword !== password && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />No coinciden</p>}
-                      {confirmPassword.length > 0 && confirmPassword === password && password.length >= 8 && <p className="text-xs text-emerald-500 mt-1 flex items-center gap-1"><Check size={10} />Coinciden</p>}
+                      {confirmPassword.length > 0 && focused !== 'confirmPassword' && confirmPassword !== password && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />No coinciden</p>}
+                      {confirmPassword.length > 0 && focused !== 'confirmPassword' && confirmPassword === password && password.length >= 8 && <p className="text-xs text-emerald-500 mt-1 flex items-center gap-1"><Check size={10} />Coinciden</p>}
                     </div>
                   </div>
                 </div>
-
                 <div className="mt-8 space-y-3">
                   <motion.button
                     onClick={handleNext} disabled={!step1Valid} whileTap={step1Valid ? { scale: 0.97 } : {}}
@@ -740,15 +657,14 @@ export function RegisterPage() {
                   >
                     Continuar <ArrowRight size={18} />
                   </motion.button>
-                  <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-center text-sm text-gray-800 dark:text-gray-200">
                     ¿Ya tienes cuenta?{' '}
                     <button onClick={() => navigate('/login')} className="font-semibold" style={{ color: PINK }}>Iniciar Sesión</button>
                   </p>
                 </div>
               </motion.div>
             )}
-
-            {/* ══ STEP 2: VERIFICACIÓN OTP ═══════════════════════════════════ */}
+            {}
             {step === 2 && (
               <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="text-center mb-6">
@@ -756,11 +672,10 @@ export function RegisterPage() {
                     <ShieldCheck size={28} color="white" strokeWidth={2} />
                   </div>
                   <h1 className="text-gray-900 dark:text-white">Verifica tu correo</h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enviamos un código de 6 dígitos a</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">Enviamos un código de 6 dígitos a</p>
                   <p className="text-sm font-semibold mt-0.5" style={{ color: TEAL }}>{maskEmail(email)}</p>
                 </div>
-
-                {/* Timer */}
+                {}
                 <div className="flex justify-center mb-6">
                   <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
                     style={{
@@ -773,8 +688,7 @@ export function RegisterPage() {
                     {otpStatus === 'expired' ? 'Código expirado' : `Código válido por ${formatTime(otpTimeLeft)}`}
                   </div>
                 </div>
-
-                {/* Intentos */}
+                {}
                 {otpAttempts > 0 && otpStatus !== 'locked' && (
                   <div className="flex justify-center mb-4">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: 'rgba(245,158,11,0.1)', color: GOLD, border: '1px solid rgba(245,158,11,0.3)' }}>
@@ -782,8 +696,7 @@ export function RegisterPage() {
                     </div>
                   </div>
                 )}
-
-                {/* OTP inputs */}
+                {}
                 <div className="flex gap-1.5 sm:gap-2.5 justify-center mb-4 px-1">
                   {code.map((digit, i) => (
                     <input key={i} ref={el => { codeRefs.current[i] = el; }}
@@ -806,32 +719,28 @@ export function RegisterPage() {
                     />
                   ))}
                 </div>
-
                 {errors.code && (
                   <div className="flex items-center gap-2 justify-center mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                     <XCircle size={14} className="text-red-500 flex-shrink-0" />
                     <p className="text-xs text-red-600 dark:text-red-400">{errors.code}</p>
                   </div>
                 )}
-
-                {/* Resend */}
+                {}
                 <div className="text-center mb-4">
                   {resendCooldown > 0 ? (
-                    <p className="text-xs text-gray-400">Puedes reenviar en <span className="font-semibold" style={{ color: TEAL }}>{resendCooldown}s</span></p>
+                    <p className="text-xs text-gray-700 dark:text-gray-400">Puedes reenviar en <span className="font-semibold" style={{ color: TEAL }}>{resendCooldown}s</span></p>
                   ) : (
                     <button type="button" onClick={handleResend} className="flex items-center gap-1.5 mx-auto text-sm font-semibold active:scale-95" style={{ color: TEAL }}>
                       <RefreshCw size={13} />Reenviar código
                     </button>
                   )}
                 </div>
-
-                <div className="p-3 rounded-xl text-xs text-gray-400" style={{ background: isDark ? '#112240' : '#F0F7FF' }}>
+                <div className="p-3 rounded-xl text-xs text-gray-700 dark:text-gray-400" style={{ background: isDark ? '#112240' : '#F0F7FF' }}>
                   <p className="flex items-start gap-2">
                     <Send size={12} className="mt-0.5 flex-shrink-0" style={{ color: TEAL }} />
                     Revisa tu carpeta de spam. El código es válido por 10 minutos y tienes 3 intentos.
                   </p>
                 </div>
-
                 <div className="mt-6">
                   <motion.button onClick={handleVerifyOtp} disabled={isLoading || otpStatus === 'locked'} whileTap={{ scale: 0.97 }}
                     className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg disabled:opacity-70"
@@ -842,107 +751,36 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-
-            {/* ══ STEP 3: PERFIL ACADÉMICO ════════════════════════════════════ */}
+            {}
             {step === 3 && (
               <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="mb-6">
                   <h1 className="text-gray-900 dark:text-white">Tu perfil académico</h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Ayúdanos a conectarte mejor</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200">Ayúdanos a conectarte mejor</p>
                 </div>
-
                 <div className="space-y-5">
-                  {/* Tipo de programa */}
+                  {}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de programa</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProgramType('pregrado');
-                          setProgram('');
-                          setSecondProgram('');
-                        }}
-                        className="py-3 px-4 rounded-xl font-medium text-sm transition-all border-2"
-                        style={
-                          programType === 'pregrado'
-                            ? { background: GRADIENT, color: 'white', borderColor: 'transparent' }
-                            : { background: isDark ? '#172A45' : '#EFF6FF', color: isDark ? '#9CA3AF' : '#0A192F', borderColor: 'transparent' }
-                        }
-                      >
-                        Pregrado
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProgramType('maestria');
-                          setProgram('');
-                          setSecondProgram('');
-                        }}
-                        className="py-3 px-4 rounded-xl font-medium text-sm transition-all border-2"
-                        style={
-                          programType === 'maestria'
-                            ? { background: GRADIENT, color: 'white', borderColor: 'transparent' }
-                            : { background: isDark ? '#172A45' : '#EFF6FF', color: isDark ? '#9CA3AF' : '#0A192F', borderColor: 'transparent' }
-                        }
-                      >
-                        Maestría
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Programa principal */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      {programType === 'pregrado' ? 'Programa académico' : 'Programa de maestría'}
-                    </label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Programa académico</label>
                     <div className="relative">
-                      <BookOpen size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
+                      <BookOpen size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
                       <select
                         value={program}
                         onChange={e => setProgram(e.target.value)}
                         className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#06B6D4] transition-all appearance-none"
                       >
-                        <option value="">Selecciona tu {programType === 'pregrado' ? 'programa' : 'maestría'}</option>
-                        {(programType === 'pregrado' ? pregradoPrograms : maestriaPrograms).map(p => (
+                        <option value="">Selecciona tu programa</option>
+                        {pregradoPrograms.map(p => (
                           <option key={p} value={p}>{p}</option>
                         ))}
                       </select>
-                      <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
                     </div>
                     {errors.program && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.program}</p>}
                   </div>
-
-                  {/* Doble titulación (solo para pregrado) */}
-                  {programType === 'pregrado' && program && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                        Segunda carrera (opcional)
-                        <span className="text-xs text-gray-400 ml-2">Doble titulación</span>
-                      </label>
-                      <div className="relative">
-                        <BookOpen size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
-                        <select
-                          value={secondProgram}
-                          onChange={e => setSecondProgram(e.target.value)}
-                          className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#06B6D4] transition-all appearance-none"
-                        >
-                          <option value="">Ninguna (no aplica)</option>
-                          {pregradoPrograms.filter(p => p !== program).map(p => (
-                            <option key={p} value={p}>{p}</option>
-                          ))}
-                        </select>
-                        <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Solo si estás cursando dos carreras simultáneamente
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Semestre */}
+                  {}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Semestre actual</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Semestre actual</label>
                     <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
                       {Array.from({ length: 10 }, (_, i) => i + 1).map(s => (
                         <button key={s} type="button" onClick={() => setSemester(String(s))}
@@ -955,12 +793,11 @@ export function RegisterPage() {
                     </div>
                     {errors.semester && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.semester}</p>}
                   </div>
-
-                  {/* Código estudiantil */}
+                  {}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Código estudiantil</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Código estudiantil</label>
                     <div className="relative">
-                      <IdCard size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <IdCard size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                       <input value={studentId} onChange={e => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 10))} onBlur={() => markTouched('studentId')} placeholder="Ej: 2023123456" inputMode="numeric" maxLength={10}
                         className={`${inputBase} pl-10 pr-4 ${inputBorder('studentId', touched.studentId && !/^\d{10}$/.test(studentId))}`}
                       />
@@ -968,11 +805,10 @@ export function RegisterPage() {
                     </div>
                     <div className="flex justify-between mt-1">
                       {touched.studentId && errors.studentId ? <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle size={11} />{errors.studentId}</p> : <span />}
-                      <span className={`text-[10px] ml-auto ${studentId.length === 10 ? 'text-emerald-500' : 'text-gray-400'}`}>{studentId.length}/10</span>
+                      <span className={`text-[10px] ml-auto ${studentId.length === 10 ? 'text-emerald-500' : 'text-gray-600 dark:text-gray-400'}`}>{studentId.length}/10</span>
                     </div>
                   </div>
                 </div>
-
                 <div className="mt-8">
                   <motion.button onClick={handleNext} disabled={!step3Valid} whileTap={step3Valid ? { scale: 0.97 } : {}}
                     className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg"
@@ -983,18 +819,15 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-
-            {/* ══ STEP 4: INTERESES ══════════════════════════════════════════ */}
+            {}
             {step === 4 && (
               <motion.div key="step4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
-
-                {/* Header */}
+                {}
                 <div className="mb-5">
                   <h1 className="text-gray-900 dark:text-white">¿Qué te apasiona?</h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Explora las categorías y elige lo que más te gusta</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200">Explora las categorías y elige lo que más te gusta</p>
                 </div>
-
-                {/* Floating counter */}
+                {}
                 <div className="sticky top-0 z-10 mb-4">
                   <div
                     className="rounded-2xl p-3 flex items-center justify-between backdrop-blur-sm"
@@ -1011,20 +844,19 @@ export function RegisterPage() {
                         </motion.div>
                       ) : (
                         <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: isDark ? '#172A45' : '#E5E7EB' }}>
-                          <Heart size={14} className="text-gray-400" />
+                          <Heart size={14} className="text-gray-500 dark:text-gray-400" />
                         </div>
                       )}
                       <div>
                         <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
                           {selectedInterests.length >= MIN_INTERESTS ? '¡Listo para continuar!' : `Selecciona al menos ${MIN_INTERESTS}`}
                         </p>
-                        <p className="text-[10px] text-gray-400">
+                        <p className="text-[10px] text-gray-600 dark:text-gray-400">
                           {selectedInterests.length} seleccionado{selectedInterests.length !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
-
-                    {/* Progress dots */}
+                    {}
                     <div className="flex items-center gap-1.5">
                       {Array.from({ length: MIN_INTERESTS }, (_, i) => (
                         <motion.div
@@ -1050,15 +882,13 @@ export function RegisterPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Error */}
+                {}
                 {errors.interests && (
                   <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                     <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1"><AlertCircle size={11} />{errors.interests}</p>
                   </div>
                 )}
-
-                {/* Categories */}
+                {}
                 <div className="space-y-3">
                   {interestCategories.map((cat, idx) => {
                     const catCount = cat.options.filter(o => selectedInterests.includes(`${cat.id}::${o}`)).length;
@@ -1079,8 +909,7 @@ export function RegisterPage() {
                     );
                   })}
                 </div>
-
-                {/* Selected summary */}
+                {}
                 {selectedInterests.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -1110,8 +939,7 @@ export function RegisterPage() {
                     </div>
                   </motion.div>
                 )}
-
-                {/* Finalizar */}
+                {}
                 <div className="mt-6 space-y-3">
                   <motion.button
                     onClick={handleFinish}
@@ -1137,14 +965,13 @@ export function RegisterPage() {
                       </>
                     )}
                   </motion.button>
-                  <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-center text-sm text-gray-800 dark:text-gray-200">
                     ¿Ya tienes cuenta?{' '}
                     <button onClick={() => navigate('/login')} className="font-semibold" style={{ color: PINK }}>Iniciar Sesión</button>
                   </p>
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
           </div>
         </div>

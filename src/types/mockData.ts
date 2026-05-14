@@ -13,7 +13,6 @@ export interface MatchUser {
   bio?: string;
   connectionStatus?: 'none' | 'pending' | 'connected';
 }
-
 export interface Parche {
   id: string;
   name: string;
@@ -32,8 +31,8 @@ export interface Parche {
   trending?: boolean;
   tags: string[];
   admin: string;
+  adminId: string;
 }
-
 export interface Event {
   id: string;
   title: string;
@@ -52,8 +51,19 @@ export interface Event {
   registered: boolean;
   reminder: boolean;
   tags: string[];
+  isPast?: boolean;
 }
-
+export interface WellnessResource {
+  id: string;
+  name: string;
+  description: string;
+  category: 'SALUD' | 'DEPORTE' | 'CULTURA' | 'MENTAL_HEALTH';
+  schedule: string;
+  contact: string;
+  active: boolean;
+  location?: string;
+  phone?: string;
+}
 export interface ChatMessage {
   id: string;
   sender: string;
@@ -65,7 +75,6 @@ export interface ChatMessage {
   imageUrl?: string;
   isMe?: boolean;
 }
-
 export interface DirectChat {
   id: string;
   userId: string;
@@ -78,7 +87,6 @@ export interface DirectChat {
   online: boolean;
   accentColor: string;
 }
-
 export interface Mona {
   id: string;
   name: string;
@@ -93,7 +101,6 @@ export interface Mona {
   unlockedAt?: string;
   xp: number;
 }
-
 export interface Notification {
   id: string;
   type: 'chat' | 'event' | 'match' | 'parche_invitation' | 'event_reminder';
@@ -106,7 +113,6 @@ export interface Notification {
   read: boolean;
   actionUrl?: string;
 }
-
 export interface Achievement {
   id: string;
   title: string;
@@ -115,7 +121,6 @@ export interface Achievement {
   date: string;
   xp: number;
 }
-
 export const GRADIENT = 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)';
 export const PINK = '#1D4ED8';
 export const ORANGE = '#06B6D4';
@@ -124,7 +129,6 @@ export const TEAL_GRADIENT = 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)'
 export const GOLD = '#D97706';
 export const GOLD_LIGHT = '#F59E0B';
 export const GOLD_GRADIENT = 'linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%)';
-
 export interface QREnvelope {
   code: string;
   monaIds: string[];
@@ -135,7 +139,6 @@ export interface QREnvelope {
   emoji: string;
   description: string;
 }
-
 export const QR_ENVELOPES: QREnvelope[] = [
   {
     code: 'PATRICIA-TECH-001',
@@ -198,7 +201,6 @@ export const QR_ENVELOPES: QREnvelope[] = [
     description: '¡El sobre más exclusivo y raro de patrici.a!',
   },
 ];
-
 export const matchUsers: MatchUser[] = [
   {
     id: 'u2',
@@ -516,7 +518,6 @@ export const matchUsers: MatchUser[] = [
     connectionStatus: 'none',
   },
 ];
-
 export const parches: Parche[] = [
   {
     id: 'p1',
@@ -540,6 +541,7 @@ export const parches: Parche[] = [
     trending: true,
     tags: ['Música', 'Vinilos', 'Playlists'],
     admin: 'Valentina R.',
+    adminId: 'u2',
   },
   {
     id: 'p2',
@@ -561,6 +563,7 @@ export const parches: Parche[] = [
     joined: false,
     tags: ['Deporte', 'Fitness', 'Mañana'],
     admin: 'Daniel C.',
+    adminId: 'u5',
   },
   {
     id: 'p3',
@@ -584,6 +587,7 @@ export const parches: Parche[] = [
     trending: true,
     tags: ['Python', 'Algoritmos', 'Open Source'],
     admin: 'Mateo S.',
+    adminId: 'u3',
   },
   {
     id: 'p4',
@@ -605,6 +609,7 @@ export const parches: Parche[] = [
     joined: true,
     tags: ['Estudio', 'Concentración', 'Grupos'],
     admin: 'Sofía M.',
+    adminId: 'u4',
   },
   {
     id: 'p5',
@@ -626,6 +631,7 @@ export const parches: Parche[] = [
     joined: false,
     tags: ['Literatura', 'Café', 'Cultura'],
     admin: 'Valentina R.',
+    adminId: 'u2',
   },
   {
     id: 'p6',
@@ -647,9 +653,9 @@ export const parches: Parche[] = [
     joined: false,
     tags: ['Fútbol', 'Deporte', 'Recreativo'],
     admin: 'Mateo S.',
+    adminId: 'u3',
   },
 ];
-
 export const events: Event[] = [
   {
     id: 'e1',
@@ -686,6 +692,7 @@ export const events: Event[] = [
     registered: false,
     reminder: false,
     tags: ['Social', 'Networking', 'Rooftop'],
+    isPast: true,
   },
   {
     id: 'e3',
@@ -757,74 +764,73 @@ export const events: Event[] = [
     registered: false,
     reminder: false,
     tags: ['Arte', 'Muralismo', 'Urbano'],
+    isPast: true,
   },
 ];
-
-export const vibraCategories = [
-  { id: 'v1', name: 'Live Music', emoji: '🎵', gradient: GRADIENT },
-  { id: 'v2', name: 'Outdoor', emoji: '🌿', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
-  { id: 'v3', name: 'Study', emoji: '📚', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)' },
-  { id: 'v4', name: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
-  { id: 'v5', name: 'Gaming', emoji: '🎮', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
-  { id: 'v6', name: 'Arte', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
+export const wellnessResources: WellnessResource[] = [
+  { id: 'w1', name: 'Medicina General ECI', description: 'Consultas médicas generales, control de enfermedades y seguimiento de salud estudiantil.', category: 'SALUD', schedule: 'Lun–Vie 8:00 AM – 5:00 PM', contact: 'medicinageneral@escuelaing.edu.co', location: 'Bloque A, Piso 1', active: true },
+  { id: 'w2', name: 'Enfermería y Primeros Auxilios', description: 'Atención de urgencias menores, primeros auxilios y acompañamiento en emergencias.', category: 'SALUD', schedule: 'Lun–Vie 7:00 AM – 7:00 PM', contact: 'enfermeria@escuelaing.edu.co', location: 'Entrada Principal', active: true },
+  { id: 'w3', name: 'Nutrición y Alimentación Saludable', description: 'Asesoría nutricional personalizada para mejorar hábitos alimenticios y rendimiento académico.', category: 'SALUD', schedule: 'Mar y Jue 10:00 AM – 3:00 PM', contact: 'nutricion@escuelaing.edu.co', location: 'Bienestar, Bloque A', active: false },
+  { id: 'w4', name: 'Liga de Fútbol Interfacultades', description: 'Torneos y entrenamientos de fútbol sala entre facultades, abiertos a todos los niveles.', category: 'DEPORTE', schedule: 'Lun, Mié y Vie 4:00 PM – 6:00 PM', contact: 'deportes@escuelaing.edu.co', location: 'Canchas Los Pinos', active: true },
+  { id: 'w5', name: 'Yoga y Pilates', description: 'Clases de yoga y pilates para reducir el estrés y mejorar la flexibilidad y concentración.', category: 'DEPORTE', schedule: 'Mar y Jue 12:00 PM – 1:00 PM', contact: 'bienestar@escuelaing.edu.co', location: 'Sala Polideportiva', active: true },
+  { id: 'w6', name: 'Natación Recreativa', description: 'Acceso a piscina y clases grupales de natación para estudiantes con carné ECI.', category: 'DEPORTE', schedule: 'Lun–Sáb 6:00 AM – 8:00 PM', contact: 'natacion@escuelaing.edu.co', location: 'Piscina ECI', active: false },
+  { id: 'w7', name: 'Grupo de Teatro', description: 'Taller de actuación y expresión corporal. Presentaciones semestrales abiertas a la comunidad.', category: 'CULTURA', schedule: 'Viernes 3:00 PM – 6:00 PM', contact: 'teatro@escuelaing.edu.co', location: 'Auditorio B', active: true },
+  { id: 'w8', name: 'Taller de Fotografía', description: 'Aprende fotografía análoga y digital, composición y edición con instructores profesionales.', category: 'CULTURA', schedule: 'Miércoles 2:00 PM – 5:00 PM', contact: 'fotografia@escuelaing.edu.co', location: 'Sala Multimedia', active: true },
+  { id: 'w9', name: 'Cine Club ECI', description: 'Proyección y análisis de cine latinoamericano e independiente. Entrada libre para estudiantes.', category: 'CULTURA', schedule: 'Jueves 5:00 PM – 8:00 PM', contact: 'cineclub@escuelaing.edu.co', location: 'Auditorio Principal', active: false },
+  { id: 'w10', name: 'Psicología Estudiantil', description: 'Atención psicológica individual y grupal. Apoyo en crisis, duelo, ansiedad y salud emocional.', category: 'MENTAL_HEALTH', schedule: 'Lun–Vie 8:00 AM – 5:00 PM', contact: 'psicologia@escuelaing.edu.co', location: 'Bloque A, Piso 2', active: true, phone: '601 745 6390 ext. 101' },
+  { id: 'w11', name: 'Grupo de Apoyo: Estrés Académico', description: 'Sesiones grupales para manejar el estrés, la procrastinación y la presión del rendimiento académico.', category: 'MENTAL_HEALTH', schedule: 'Martes 4:00 PM – 6:00 PM', contact: 'bienestar@escuelaing.edu.co', location: 'Sala Bienestar', active: true },
+  { id: 'w12', name: 'Orientación Vocacional y Proyecto de Vida', description: 'Acompañamiento en decisiones de carrera, exploración vocacional y construcción del proyecto de vida.', category: 'MENTAL_HEALTH', schedule: 'Lun–Vie 9:00 AM – 4:00 PM', contact: 'orientacion@escuelaing.edu.co', location: 'Bloque A, Piso 2', active: true },
 ];
-
+export const vibraCategories = [
+  { id: 'v1', name: 'Música en Vivo', emoji: '🎵', gradient: GRADIENT },
+  { id: 'v2', name: 'Al Aire Libre', emoji: '🌿', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
+  { id: 'v3', name: 'Estudio', emoji: '📚', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)' },
+  { id: 'v4', name: 'Gastronomía', emoji: '🍕', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
+  { id: 'v5', name: 'Videojuegos', emoji: '🎮', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
+  { id: 'v6', name: 'Arte y Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
+];
 export const monas: Mona[] = [
-  // ── TECNOLOGÍA ──────────────────────────────────────────────────────
   { id: 'tech-puppy', name: 'Tech Puppy', description: 'Para los que viven en el mundo digital', emoji: '🐾', category: 'tecnología', color: '#3B82F6', bgColor: '#EFF6FF', rarity: 'común', unlocked: true, condition: 'Únete a tu primer parche de tecnología', unlockedAt: 'Hace 3 semanas', xp: 50 },
   { id: 'code-master', name: 'Code Master', description: 'Dominas el arte de programar', emoji: '💻', category: 'tecnología', color: '#1D4ED8', bgColor: '#DBEAFE', rarity: 'raro', unlocked: true, condition: 'Participa en 5 sesiones de coding', unlockedAt: 'Hace 1 semana', xp: 150 },
   { id: 'bug-hunter', name: 'Bug Hunter', description: 'Ningún error se te escapa', emoji: '🐛', category: 'tecnología', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'común', unlocked: false, condition: 'Resuelve 10 retos de algoritmos en parches', xp: 75 },
   { id: 'hackathon-hero', name: 'Hackathon Hero', description: '48 horas de pura innovación', emoji: '⚡', category: 'tecnología', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'épico', unlocked: false, condition: 'Participa en un hackathon universitario', xp: 300 },
   { id: 'ai-whiz', name: 'AI Whiz', description: 'El futuro está en tus manos', emoji: '🤖', category: 'tecnología', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Crea y presenta un proyecto de IA en el campus', xp: 500 },
-
-  // ── SOCIAL ──────────────────────────────────────────────────────────
   { id: 'social', name: 'Social Butterfly', description: 'El alma de cualquier parche', emoji: '🤝', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, condition: 'Invita a 5 amigos a un parche', unlockedAt: 'Hace 2 semanas', xp: 50 },
   { id: 'pionera', name: 'Pionera', description: 'Siempre a la vanguardia', emoji: '🚀', category: 'social', color: '#1D4ED8', bgColor: '#EFF6FF', rarity: 'épico', unlocked: true, condition: 'Crea tu primer parche', unlockedAt: 'Hace 1 mes', xp: 250 },
   { id: 'connector', name: 'Connector', description: 'Tu red social es tu superpoder', emoji: '🌐', category: 'social', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Conecta con 20 personas diferentes en el campus', xp: 120 },
   { id: 'campus-star', name: 'Campus Star', description: 'Todos te conocen en el campus', emoji: '⭐', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: 'Sé el perfil más visitado de tu facultad', xp: 280 },
   { id: 'lider-nato', name: 'Líder Nato', description: 'Naciste para guiar comunidades', emoji: '👑', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Administra 3 parches activos al mismo tiempo', xp: 600 },
-
-  // ── DEPORTE ─────────────────────────────────────────────────────────
   { id: 'sport-buddy', name: 'Sport Buddy', description: 'Mente sana, cuerpo sano', emoji: '⚡', category: 'deporte', color: '#0EA5E9', bgColor: '#E0F2FE', rarity: 'común', unlocked: false, condition: 'Únete a 3 parches deportivos', xp: 70 },
   { id: 'marathon-runner', name: 'Marathon', description: 'La distancia no te detiene', emoji: '🏃', category: 'deporte', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Completa 10 actividades físicas en parches', xp: 130 },
   { id: 'mvp-campus', name: 'MVP Campus', description: 'El jugador más valioso del semestre', emoji: '🏆', category: 'deporte', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'épico', unlocked: false, condition: 'Gana un torneo inter-parches', xp: 300 },
   { id: 'gym-addict', name: 'Gym Addict', description: 'El gimnasio es tu segundo hogar', emoji: '💪', category: 'deporte', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, condition: 'Asiste al gimnasio 20 veces con tu parche', xp: 70 },
   { id: 'team-player', name: 'Team Player', description: 'Juntos siempre llegamos más lejos', emoji: '🤜', category: 'deporte', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'raro', unlocked: false, condition: 'Participa en 5 deportes diferentes', xp: 150 },
-
-  // ── CULTURA ─────────────────────────────────────────────────────────
   { id: 'bookworm', name: 'Bookworm', description: 'Los libros son tu mejor compañía', emoji: '📚', category: 'cultura', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'común', unlocked: true, condition: 'Únete a un club de lectura', unlockedAt: 'Hace 2 semanas', xp: 60 },
   { id: 'melomano', name: 'Melómano', description: 'La música es tu idioma universal', emoji: '🎵', category: 'cultura', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: true, condition: 'Asiste a 5 eventos musicales en el campus', unlockedAt: 'Hace 3 días', xp: 260 },
   { id: 'cinefilo', name: 'Cinéfilo', description: 'El cine lo es todo para ti', emoji: '🎬', category: 'cultura', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Organiza 3 noches de cine en parches', xp: 140 },
   { id: 'culture-vulture', name: 'Culture Vulture', description: 'Devorador de experiencias culturales', emoji: '🦚', category: 'cultura', color: '#10B981', bgColor: '#ECFDF5', rarity: 'raro', unlocked: false, condition: 'Asiste a 5 eventos culturales universitarios', xp: 160 },
   { id: 'creator', name: 'Creator', description: 'La creatividad no tiene límites', emoji: '🎨', category: 'cultura', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Organiza un evento comunitario con más de 20 asistentes', xp: 550 },
-
-  // ── BIENESTAR ───────────────────────────────────────────────────────
   { id: 'happy-vibes', name: 'Happy Vibes', description: 'Tu energía positiva contagia a todos', emoji: '😊', category: 'bienestar', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: false, condition: 'Registra tu estado de ánimo 7 días seguidos', xp: 60 },
   { id: 'sleep-champion', name: 'Sleep Champion', description: 'Descansar también es parte del éxito', emoji: '😴', category: 'bienestar', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'común', unlocked: false, condition: 'Completa 5 sesiones de descanso activo', xp: 50 },
   { id: 'zen-master', name: 'Zen Master', description: 'Paz interior en el caos universitario', emoji: '🧘', category: 'bienestar', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Completa 3 talleres de mindfulness', xp: 130 },
   { id: 'balance-pro', name: 'Balance Pro', description: 'Estudias, descansas y vives en equilibrio', emoji: '⚖️', category: 'bienestar', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: '30 días con hábitos saludables registrados', xp: 270 },
   { id: 'healer', name: 'Healer', description: 'Apoyo incondicional para la comunidad', emoji: '💚', category: 'bienestar', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Completa el módulo de bienestar y apoya a 3 compañeros', xp: 500 },
-
-  // ── ACADEMIA ────────────────────────────────────────────────────────
   { id: 'study-streak', name: 'Study Streak', description: 'La constancia es tu superpoder', emoji: '📖', category: 'academia', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'raro', unlocked: false, condition: 'Estudia en parches 14 días consecutivos', xp: 130 },
   { id: 'honors', name: 'Honors', description: 'Reconocimiento al mérito académico', emoji: '🎓', category: 'academia', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'raro', unlocked: true, condition: 'Completa 10 sesiones de estudio en parches', unlockedAt: 'Hace 1 semana', xp: 150 },
   { id: 'genio', name: 'Genio', description: 'Mente brillante del campus', emoji: '💡', category: 'academia', color: '#1D4ED8', bgColor: '#DBEAFE', rarity: 'épico', unlocked: true, condition: 'Alcanza nivel 10 en la plataforma', unlockedAt: 'Hace 2 semanas', xp: 280 },
   { id: 'perfect-score', name: 'Perfect Score', description: 'La excelencia es tu estándar', emoji: '💯', category: 'academia', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: 'Obtén 5/5 en la evaluación de un parche de estudio', xp: 320 },
   { id: 'cum-laude', name: 'Cum Laude', description: 'La máxima distinción académica', emoji: '📜', category: 'academia', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Mantén promedio ≥ 4.5 y lidera 5 parches de estudio', xp: 600 },
-
-  // ── ESPECIAL ────────────────────────────────────────────────────────
   { id: 'first-day', name: 'First Day', description: 'El primer paso siempre es el más importante', emoji: '🌱', category: 'especial', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, condition: 'Completa tu registro en patrici.a', unlockedAt: 'Hace 1 mes', xp: 30 },
   { id: 'night-owl', name: 'Night Owl', description: 'Las mejores ideas llegan en la madrugada', emoji: '🦉', category: 'especial', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'raro', unlocked: false, condition: 'Participa en parches nocturnos 5 veces', xp: 180 },
   { id: 'explorer', name: 'Explorer', description: 'Siempre buscando nuevas aventuras', emoji: '🧭', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Únete a parches de 5 categorías diferentes', xp: 200 },
   { id: 'social-100', name: 'Social 100', description: 'La élite social del campus', emoji: '🎊', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Conecta con 100 estudiantes en un semestre', xp: 700 },
   { id: 'campus-legend', name: 'Campus Legend', description: '¡Eres parte de la historia de patrici.a!', emoji: '🌟', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Completa el álbum al 100%', xp: 800 },
 ];
-
 export const directChats: DirectChat[] = [
   {
     id: 'dc1',
     userId: 'u2',
-    name: 'Valentina R.',
+    name: 'Mariana Malagón',
     avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
     faculty: 'Ingeniería de Sistemas',
     lastMessage: 'Me encantaron las fotos del último parche! 📸',
@@ -836,7 +842,7 @@ export const directChats: DirectChat[] = [
   {
     id: 'dc2',
     userId: 'u3',
-    name: 'Mateo S.',
+    name: 'Diego Fabian Andrade',
     avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
     faculty: 'Ingeniería de Sistemas',
     lastMessage: 'Claro! Te paso el repo en un rato 💻',
@@ -848,7 +854,7 @@ export const directChats: DirectChat[] = [
   {
     id: 'dc3',
     userId: 'u4',
-    name: 'Sofía M.',
+    name: 'Maria Jose Perez',
     avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
     faculty: 'Ingeniería Biomédica',
     lastMessage: 'Nos vemos en la biblio entonces! 📚',
@@ -860,7 +866,7 @@ export const directChats: DirectChat[] = [
   {
     id: 'dc4',
     userId: 'u5',
-    name: 'Daniel C.',
+    name: 'David Santiago Cajamarca',
     avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
     faculty: 'Ingeniería de Sistemas',
     lastMessage: '¿Tienes el link del meet? 🎮',
@@ -869,12 +875,35 @@ export const directChats: DirectChat[] = [
     online: true,
     accentColor: '#06B6D4',
   },
+  {
+    id: 'dc5',
+    userId: 'u6',
+    name: 'Stiven Esneider Pardo',
+    avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    faculty: 'Ingeniería Industrial',
+    lastMessage: '¿Vamos al parche de estudio esta tarde?',
+    lastTime: '3h',
+    unread: 0,
+    online: false,
+    accentColor: '#F59E0B',
+  },
+  {
+    id: 'dc6',
+    userId: 'u7',
+    name: 'Juan David Gómez',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    faculty: 'Ingeniería Civil',
+    lastMessage: '¡El proyecto quedó increíble! 🏗️',
+    lastTime: '1d',
+    unread: 0,
+    online: true,
+    accentColor: '#EC4899',
+  },
 ];
-
 export const chatMessages: ChatMessage[] = [
   {
     id: 'm1',
-    sender: 'Mateo',
+    sender: 'Diego Fabian',
     senderId: 'u3',
     avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
     content: '¡Hola equipo! Ya estoy en la mesa del fondo, la que tiene los enchufes libres. 🔌',
@@ -883,7 +912,7 @@ export const chatMessages: ChatMessage[] = [
   },
   {
     id: 'm2',
-    sender: 'Lucía',
+    sender: 'Mariana',
     senderId: 'u6',
     avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
     content: 'Súper, llego en 5. ¿Alguien quiere un café? Paso por el Oxxo.',
@@ -895,7 +924,7 @@ export const chatMessages: ChatMessage[] = [
     sender: 'Tú',
     senderId: 'u1',
     avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-    content: '¡Yo! Un latte frío si se puede Lucía. Mil gracias! ✨',
+    content: '¡Yo! Un latte frío si se puede Mariana. Mil gracias! ✨',
     timestamp: '15:07',
     type: 'text',
     isMe: true,
@@ -905,13 +934,13 @@ export const chatMessages: ChatMessage[] = [
     sender: 'Sistema',
     senderId: 'system',
     avatar: '',
-    content: 'Carlos se unió al parche',
+    content: 'Stiven Esneider se unió al parche',
     timestamp: '15:10',
     type: 'system',
   },
   {
     id: 'm5',
-    sender: 'Carlos',
+    sender: 'David Santiago',
     senderId: 'u5',
     avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
     content: '¡Acá estamos!',
@@ -948,7 +977,6 @@ export const chatMessages: ChatMessage[] = [
     isMe: true,
   },
 ];
-
 export const achievements: Achievement[] = [
   {
     id: 'a1',
@@ -983,7 +1011,6 @@ export const achievements: Achievement[] = [
     xp: 300,
   },
 ];
-
 export const interestOptions = [
   { id: 'musica', label: 'Música', emoji: '🎵' },
   { id: 'programacion', label: 'Programación', emoji: '💻' },
@@ -1002,9 +1029,6 @@ export const interestOptions = [
   { id: 'voluntariado', label: 'Voluntariado', emoji: '🤝' },
   { id: 'cocina', label: 'Cocina', emoji: '👨‍🍳' },
 ];
-
-// ── RANKING / LEADERBOARD ────────────────────────────────────────────────────
-
 export interface RankingUser {
   id: string;
   name: string;
@@ -1017,7 +1041,6 @@ export interface RankingUser {
   streak: number;
   isCurrentUser?: boolean;
 }
-
 export const rankingUsers: RankingUser[] = [
   {
     id: 'rank1',
@@ -1153,8 +1176,6 @@ export const rankingUsers: RankingUser[] = [
     streak: 2,
   },
 ];
-
-// ─── NOTIFICATIONS ──────────────────────────────────────────────────────────
 export const notifications: Notification[] = [
   {
     id: 'notif1',

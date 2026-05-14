@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, TrendingUp, Users, Calendar, MessageCircle, Zap, Star, Award } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from 'recharts';
-import { useApp } from '../context/AppContext';
-import { achievements, GRADIENT, PINK, ORANGE } from '../data/mockData';
+import { useApp } from '../store/AppContext';
+import { achievements, GRADIENT, PINK, ORANGE } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
 const activityData = [
   { day: 'L', value: 3 },
   { day: 'M', value: 5 },
@@ -16,7 +15,6 @@ const activityData = [
   { day: 'S', value: 9 },
   { day: 'D', value: 4 },
 ];
-
 const weeklyGrowth = [
   { week: 'S1', parches: 2, conexiones: 5 },
   { week: 'S2', parches: 4, conexiones: 8 },
@@ -25,7 +23,6 @@ const weeklyGrowth = [
   { week: 'S5', parches: 8, conexiones: 20 },
   { week: 'S6', parches: 7, conexiones: 25 },
 ];
-
 const radarData = [
   { subject: 'Social', value: 85 },
   { subject: 'Académico', value: 70 },
@@ -34,7 +31,6 @@ const radarData = [
   { subject: 'Bienestar', value: 75 },
   { subject: 'Tecnología', value: 95 },
 ];
-
 const categoryData = [
   { name: 'Tecnología', count: 5, color: '#3B82F6' },
   { name: 'Música', count: 4, color: PINK },
@@ -42,18 +38,15 @@ const categoryData = [
   { name: 'Social', count: 3, color: ORANGE },
   { name: 'Deporte', count: 2, color: '#8B5CF6' },
 ];
-
 export function StatsPage() {
   const navigate = useNavigate();
   const { currentUser } = useApp();
   const [period, setPeriod] = useState<'semana' | 'mes' | 'semestre'>('mes');
-
   if (!currentUser) return null;
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0D0F1C] pb-8">
-      {/* Header */}
-      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 md:top-0 z-10">
+    <div className="min-h-screen pb-8">
+      {}
+      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-[57px] z-10">
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#1E2038] text-gray-500 dark:text-gray-400"
@@ -61,13 +54,12 @@ export function StatsPage() {
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="text-gray-900 dark:text-white text-base">Estadísticas</h1>
+          <h1 className="text-gray-900 dark:text-white text-base">🏆 Estadísticas</h1>
           <p className="text-xs text-gray-400">Tu impacto en la comunidad</p>
         </div>
       </div>
-
-      <div className="px-5 pt-5 max-w-lg mx-auto">
-        {/* Period Selector */}
+      <div className="px-4 pt-5">
+        {}
         <div className="flex bg-white dark:bg-[#151729] rounded-xl p-1 mb-5 shadow-sm">
           {(['semana', 'mes', 'semestre'] as const).map(p => (
             <button
@@ -80,8 +72,7 @@ export function StatsPage() {
             </button>
           ))}
         </div>
-
-        {/* Key Stats */}
+        {}
         <div className="grid grid-cols-2 gap-3 mb-5">
           {[
             { icon: Users, value: '25', label: 'Nuevas conexiones', delta: '+5', positive: true, color: PINK },
@@ -99,10 +90,9 @@ export function StatsPage() {
             </div>
           ))}
         </div>
-
-        {/* Activity Chart */}
+        {}
         <div className="bg-white dark:bg-[#151729] rounded-2xl p-4 mb-5 shadow-sm">
-          <h3 className="font-semibold text-gray-800 dark:text-white text-sm mb-4">Actividad esta semana</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-4">Actividad esta semana</h3>
           <div className="flex items-end gap-2 h-20">
             {activityData.map((d, i) => (
               <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
@@ -119,10 +109,9 @@ export function StatsPage() {
             ))}
           </div>
         </div>
-
-        {/* Growth Chart */}
+        {}
         <div className="bg-white dark:bg-[#151729] rounded-2xl p-4 mb-5 shadow-sm">
-          <h3 className="font-semibold text-gray-800 dark:text-white text-sm mb-1">Crecimiento de red</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-1">Crecimiento de red</h3>
           <p className="text-xs text-gray-400 mb-4">Parches y conexiones por semana</p>
           <ResponsiveContainer width="100%" height={140}>
             <LineChart data={weeklyGrowth}>
@@ -153,10 +142,9 @@ export function StatsPage() {
             </div>
           </div>
         </div>
-
-        {/* Social Radar */}
+        {}
         <div className="bg-white dark:bg-[#151729] rounded-2xl p-4 mb-5 shadow-sm">
-          <h3 className="font-semibold text-gray-800 dark:text-white text-sm mb-1">Perfil Social</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-1">Perfil Social</h3>
           <p className="text-xs text-gray-400 mb-2">Tus dimensiones universitarias</p>
           <ResponsiveContainer width="100%" height={200}>
             <RadarChart data={radarData}>
@@ -166,10 +154,9 @@ export function StatsPage() {
             </RadarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Categories */}
+        {}
         <div className="bg-white dark:bg-[#151729] rounded-2xl p-4 mb-5 shadow-sm">
-          <h3 className="font-semibold text-gray-800 dark:text-white text-sm mb-4">Parches por categoría</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-4">Parches por categoría</h3>
           <div className="space-y-3">
             {categoryData.map(cat => (
               <div key={cat.name} className="flex items-center gap-3">
@@ -185,12 +172,11 @@ export function StatsPage() {
             ))}
           </div>
         </div>
-
-        {/* Level Progress */}
+        {}
         <div className="bg-white dark:bg-[#151729] rounded-2xl p-4 mb-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Nivel {currentUser.level}</h3>
+              <h3 className="font-semibold text-gray-800 dark:text-white">Nivel {currentUser.level}</h3>
               <p className="text-xs text-gray-400">{currentUser.xp.toLocaleString()} / 5,000 XP</p>
             </div>
             <div
@@ -214,10 +200,9 @@ export function StatsPage() {
             <span>{5000 - currentUser.xp} XP para nivel {currentUser.level + 1}</span>
           </div>
         </div>
-
-        {/* Recent Achievements */}
+        {}
         <div className="mb-5">
-          <h3 className="font-semibold text-gray-800 dark:text-white text-sm mb-3">Logros recientes</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-white mb-3">🏅 Logros recientes</h3>
           <div className="space-y-2">
             {achievements.map((a, i) => (
               <div

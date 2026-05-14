@@ -1,79 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Search, Filter, MapPin, Clock, Users, Lock, Globe, ChevronRight, Flame, Navigation, Mail, CheckCircle2, X } from 'lucide-react';
-import { parches, GRADIENT, PINK, ORANGE, GOLD_GRADIENT, GOLD_LIGHT, TEAL_GRADIENT } from '../data/mockData';
+import { Plus, Search, Filter, MapPin, Clock, Users, Lock, Globe, ChevronRight, Flame, Navigation, Mail, CheckCircle2, X, ChevronLeft } from 'lucide-react';
+import { parches, GRADIENT, PINK, ORANGE, GOLD_GRADIENT, GOLD_LIGHT, TEAL_GRADIENT } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-
 const uniqueCategories = ['Todos', ...Array.from(new Set(parches.map(p => p.category)))];
-
 export function ParchesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'mis-parches' | 'explorar' | 'invitaciones'>('mis-parches');
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Mock: IDs de parches a los que el usuario fue invitado
   const [invitedParches, setInvitedParches] = useState<string[]>(['p2', 'p5']);
-
-  // Estado para manejar parches unidos (override del estado joined original)
   const [joinedParches, setJoinedParches] = useState<Record<string, boolean>>({});
-
-  // Leer parámetros de URL al cargar la página
   useEffect(() => {
     const tab = searchParams.get('tab');
     const category = searchParams.get('category');
-
     if (tab === 'explorar') {
       setActiveTab('explorar');
     } else if (tab === 'invitaciones') {
       setActiveTab('invitaciones');
     }
-
     if (category && uniqueCategories.includes(category)) {
       setActiveCategory(category);
     }
-
-    // Limpiar parámetros de URL después de leerlos
     if (tab || category) {
       setSearchParams({});
     }
   }, [searchParams, setSearchParams]);
-
-  // Función helper para verificar si un parche está unido
   const isParcheJoined = (parcheId: string) => {
     return joinedParches[parcheId] !== undefined ? joinedParches[parcheId] : parches.find(p => p.id === parcheId)?.joined || false;
   };
-
   const myParches = parches.filter(p => isParcheJoined(p.id));
   const exploreParches = parches.filter(p => !isParcheJoined(p.id) && !invitedParches.includes(p.id));
   const invitationParches = parches.filter(p => invitedParches.includes(p.id));
-
   const handleAcceptInvitation = (parcheId: string) => {
     setJoinedParches(prev => ({ ...prev, [parcheId]: true }));
     setInvitedParches(prev => prev.filter(id => id !== parcheId));
   };
-
   const handleRejectInvitation = (parcheId: string) => {
     setInvitedParches(prev => prev.filter(id => id !== parcheId));
   };
-
   const filteredExplore = exploreParches.filter(p => {
     const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      {/* Header */}
-      <div className="px-5 pt-6 pb-4">
+      {}
+      <div className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-gray-900 dark:text-white">Parches</h1>
-            <p className="text-sm text-blue-400 dark:text-gray-400">Tus planes y comunidades</p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-gray-600 dark:text-gray-400"
+              style={{ background: 'rgba(10,25,47,0.07)' }}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-gray-900 dark:text-white">🤝 Parches</h1>
+              <p className="text-sm text-blue-400 dark:text-gray-400">Tus planes y comunidades</p>
+            </div>
           </div>
           <button
             onClick={() => navigate('/parches/create')}
@@ -83,8 +73,7 @@ export function ParchesPage() {
             <Plus size={20} />
           </button>
         </div>
-
-        {/* ── "Ver Mapa ECI" quick-access banner ── */}
+        {}
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
@@ -108,8 +97,7 @@ export function ParchesPage() {
           </div>
           <Navigation size={16} style={{ color: GOLD_LIGHT }} className="flex-shrink-0" />
         </motion.button>
-
-        {/* Search */}
+        {}
         <div className="relative mb-4">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -119,8 +107,7 @@ export function ParchesPage() {
             className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-[#112240] border border-blue-100 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#1D4ED8] text-sm shadow-sm transition-all"
           />
         </div>
-
-        {/* Tabs */}
+        {}
         <div className="flex bg-blue-50 dark:bg-[#112240] rounded-xl p-1 gap-1">
           <button
             onClick={() => setActiveTab('mis-parches')}
@@ -168,9 +155,8 @@ export function ParchesPage() {
           </button>
         </div>
       </div>
-
       <AnimatePresence mode="wait">
-        {/* Mis Parches */}
+        {}
         {activeTab === 'mis-parches' && (
           <motion.div
             key="mis-parches"
@@ -203,7 +189,7 @@ export function ParchesPage() {
                   onClick={() => navigate(`/parches/${parche.id}`)}
                   className="bg-white dark:bg-[#112240] rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[0.98] transition-all"
                 >
-                  {/* Color band */}
+                  {}
                   <div className="h-1.5" style={{ background: parche.coverColor }} />
                   <div className="p-4">
                     <div className="flex items-start gap-3">
@@ -215,7 +201,7 @@ export function ParchesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <h3 className="font-semibold text-gray-800 dark:text-white text-sm">{parche.name}</h3>
+                          <h3 className="font-semibold text-gray-800 dark:text-white">{parche.name}</h3>
                           {parche.type === 'private' ? (
                             <Lock size={12} className="text-gray-400" />
                           ) : (
@@ -247,8 +233,7 @@ export function ParchesPage() {
                         </svg>
                       </button>
                     </div>
-
-                    {/* Members */}
+                    {}
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-blue-50 dark:border-[#233554]">
                       <div className="flex items-center gap-2">
                         <div className="flex -space-x-1.5">
@@ -272,8 +257,7 @@ export function ParchesPage() {
             )}
           </motion.div>
         )}
-
-        {/* Invitaciones */}
+        {}
         {activeTab === 'invitaciones' && (
           <motion.div
             key="invitaciones"
@@ -307,10 +291,10 @@ export function ParchesPage() {
                   className="bg-white dark:bg-[#112240] rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[0.98] transition-all border-2"
                   style={{ borderColor: 'rgba(59,130,246,0.3)' }}
                 >
-                  {/* Color band */}
+                  {}
                   <div className="h-1.5" style={{ background: parche.coverColor }} />
                   <div className="p-4">
-                    {/* Header con badge de invitación */}
+                    {}
                     <div className="flex items-center gap-2 mb-3">
                       <div
                         className="px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1"
@@ -322,7 +306,6 @@ export function ParchesPage() {
                         de {parche.admin}
                       </span>
                     </div>
-
                     <div className="flex items-start gap-3 mb-3">
                       <div
                         className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -332,7 +315,7 @@ export function ParchesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <h3 className="font-semibold text-gray-800 dark:text-white text-sm">{parche.name}</h3>
+                          <h3 className="font-semibold text-gray-800 dark:text-white">{parche.name}</h3>
                           {parche.type === 'private' ? (
                             <Lock size={12} className="text-gray-400" />
                           ) : (
@@ -355,8 +338,7 @@ export function ParchesPage() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Members */}
+                    {}
                     <div className="flex items-center justify-between pb-3 border-b border-blue-50 dark:border-[#233554]">
                       <div className="flex items-center gap-2">
                         <div className="flex -space-x-1.5">
@@ -374,8 +356,7 @@ export function ParchesPage() {
                         ))}
                       </div>
                     </div>
-
-                    {/* Action buttons */}
+                    {}
                     <div className="flex gap-2 mt-3">
                       <button
                         onClick={e => {
@@ -406,8 +387,7 @@ export function ParchesPage() {
             )}
           </motion.div>
         )}
-
-        {/* Explorar */}
+        {}
         {activeTab === 'explorar' && (
           <motion.div
             key="explorar"
@@ -415,7 +395,7 @@ export function ParchesPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
           >
-            {/* Category filters */}
+            {}
             <div className="px-5 mb-4">
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {uniqueCategories.map(cat => (
@@ -434,7 +414,6 @@ export function ParchesPage() {
                 ))}
               </div>
             </div>
-
             <div className="px-5 space-y-3">
               {filteredExplore.map((parche, i) => (
                 <motion.div
@@ -455,7 +434,7 @@ export function ParchesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-gray-800 dark:text-white text-sm">{parche.name}</h3>
+                          <h3 className="font-semibold text-gray-800 dark:text-white">{parche.name}</h3>
                           {parche.type === 'private' && <Lock size={11} className="text-gray-400" />}
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{parche.description}</p>
@@ -470,7 +449,6 @@ export function ParchesPage() {
                         </div>
                       </div>
                     </div>
-
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1.5">
                         {parche.tags.slice(0, 2).map(tag => (
@@ -490,7 +468,6 @@ export function ParchesPage() {
                   </div>
                 </motion.div>
               ))}
-
               {filteredExplore.length === 0 && (
                 <div className="text-center py-12">
                   <div className="flex justify-center mb-3">
@@ -503,8 +480,7 @@ export function ParchesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* FAB */}
+      {}
       <button
         onClick={() => navigate('/parches/create')}
         className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"

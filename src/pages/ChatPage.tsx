@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,29 +9,22 @@ import {
   MapPin, Clock, User, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { parches, chatMessages, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../data/mockData';
-import { useApp } from '../context/AppContext';
+import { parches, chatMessages, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
+import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
-
-/** Extract accent color from a CSS gradient string */
 function extractGradientColors(coverColor: string) {
   const hexes = coverColor.match(/#[0-9A-Fa-f]{6}/g);
   const accentColor = hexes ? hexes[hexes.length - 1] : '#3B82F6';
   const bubbleBg = coverColor.includes('gradient') ? coverColor : `linear-gradient(135deg, ${accentColor}, ${accentColor})`;
   return { bubbleBg, accentColor };
 }
-
-// ── Chat list (desktop sidebar data) ────────────────────────────────────────
 const chatList = parches.filter(p => p.joined).map((p, i) => ({
   ...p,
   lastMessage: ['¡Ya estoy en la mesa del fondo! 🔌', 'Coffee & Python esta noche? ☕', 'Alguien ya terminó los ejercicios?'][i % 3],
   lastTime: ['Ahora', '15 min', '1h'][i % 3],
   unread: [3, 0, 1][i % 3],
 }));
-
-// ── Context-menu items ───────────────────────────────────────────────────────
 const CONTEXT_ACTIONS = [
   { icon: UserCheck, label: 'Ver perfil del parche',    color: '#3B82F6', action: 'profile' },
   { icon: Search,    label: 'Buscar en el chat',        color: '#06B6D4', action: 'search' },
@@ -39,7 +32,6 @@ const CONTEXT_ACTIONS = [
   { icon: Eraser,    label: 'Vaciar chat',              color: '#EF4444', action: 'clear' },
   { icon: AlertCircle, label: 'Reportar parche',        color: '#DC2626', action: 'report' },
 ];
-
 export function ChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -59,16 +51,12 @@ export function ChatPage() {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  // ── Menu anchor: calculated from button position for fixed dropdown ──
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
-
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
   const handleSend = () => {
     if (!input.trim()) return;
     const newMsg = {
@@ -84,13 +72,12 @@ export function ChatPage() {
     setMessages(prev => [...prev, newMsg]);
     setInput('');
     setShowEmojis(false);
-
     if (Math.random() > 0.5) {
       setTimeout(() => {
         const replies = ['¡Genial! 🙌', 'Sí, ya voy para allá', '¿A qué hora llegas?', '👍👍', '¡Perfecto!', 'Ok, nos vemos 😊'];
         setMessages(prev => [...prev, {
           id: `m${Date.now()}`,
-          sender: 'Mateo',
+          sender: 'Diego Fabian',
           senderId: 'u3',
           avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
           content: replies[Math.floor(Math.random() * replies.length)],
@@ -100,7 +87,6 @@ export function ChatPage() {
       }, 2000 + Math.random() * 2000);
     }
   };
-
   const handleContextAction = (action: string) => {
     setShowContextMenu(false);
     switch (action) {
@@ -120,17 +106,11 @@ export function ChatPage() {
         alert(`Función "${action}" próximamente ✨`);
     }
   };
-
   const isMuted = mutedChats.includes(parche.id);
-
   const handleReportMessage = () => {
     if (!reportingMessage || !reportReason) return;
-    if (reportReason === 'Otro motivo' && !reportDescription.trim()) return;
-
-    // Simulate sending report to Bienestar team
+    if (!reportDescription.trim()) return;
     setReportSuccess(true);
-
-    // Auto-hide success message and reset after 3 seconds
     setTimeout(() => {
       setReportSuccess(false);
       setReportingMessage(null);
@@ -138,15 +118,13 @@ export function ChatPage() {
       setReportDescription('');
     }, 3000);
   };
-
-  // ── Chat view ────────────────────────────────────────────────────────────
   const chatView = (
     <div className="flex flex-col h-screen">
-      {/* Header */}
+      {}
       <div
         className="px-4 py-3 flex items-center gap-3 shadow-sm border-b"
         style={{
-          background: isDark ? 'rgba(17,34,64,0.97)' : 'rgba(255,255,255,0.97)',
+          background: isDark ? 'rgba(13,27,46,0.98)' : 'rgba(253,252,248,0.97)',
           borderColor: isDark ? '#233554' : '#F3F4F6',
           position: 'relative',
           zIndex: 10,
@@ -185,7 +163,7 @@ export function ChatPage() {
           >
             <Video size={18} />
           </button>
-          {/* ── Three-dot context menu ── */}
+          {}
           <div className="relative">
             <button
               ref={menuButtonRef}
@@ -209,16 +187,15 @@ export function ChatPage() {
             >
               <MoreVertical size={18} />
             </button>
-
-            {/* ── Dropdown rendered via portal → guaranteed above EVERYTHING ── */}
+            {}
             {showContextMenu && createPortal(
               <>
-                {/* Invisible backdrop to close on outside click */}
+                {}
                 <div
                   style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
                   onClick={() => setShowContextMenu(false)}
                 />
-                {/* Dropdown card */}
+                {}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.88, y: -8 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -229,23 +206,22 @@ export function ChatPage() {
                     top: menuAnchor.top,
                     right: menuAnchor.right,
                     zIndex: 9999,
-                    background: isDark ? '#0D1B2E' : 'white',
+                    background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.98)',
                     border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
                     boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3)',
                   }}
                 >
-                  {/* Arrow pointer */}
+                  {}
                   <div className="absolute -top-2 right-4 w-4 h-2 overflow-hidden" style={{ zIndex: 10000 }}>
                     <div
                       className="w-3 h-3 rotate-45 mx-auto"
                       style={{
                         marginTop: '4px',
-                        background: isDark ? '#0D1B2E' : 'white',
+                        background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.98)',
                         border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
                       }}
                     />
                   </div>
-
                   {CONTEXT_ACTIONS.map((item, i) => (
                     <button
                       key={item.action}
@@ -266,7 +242,7 @@ export function ChatPage() {
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         {item.label}
                       </span>
-                      {/* Gold dot for muted state */}
+                      {}
                       {item.action === 'mute' && isMuted && (
                         <div className="ml-auto w-2 h-2 rounded-full" style={{ background: GOLD_LIGHT }} />
                       )}
@@ -277,7 +253,7 @@ export function ChatPage() {
               document.body
             )}
           </div>
-          {/* Avatar */}
+          {}
           <button
             onClick={() => navigate('/profile')}
             className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#1E3A5F] shadow-sm active:scale-95 transition-transform ml-1"
@@ -290,8 +266,7 @@ export function ChatPage() {
           </button>
         </div>
       </div>
-
-      {/* Parche info expand */}
+      {}
       <AnimatePresence>
         {showInfo && (
           <motion.div
@@ -325,35 +300,47 @@ export function ChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Messages area with doodle bg */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative" style={{ background: isDark ? '#0A192F' : '#EEF2FF', isolation: 'isolate' }}>
-        {/* Doodle pattern behind messages */}
+      {}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative" style={{
+        background: isDark ? '#0A192F' : '#EDE9E0',
+        isolation: 'isolate',
+      }}>
+        {}
         <DoodleBackground isDark={isDark} opacity={isDark ? 1 : 0.8} />
-
         <div className="relative z-10">
-          {/* Date separator */}
+          {}
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex-1 h-px bg-white/10 dark:bg-white/10" />
-            <span className="text-xs text-white/50 dark:text-white/40 bg-black/20 px-3 py-0.5 rounded-full">Hoy</span>
-            <div className="flex-1 h-px bg-white/10 dark:bg-white/10" />
+            <div className="flex-1 h-px" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,25,47,0.12)' }} />
+            <span
+              className="text-xs px-3 py-0.5 rounded-full"
+              style={{
+                color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(10,25,47,0.5)',
+                background: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(253,252,248,0.85)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >Hoy</span>
+            <div className="flex-1 h-px" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,25,47,0.12)' }} />
           </div>
-
           <div className="space-y-3">
             {messages.map((msg, i) => {
               if (msg.type === 'system') {
                 return (
                   <div key={msg.id} className="flex justify-center">
-                    <span className="text-xs text-white/50 bg-black/25 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <span
+                      className="text-xs backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5"
+                      style={{
+                        color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(10,25,47,0.45)',
+                        background: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(253,252,248,0.8)',
+                        border: isDark ? 'none' : '1px solid rgba(10,25,47,0.08)',
+                      }}
+                    >
                       <User size={10} /> {msg.content}
                     </span>
                   </div>
                 );
               }
-
               const isMe = msg.isMe || msg.senderId === 'u1';
               const showAvatar = !isMe && (i === 0 || messages[i - 1].senderId !== msg.senderId || messages[i - 1].type === 'system');
-
               return (
                 <motion.div
                   key={msg.id}
@@ -372,7 +359,7 @@ export function ChatPage() {
                     {showAvatar && !isMe && (
                       <span className="text-[11px] text-white/60 mb-1 ml-1">{msg.sender}</span>
                     )}
-                    {/* Report icon - only shown on hover and for messages from others */}
+                    {}
                     {!isMe && msg.senderId !== 'u1' && hoveredMessageId === msg.id && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -395,7 +382,7 @@ export function ChatPage() {
                       <div className={`rounded-2xl overflow-hidden ${isMe ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
                         <img src={msg.imageUrl} alt="Imagen" className="w-56 h-36 object-cover" />
                         {msg.content && (
-                          <div className="px-3 py-2 text-sm" style={isMe ? { background: bubbleBg, color: 'white' } : { background: 'rgba(255,255,255,0.9)' }}>
+                          <div className="px-3 py-2 text-sm" style={isMe ? { background: bubbleBg, color: 'white' } : { background: isDark ? '#152238' : 'rgba(253,252,248,0.9)', color: isDark ? '#D1D9E6' : '#111827' }}>
                             {msg.content}
                           </div>
                         )}
@@ -406,7 +393,7 @@ export function ChatPage() {
                         style={
                           isMe
                             ? { background: bubbleBg, color: 'white' }
-                            : { background: 'rgba(255,255,255,0.92)', color: '#1F2937' }
+                            : { background: isDark ? '#152238' : 'rgba(253,252,248,0.97)', color: isDark ? '#D1D9E6' : '#111827', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(10,25,47,0.08)' }
                         }
                       >
                         {msg.content}
@@ -428,8 +415,7 @@ export function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
       </div>
-
-      {/* Emoji picker */}
+      {}
       <AnimatePresence>
         {showEmojis && (
           <motion.div
@@ -449,8 +435,7 @@ export function ChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Attachments panel */}
+      {}
       <AnimatePresence>
         {showAttachments && (
           <motion.div
@@ -481,8 +466,7 @@ export function ChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Input bar */}
+      {}
       <div
         className="px-4 py-3 border-t"
         style={{ background: isDark ? '#112240' : 'white', borderColor: isDark ? '#233554' : '#F3F4F6' }}
@@ -519,8 +503,6 @@ export function ChatPage() {
       </div>
     </div>
   );
-
-  // ── Report Message Modal ─────────────────────────────────────────────────
   const reportReasons = [
     { id: 'offensive', label: 'Contenido ofensivo', Icon: ShieldAlert, color: '#DC2626' },
     { id: 'harassment', label: 'Me molestó o incomodó', Icon: ThumbsDown, color: '#EA580C' },
@@ -528,7 +510,6 @@ export function ChatPage() {
     { id: 'inappropriate', label: 'Inapropiado para el grupo', Icon: TriangleAlert, color: '#D97706' },
     { id: 'other', label: 'Otro motivo', Icon: MessageSquare, color: '#6B7280' },
   ];
-
   const reportModal = (
     <AnimatePresence>
       {reportingMessage && (
@@ -551,7 +532,7 @@ export function ChatPage() {
             exit={{ scale: 0.9, opacity: 0 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] rounded-3xl shadow-2xl p-6 max-w-sm w-full mx-4 max-h-[85vh] overflow-y-auto"
             style={{
-              background: isDark ? '#0D1B2E' : 'white',
+              background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.98)',
               border: `1.5px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
             }}
           >
@@ -583,8 +564,7 @@ export function ChatPage() {
                 </p>
               </div>
             </div>
-
-            {/* Reason selection */}
+            {}
             <div className="mb-4">
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                 ¿Por qué reportas este mensaje?
@@ -639,9 +619,8 @@ export function ChatPage() {
                   </button>
                 ))}
               </div>
-
-              {/* Custom description for "Otro motivo" */}
-              {reportReason === 'Otro motivo' && (
+              {}
+              {reportReason && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -649,12 +628,12 @@ export function ChatPage() {
                   className="mt-3"
                 >
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                    Describe lo que te molestó
+                    Cuéntanos qué pasó y por qué te hizo sentir mal
                   </label>
                   <textarea
                     value={reportDescription}
                     onChange={(e) => setReportDescription(e.target.value.slice(0, 500))}
-                    placeholder="Escribe aquí los detalles..."
+                    placeholder="Describe con tus palabras lo que ocurrió..."
                     className="w-full px-3 py-2.5 rounded-xl text-sm resize-none focus:outline-none transition-all"
                     rows={4}
                     maxLength={500}
@@ -670,7 +649,6 @@ export function ChatPage() {
                 </motion.div>
               )}
             </div>
-
             {!reportSuccess ? (
               <div className="flex gap-3">
                 <button
@@ -723,15 +701,13 @@ export function ChatPage() {
       )}
     </AnimatePresence>
   );
-
-  // ── DESKTOP MASTER-DETAIL layout ─────────────────────────────────────────
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Desktop sidebar: chat list (hidden on mobile) */}
+      {}
       <aside
         className="hidden md:flex flex-col w-80 flex-shrink-0 border-r overflow-hidden"
         style={{
-          background: isDark ? '#0D1B2E' : 'white',
+          background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.98)',
           borderColor: isDark ? '#1E3A5F' : '#F3F4F6',
         }}
       >
@@ -786,13 +762,11 @@ export function ChatPage() {
           })}
         </div>
       </aside>
-
-      {/* Chat panel */}
+      {}
       <div className="flex-1 overflow-hidden">
         {chatView}
       </div>
-
-      {/* Report message modal */}
+      {}
       {reportModal}
     </div>
   );

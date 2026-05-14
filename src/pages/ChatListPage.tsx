@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Search, ScanLine, MessageSquare, Users, User, ArrowLeft } from 'lucide-react';
-import { parches, directChats, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, TEAL } from '../data/mockData';
+import { parches, directChats, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { useApp } from '../context/AppContext';
-
+import { Avatar } from '../components/ui/Avatar';
+import { useApp } from '../store/AppContext';
 const groupChatList = parches.filter(p => p.joined).map((p, i) => ({
   ...p,
   chatType: 'group' as const,
@@ -18,37 +18,30 @@ const groupChatList = parches.filter(p => p.joined).map((p, i) => ({
   unread: [3, 0, 1][i % 3],
   online: [true, false, true][i % 3],
 }));
-
 const directChatList = directChats.map(dc => ({
   ...dc,
   chatType: 'direct' as const,
 }));
-
-// Combine and sort by "most recent" (simplified: just interleave)
 const allChats = [...directChatList, ...groupChatList].sort((a, b) => {
   const timeOrder = { 'Ahora': 0, '10 min': 1, '15 min': 2, '1h': 3, '2h': 4, '1d': 5 };
   return (timeOrder[a.lastTime as keyof typeof timeOrder] ?? 999) - (timeOrder[b.lastTime as keyof typeof timeOrder] ?? 999);
 });
-
 export function ChatListPage() {
   const navigate = useNavigate();
-  const { currentUser } = useApp();
+  const { currentUser, isDark } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'direct' | 'groups'>('all');
-
   const baseFiltered = allChats.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   const filtered = baseFiltered.filter(c => {
     if (activeTab === 'direct') return c.chatType === 'direct';
     if (activeTab === 'groups') return c.chatType === 'group';
     return true;
   });
-
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header */}
+      {}
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3 flex-1">
@@ -59,12 +52,12 @@ export function ChatListPage() {
               <ArrowLeft size={20} />
             </button>
             <div className="flex-1">
-              <h1 className="text-gray-900 dark:text-white">Chats</h1>
+              <h1 className="text-gray-900 dark:text-white">💬 Chats</h1>
               <p className="text-sm text-gray-400">{allChats.length} conversaciones activas</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Gold album shortcut */}
+            {}
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={() => navigate('/monas')}
@@ -74,7 +67,7 @@ export function ChatListPage() {
               <ScanLine size={13} />
               QR Patricias
             </motion.button>
-            {/* Avatar */}
+            {}
             <button
               onClick={() => navigate('/profile')}
               className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#1E3A5F] shadow-sm active:scale-95 transition-transform"
@@ -87,18 +80,27 @@ export function ChatListPage() {
             </button>
           </div>
         </div>
-
         <div className="relative mb-4">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Buscar chats..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-100 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none text-sm shadow-sm"
+            className="w-full pl-10 pr-4 py-3 rounded-2xl placeholder-gray-400 focus:outline-none text-sm"
+            style={isDark ? {
+              background: '#0D1B2E',
+              color: '#E2E8F0',
+              border: '1px solid rgba(30,58,95,0.6)',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            } : {
+              background: 'rgba(253,252,248,0.95)',
+              color: '#1F2937',
+              boxShadow: '0 2px 10px rgba(10,25,47,0.07)',
+              border: '1px solid rgba(10,25,47,0.07)',
+            }}
           />
         </div>
-
-        {/* Filter tabs */}
+        {}
         <div className="flex gap-2">
           {[
             { id: 'all', label: 'Todos', icon: MessageSquare },
@@ -125,8 +127,7 @@ export function ChatListPage() {
           })}
         </div>
       </div>
-
-      {/* Chat List */}
+      {}
       <div className="flex-1 px-5">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
@@ -149,7 +150,6 @@ export function ChatListPage() {
               const accentColor = isDirect
                 ? chat.accentColor
                 : (chat.coverColor.match(/#[0-9A-Fa-f]{6}/g) || ['#06B6D4']).slice(-1)[0];
-
               return (
                 <motion.button
                   key={chat.id}
@@ -157,15 +157,25 @@ export function ChatListPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(isDirect ? `/direct-chat/${chat.id}` : `/chat/${chat.id}`)}
-                  className="w-full flex items-center gap-3 bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm text-left active:scale-[0.98] transition-all"
+                  className="w-full flex items-center gap-3 rounded-2xl p-4 text-left active:scale-[0.98] transition-all"
+                  style={isDark ? {
+                    background: '#0D1B2E',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+                    border: '1px solid rgba(30,58,95,0.6)',
+                  } : {
+                    background: 'rgba(253,252,248,0.95)',
+                    boxShadow: '0 2px 14px rgba(10,25,47,0.07)',
+                    border: '1px solid rgba(10,25,47,0.06)',
+                  }}
                 >
-                  {/* Avatar */}
+                  {}
                   <div className="relative flex-shrink-0">
                     {isDirect ? (
-                      <img
-                        src={chat.avatar}
-                        alt={chat.name}
-                        className="w-12 h-12 rounded-xl object-cover"
+                      <Avatar
+                        name={chat.name}
+                        size={48}
+                        className="rounded-xl"
+                        gradient={accentColor}
                       />
                     ) : (
                       <div
@@ -176,11 +186,10 @@ export function ChatListPage() {
                       </div>
                     )}
                     {chat.online && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#112240]" style={{ background: accentColor }} />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style={{ background: accentColor, borderColor: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.95)' }} />
                     )}
                   </div>
-
-                  {/* Content */}
+                  {}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-gray-800 dark:text-white text-sm truncate">{chat.name}</h3>
@@ -201,7 +210,7 @@ export function ChatListPage() {
                       <div className="flex items-center gap-1 mt-1">
                         <div className="flex -space-x-1">
                           {chat.memberAvatars.slice(0, 2).map((av, j) => (
-                            <img key={j} src={av} alt="" className="w-4 h-4 rounded-full object-cover border border-white dark:border-[#112240]" />
+                            <img key={j} src={av} alt="" className="w-4 h-4 rounded-full object-cover" style={{ border: `1px solid ${isDark ? '#0D1B2E' : 'rgba(253,252,248,0.95)'}` }} />
                           ))}
                         </div>
                         <span className="text-[10px] text-gray-400">{chat.members} miembros</span>

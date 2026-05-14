@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
+import lightBg from '../assets/image-3.png';
+import darkBg from '../assets/image-2.png';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -6,12 +9,12 @@ import {
   BarChart3, MapPin, MessageCircle, AlertTriangle, LogOut,
   Menu, X, ChevronRight, Activity, Zap, Eye, Ban, CheckCircle,
   XCircle, Edit3, Trash2, Flag, Settings, Sun, Moon, UserCheck,
-  Search, Filter, MoreVertical, Lock, Unlock, Sliders
+  Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell
 } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT } from '../data/mockData';
+import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT } from '../types/mockData';
+import logoImg from '../assets/logo_nuevo_patricia.png';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-import { useApp } from '../context/AppContext';
-
+import { useApp } from '../store/AppContext';
 interface Metric {
   label: string;
   value: string | number;
@@ -20,7 +23,13 @@ interface Metric {
   color: string;
   bg: string;
 }
-
+interface UserReport {
+  id: string;
+  category: 'comportamiento' | 'spam' | 'acoso' | 'contenido' | 'otro';
+  message: string;
+  reporter: string;
+  date: string;
+}
 interface User {
   id: string;
   name: string;
@@ -32,8 +41,8 @@ interface User {
   xp: number;
   level: number;
   reports: number;
+  reportDetails?: UserReport[];
 }
-
 interface Parche {
   id: string;
   name: string;
@@ -43,7 +52,6 @@ interface Parche {
   location: string;
   status: 'active' | 'flagged' | 'deleted';
 }
-
 interface Event {
   id: string;
   title: string;
@@ -53,7 +61,6 @@ interface Event {
   status: 'pending' | 'approved' | 'rejected';
   category: string;
 }
-
 interface Patricia {
   id: string;
   name: string;
@@ -65,7 +72,6 @@ interface Patricia {
   obtainedCount: number;
   active: boolean;
 }
-
 export function AdminDashboardPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useApp();
@@ -74,34 +80,59 @@ export function AdminDashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedParche, setSelectedParche] = useState<Parche | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [scheduleEmailError, setScheduleEmailError] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const showError = (msg: string) => { setErrorMessage(msg); setShowErrorModal(true); };
+  const showSuccess = (msg: string) => { setSuccessMessage(msg); setShowSuccessModal(true); };
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => setConfirmModal({ title, message, onConfirm });
+  const [startDate, setStartDate] = useState('2025-01-01');
+  const [endDate, setEndDate] = useState('2025-05-31');
+  const [metricType, setMetricType] = useState<'all' | 'users' | 'parches' | 'events' | 'matches' | 'zones'>('all');
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+  const [reportStartDate, setReportStartDate] = useState('2025-01-01');
+  const [reportEndDate, setReportEndDate] = useState('2025-05-31');
+  const [showPreview, setShowPreview] = useState(false);
+  const [scheduleFrequency, setScheduleFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [scheduleEmail, setScheduleEmail] = useState('');
+  const [statsStartDate, setStatsStartDate] = useState('2025-01-01');
+  const [statsEndDate, setStatsEndDate] = useState('2025-05-31');
+  const [statsType, setStatsType] = useState<'all' | 'events' | 'participation' | 'social'>('all');
   const handleLogout = () => {
     localStorage.removeItem('adminSession');
     navigate('/admin/login');
   };
-
-  // Mock Data States
   const [users, setUsers] = useState<User[]>([
     { id: 'u1', name: 'María González', email: 'maria.g@mail.escuelaing.edu.co', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100', faculty: 'Sistemas', status: 'active', verified: true, xp: 3200, level: 12, reports: 0 },
     { id: 'u2', name: 'Carlos Mendoza', email: 'carlos.m@mail.escuelaing.edu.co', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', faculty: 'Civil', status: 'active', verified: true, xp: 2800, level: 10, reports: 0 },
-    { id: 'u3', name: 'Ana Torres', email: 'ana.t@mail.escuelaing.edu.co', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', faculty: 'Industrial', status: 'flagged', verified: true, xp: 1500, level: 7, reports: 3 },
-    { id: 'u4', name: 'Juan Pérez', email: 'juan.p@mail.escuelaing.edu.co', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', faculty: 'Mecánica', status: 'suspended', verified: false, xp: 900, level: 5, reports: 5 },
+    { id: 'u3', name: 'Ana Torres', email: 'ana.t@mail.escuelaing.edu.co', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', faculty: 'Industrial', status: 'flagged', verified: true, xp: 1500, level: 7, reports: 3, reportDetails: [
+      { id: 'r1', category: 'comportamiento', message: 'Esta usuaria publicó comentarios ofensivos en el parche de Cálculo 3, insultando a otros miembros del grupo por no entender los ejercicios.', reporter: 'carlos.m@mail.escuelaing.edu.co', date: '2025-05-10' },
+      { id: 'r2', category: 'acoso', message: 'Me envió mensajes privados reiterados después de que le pedí que parara. Siento que me está acosando dentro de la plataforma.', reporter: 'juan.p@mail.escuelaing.edu.co', date: '2025-05-08' },
+      { id: 'r3', category: 'contenido', message: 'Compartió imágenes inapropiadas en el chat del parche "Café y Conversa" sin ningún aviso previo.', reporter: 'maria.g@mail.escuelaing.edu.co', date: '2025-05-06' },
+    ]},
+    { id: 'u4', name: 'Juan Pérez', email: 'juan.p@mail.escuelaing.edu.co', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', faculty: 'Mecánica', status: 'suspended', verified: false, xp: 900, level: 5, reports: 5, reportDetails: [
+      { id: 'r4', category: 'spam', message: 'Está spameando el feed con publicaciones repetidas sobre un negocio personal, varias veces al día durante semanas.', reporter: 'maria.g@mail.escuelaing.edu.co', date: '2025-05-12' },
+      { id: 'r5', category: 'comportamiento', message: 'En el parche de Fútbol Campus empezó a insultar a los otros jugadores cuando perdieron el partido. El lenguaje fue muy agresivo.', reporter: 'ana.t@mail.escuelaing.edu.co', date: '2025-05-11' },
+      { id: 'r6', category: 'spam', message: 'Envía mensajes masivos con links externos a todos los usuarios del parche sin que nadie se lo haya pedido.', reporter: 'carlos.m@mail.escuelaing.edu.co', date: '2025-05-09' },
+      { id: 'r7', category: 'acoso', message: 'Me bloqueó y creó una cuenta nueva solo para seguir enviándome mensajes. Esto ya es acoso sistemático.', reporter: 'maria.g@mail.escuelaing.edu.co', date: '2025-05-07' },
+      { id: 'r8', category: 'contenido', message: 'Publicó capturas de pantalla privadas de conversaciones de otros usuarios sin su consentimiento.', reporter: 'ana.t@mail.escuelaing.edu.co', date: '2025-05-05' },
+    ]},
   ]);
-
   const [parches, setParches] = useState<Parche[]>([
     { id: 'p1', name: 'Gaming Night ECI', creator: 'Carlos M.', members: 24, reports: 0, location: 'Bloque A', status: 'active' },
     { id: 'p2', name: 'Estudio Cálculo 3', creator: 'María G.', members: 15, reports: 0, location: 'Biblioteca', status: 'active' },
     { id: 'p3', name: 'Futbol Campus', creator: 'Juan P.', members: 32, reports: 2, location: 'Zona Deportiva', status: 'flagged' },
     { id: 'p4', name: 'Cafe y Conversa', creator: 'Ana T.', members: 18, reports: 0, location: 'Cafetería', status: 'active' },
   ]);
-
   const [events, setEvents] = useState<Event[]>([
     { id: 'e1', title: 'Hackathon ECI 2025', organizer: 'Decanatura Sistemas', date: '2025-05-15', attendees: 120, status: 'approved', category: 'Tecnología' },
     { id: 'e2', title: 'Festival de Música Campus', organizer: 'Bienestar Universitario', date: '2025-05-20', attendees: 0, status: 'pending', category: 'Cultural' },
     { id: 'e3', title: 'Feria de Semestre', organizer: 'Admin', date: '2025-05-25', attendees: 85, status: 'approved', category: 'Académico' },
     { id: 'e4', title: 'Torneo Interuniversitario', organizer: 'Club Deportivo', date: '2025-06-01', attendees: 0, status: 'pending', category: 'Deportivo' },
   ]);
-
   const [patricias, setPatricias] = useState<Patricia[]>([
     { id: 'pat1', name: 'Mona Lisa Ingeniera', description: 'Una patricia de nivel común que celebra la creatividad', rarity: 'comun', category: 'Arte', xpValue: 50, unlockCondition: 'Completar primer parche', obtainedCount: 1247, active: true },
     { id: 'pat2', name: 'La Gioconda Matemática', description: 'Patricia rara para amantes de las ciencias exactas', rarity: 'rara', category: 'Ciencias', xpValue: 100, unlockCondition: 'Obtener 500 XP', obtainedCount: 543, active: true },
@@ -110,7 +141,6 @@ export function AdminDashboardPage() {
     { id: 'pat5', name: 'Patricia Deportista', description: 'Para los más activos del campus', rarity: 'comun', category: 'Deportes', xpValue: 50, unlockCondition: 'Asistir a 3 eventos deportivos', obtainedCount: 821, active: true },
     { id: 'pat6', name: 'Patricia Cultural', description: 'Celebra las artes y la cultura', rarity: 'rara', category: 'Cultura', xpValue: 100, unlockCondition: 'Asistir a evento cultural', obtainedCount: 392, active: false },
   ]);
-
   const handleExportCSV = () => {
     const csvData = `data:text/csv;charset=utf-8,Usuario,Email,Facultad,XP,Nivel,Estado\n${users.map(u => `${u.name},${u.email},${u.faculty},${u.xp},${u.level},${u.status}`).join('\n')}`;
     const link = document.createElement('a');
@@ -120,41 +150,102 @@ export function AdminDashboardPage() {
     link.click();
     document.body.removeChild(link);
   };
-
   const handleSuspendUser = (userId: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: u.status === 'suspended' ? 'active' : 'suspended' } : u));
+    const user = users.find(u => u.id === userId);
+    const nextStatus = user?.status === 'suspended' ? 'active' : 'suspended';
+    const action = nextStatus === 'suspended' ? 'suspendido' : 'reactivado';
+    showConfirm(
+      nextStatus === 'suspended' ? 'Suspender usuario' : 'Reactivar usuario',
+      `¿Confirmas que deseas ${nextStatus === 'suspended' ? 'suspender' : 'reactivar'} a ${user?.name}?`,
+      () => {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: nextStatus as User['status'] } : u));
+        showSuccess(`Usuario ${user?.name} ${action} correctamente.`);
+      }
+    );
   };
-
   const handleBanUser = (userId: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'banned' } : u));
+    const user = users.find(u => u.id === userId);
+    showConfirm(
+      'Banear usuario',
+      `¿Estás seguro de que deseas banear a ${user?.name}? Esta acción bloqueará permanentemente su acceso.`,
+      () => {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'banned' } : u));
+        showSuccess(`Usuario ${user?.name} baneado correctamente.`);
+      }
+    );
   };
-
   const handleVerifyUser = (userId: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, verified: !u.verified } : u));
+    const user = users.find(u => u.id === userId);
+    const nextVerified = !user?.verified;
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, verified: nextVerified } : u));
+    showSuccess(`Usuario ${user?.name} ${nextVerified ? 'verificado' : 'desverificado'} correctamente.`);
   };
-
   const handleDeleteParche = (parcheId: string) => {
-    setParches(prev => prev.map(p => p.id === parcheId ? { ...p, status: 'deleted' } : p));
+    const parche = parches.find(p => p.id === parcheId);
+    showConfirm(
+      'Eliminar parche',
+      `¿Confirmas la eliminación del parche "${parche?.name}"? Esta acción no se puede deshacer.`,
+      () => {
+        setParches(prev => prev.map(p => p.id === parcheId ? { ...p, status: 'deleted' } : p));
+        showSuccess(`Parche "${parche?.name}" eliminado correctamente.`);
+      }
+    );
   };
-
   const handleApproveEvent = (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
     setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'approved' } : e));
+    showSuccess(`Evento "${event?.title}" aprobado correctamente.`);
   };
-
   const handleRejectEvent = (eventId: string) => {
-    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'rejected' } : e));
+    const event = events.find(e => e.id === eventId);
+    showConfirm(
+      'Rechazar evento',
+      `¿Confirmas el rechazo del evento "${event?.title}"?`,
+      () => {
+        setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'rejected' } : e));
+        showSuccess(`Evento "${event?.title}" rechazado.`);
+      }
+    );
   };
-
   const handleTogglePatricia = (patriciaId: string) => {
-    setPatricias(prev => prev.map(p => p.id === patriciaId ? { ...p, active: !p.active } : p));
+    const patricia = patricias.find(p => p.id === patriciaId);
+    const nextActive = !patricia?.active;
+    setPatricias(prev => prev.map(p => p.id === patriciaId ? { ...p, active: nextActive } : p));
+    showSuccess(`Patricia "${patricia?.name}" ${nextActive ? 'activada' : 'desactivada'} correctamente.`);
   };
-
-  const handleEditPatricia = (patriciaId: string) => {
-    // In a real app, this would open an edit modal
-    console.log('Edit patricia:', patriciaId);
+  const handleEditPatricia = (_patriciaId: string) => {
+    showError('La edición de patricias estará disponible próximamente.');
   };
-
-  // Mock Metrics Data
+  const handleToggleMetric = (metric: string) => {
+    setSelectedMetrics(prev =>
+      prev.includes(metric) ? prev.filter(m => m !== metric) : [...prev, metric]
+    );
+  };
+  const handleGenerateReport = () => {
+    const totalRecords = Math.floor(Math.random() * 15000) + 1000;
+    if (totalRecords > 10000) {
+      showSuccess('El reporte se está generando. Recibirás una notificación cuando esté listo.');
+    } else {
+      const csvData = `data:text/csv;charset=utf-8,Tipo,Fecha,Detalles\n${selectedMetrics.map(m => `${m},${new Date().toISOString()},Datos de ${m}`).join('\n')}`;
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csvData));
+      link.setAttribute('download', `reporte_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showSuccess('Reporte generado y descargado correctamente.');
+    }
+  };
+  const handleScheduleReport = () => {
+    if (!scheduleEmail.trim()) {
+      setScheduleEmailError('Por favor ingresa un correo de entrega.');
+      return;
+    }
+    setScheduleEmailError('');
+    const labels: Record<string, string> = { daily: 'diario', weekly: 'semanal', monthly: 'mensual' };
+    showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    setScheduleEmail('');
+  };
   const metrics: Metric[] = [
     {
       label: 'Usuarios Activos',
@@ -189,8 +280,6 @@ export function AdminDashboardPage() {
       bg: 'rgba(249,115,22,0.1)',
     },
   ];
-
-  // Mock Activity Data (simulated chart)
   const activityData = [
     { day: 'Lun', value: 65 },
     { day: 'Mar', value: 78 },
@@ -200,8 +289,6 @@ export function AdminDashboardPage() {
     { day: 'Sáb', value: 45 },
     { day: 'Dom', value: 38 },
   ];
-
-  // Mock Campus Zones Heatmap
   const campusZones = [
     { name: 'Biblioteca', activity: 92, color: '#EF4444' },
     { name: 'Cafetería', activity: 85, color: '#F59E0B' },
@@ -210,29 +297,97 @@ export function AdminDashboardPage() {
     { name: 'Bloque C', activity: 72, color: '#8B5CF6' },
     { name: 'Zona Deportiva', activity: 48, color: '#10B981' },
   ];
-
   const sidebarItems = [
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'analytics', label: 'Análisis', icon: BarChart3 },
+    { id: 'reports', label: 'Reportes', icon: Download },
+    { id: 'institutional-stats', label: 'Estadísticas Institucionales', icon: TrendingUp },
     { id: 'users', label: 'Gestión de Usuarios', icon: Users },
     { id: 'parches', label: 'Moderación de Parches', icon: Heart },
     { id: 'events', label: 'Eventos', icon: Calendar },
     { id: 'patricias', label: 'Gestión de Patricias', icon: Zap },
     { id: 'config', label: 'Configuración Sistema', icon: Settings },
   ];
-
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0A192F] flex relative overflow-hidden">
+    <div
+      className="min-h-screen flex relative"
+      style={{
+        backgroundImage: `url(${isDark ? darkBg : lightBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <DoodleBackground isDark={isDark} opacity={0.3} />
-
-      {/* Sidebar */}
+      {}
+      <header
+        className="fixed top-0 left-0 right-0 z-[70]"
+        style={isDark
+          ? { background: 'rgba(3,13,31,0.96)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(30,58,95,0.5)', boxShadow: '0 2px 20px rgba(0,0,0,0.3)' }
+          : { background: 'rgba(247,245,240,0.92)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(10,25,47,0.06)', boxShadow: '0 2px 20px rgba(10,25,47,0.07)' }
+        }
+      >
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            className="flex items-center gap-2.5 active:opacity-70 transition-opacity"
+            onClick={() => setSidebarOpen(prev => !prev)}
+          >
+            <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md">
+              <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex flex-col items-start">
+              <span
+                className="font-bold tracking-tight leading-none"
+                style={{ background: GOLD_GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontSize: '1.05rem' }}
+              >
+                PATRICI.A
+              </span>
+              <span className="text-[10px] tracking-wide" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
+                Admin Panel
+              </span>
+            </div>
+            <Menu size={15} style={{ color: isDark ? '#4A6080' : '#9CA3AF', marginLeft: 2 }} />
+          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={isDark
+                ? { background: 'rgba(23,42,69,0.8)', color: '#9CA3AF' }
+                : { background: 'rgba(253,252,248,0.80)', color: '#4A5568', boxShadow: '0 1px 8px rgba(10,25,47,0.09)', border: '1px solid rgba(10,25,47,0.07)' }
+              }
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+            <button
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 relative"
+              style={isDark
+                ? { background: 'rgba(23,42,69,0.8)', color: '#9CA3AF' }
+                : { background: 'rgba(253,252,248,0.80)', color: '#4A5568', boxShadow: '0 1px 8px rgba(10,25,47,0.09)', border: '1px solid rgba(10,25,47,0.07)' }
+              }
+            >
+              <Bell size={15} />
+              <span className="absolute top-1 right-1 w-[14px] h-[14px] rounded-full text-white flex items-center justify-center font-bold" style={{ background: GRADIENT, fontSize: '8px' }}>
+                3
+              </span>
+            </button>
+            <div className="relative flex-shrink-0">
+              <div className="w-[38px] h-[38px] rounded-full flex items-center justify-center font-bold text-white text-xs" style={{ background: GRADIENT }}>
+                A
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style={{ background: '#10B981', borderColor: isDark ? '#030D1F' : '#F7F5F0' }} />
+            </div>
+          </div>
+        </div>
+      </header>
+      {}
       <aside
-        className={`fixed lg:relative left-0 top-0 h-screen w-[280px] max-w-[80vw] bg-white dark:bg-[#112240] border-r border-gray-200 dark:border-[#1E3A5F] z-50 shadow-xl transition-transform duration-300 lg:flex-shrink-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed left-0 top-0 h-screen w-[280px] max-w-[80vw] bg-white dark:bg-[#112240] border-r border-gray-200 dark:border-[#1E3A5F] z-[60] shadow-xl transition-transform duration-300 flex flex-col ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="p-4 sm:p-5 border-b border-gray-200 dark:border-[#1E3A5F]">
@@ -251,13 +406,12 @@ export function AdminDashboardPage() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#1A2F4A] flex items-center justify-center text-gray-500 dark:text-gray-400"
+              className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#1A2F4A] flex items-center justify-center text-gray-500 dark:text-gray-400"
             >
               <X size={18} />
             </button>
           </div>
-
-          {/* Admin Info */}
+          {}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/10">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
               A
@@ -268,102 +422,137 @@ export function AdminDashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="p-3">
+        {}
+        <nav className="p-3 flex-1 overflow-y-auto">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-2 transition-all ${
+                onClick={() => { setActiveSection(item.id); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-2 transition-all relative overflow-hidden ${
                   isActive
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A2F4A]'
                 }`}
               >
-                <Icon size={18} />
-                <span className="text-sm font-medium">{item.label}</span>
-                {isActive && <ChevronRight size={16} className="ml-auto" />}
+                {isActive && <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full" style={{ background: GOLD_GRADIENT }} />}
+                <Icon size={18} className="flex-shrink-0" />
+                <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+                {isActive && <ChevronRight size={16} className="flex-shrink-0" />}
               </button>
             );
           })}
         </nav>
-
-        {/* Theme Toggle & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 border-t border-gray-200 dark:border-[#1E3A5F] space-y-2">
+        {}
+        <div className="p-3 border-t border-gray-200 dark:border-[#1E3A5F]">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-all mb-2"
           >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            <span className="text-sm font-medium">{isDark ? 'Modo Claro' : 'Modo Oscuro'}</span>
+            {isDark ? <Sun size={18} className="flex-shrink-0" /> : <Moon size={18} className="flex-shrink-0" />}
+            <span className="text-sm font-medium flex-1 text-left">{isDark ? 'Modo Claro' : 'Modo Oscuro'}</span>
           </button>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
           >
-            <LogOut size={18} />
-            <span className="text-sm font-medium">Cerrar Sesión</span>
+            <LogOut size={18} className="flex-shrink-0" />
+            <span className="text-sm font-medium flex-1 text-left">Cerrar Sesión</span>
           </button>
         </div>
       </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
-        {/* Top Header */}
-        <div className="sticky top-0 z-40 bg-white/95 dark:bg-[#0A192F]/95 backdrop-blur-lg border-b border-gray-200 dark:border-[#1E3A5F]">
-          <div className="px-4 md:px-5 py-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden w-9 h-9 flex-shrink-0 rounded-xl bg-gray-100 dark:bg-[#112240] flex items-center justify-center text-gray-700 dark:text-gray-300"
-              >
-                <Menu size={20} />
-              </button>
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-black text-gray-900 dark:text-white truncate">
-                  Dashboard Admin
-                </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
-                  Gestión y analytics de patrici.a
-                </p>
-              </div>
-            </div>
-
-            {/* Export Button */}
-            {(activeSection === 'analytics' || activeSection === 'users') && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-white font-semibold text-sm shadow-lg flex-shrink-0"
-                style={{ background: GRADIENT }}
-              >
-                <Download size={16} />
-                <span className="hidden sm:inline">Exportar</span>
-              </motion.button>
-            )}
-          </div>
-        </div>
-
-        {/* Content */}
+      {}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[55]" onClick={() => setSidebarOpen(false)} />
+      )}
+      {}
+      <div className="flex-1 pt-[57px]">
+        {}
         <div className="p-4 sm:p-5 max-w-7xl mx-auto relative z-10">
-          {/* Analytics Section */}
+          {}
           {activeSection === 'analytics' && (
             <>
-              {/* Metrics Grid */}
+              {}
+              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                      Fecha Inicio
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                      Fecha Fin
+                    </label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                      Tipo de Métrica
+                    </label>
+                    <select
+                      value={metricType}
+                      onChange={(e) => setMetricType(e.target.value as typeof metricType)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                      style={{ backgroundImage: 'none' }}
+                    >
+                      <option value="all">Todas</option>
+                      <option value="users">Usuarios</option>
+                      <option value="parches">Parches</option>
+                      <option value="events">Eventos</option>
+                      <option value="matches">Matches</option>
+                      <option value="zones">Zonas</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  Mostrando datos del semestre activo: {startDate} hasta {endDate}
+                  {metricType !== 'all' && ` · Filtrado por: ${
+                    metricType === 'users' ? 'Usuarios' :
+                    metricType === 'parches' ? 'Parches' :
+                    metricType === 'events' ? 'Eventos' :
+                    metricType === 'matches' ? 'Matches' :
+                    metricType === 'zones' ? 'Zonas' : ''
+                  }`}
+                </p>
+              </div>
+              {}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {metrics.map((metric, index) => {
               const Icon = metric.icon;
+              const isHighlighted = metricType === 'all' ||
+                (metricType === 'users' && metric.label === 'Usuarios Activos') ||
+                (metricType === 'parches' && metric.label === 'Parches Creados') ||
+                (metricType === 'events' && metric.label === 'Eventos Vigentes') ||
+                (metricType === 'matches' && metric.label === 'Tasa de Matching');
               return (
                 <motion.div
                   key={metric.label}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{
+                    opacity: isHighlighted ? 1 : 0.4,
+                    y: 0,
+                    scale: isHighlighted ? 1 : 0.97
+                  }}
                   transition={{ delay: index * 0.1 }}
                   className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+                  style={{
+                    filter: isHighlighted ? 'none' : 'grayscale(0.3)',
+                    pointerEvents: isHighlighted ? 'auto' : 'none'
+                  }}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div
@@ -386,14 +575,27 @@ export function AdminDashboardPage() {
               );
             })}
           </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Activity Chart */}
-            <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm">
+            {}
+            <motion.div
+              animate={{
+                opacity: metricType === 'zones' ? 0.4 : 1,
+                scale: metricType === 'zones' ? 0.97 : 1
+              }}
+              className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+              style={{
+                filter: metricType === 'zones' ? 'grayscale(0.3)' : 'none',
+                pointerEvents: metricType === 'zones' ? 'none' : 'auto'
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">
-                    Actividad de Usuarios
+                    {metricType === 'users' ? 'Actividad de Usuarios' :
+                     metricType === 'parches' ? 'Actividad de Parches' :
+                     metricType === 'events' ? 'Actividad de Eventos' :
+                     metricType === 'matches' ? 'Actividad de Matching' :
+                     'Actividad General'}
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Últimos 7 días
@@ -401,8 +603,7 @@ export function AdminDashboardPage() {
                 </div>
                 <Activity size={20} className="text-gray-400" />
               </div>
-
-              {/* Simple Bar Chart */}
+              {}
               <div className="space-y-3">
                 {activityData.map((day, index) => (
                   <div key={day.day}>
@@ -426,10 +627,19 @@ export function AdminDashboardPage() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Campus Heatmap */}
-            <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm">
+            </motion.div>
+            {}
+            <motion.div
+              animate={{
+                opacity: metricType === 'all' || metricType === 'zones' ? 1 : 0.4,
+                scale: metricType === 'all' || metricType === 'zones' ? 1 : 0.97
+              }}
+              className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+              style={{
+                filter: metricType === 'all' || metricType === 'zones' ? 'none' : 'grayscale(0.3)',
+                pointerEvents: metricType === 'all' || metricType === 'zones' ? 'auto' : 'none'
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white">
@@ -441,7 +651,6 @@ export function AdminDashboardPage() {
                 </div>
                 <MapPin size={20} className="text-gray-400" />
               </div>
-
               <div className="space-y-3">
                 {campusZones.map((zone, index) => (
                   <motion.div
@@ -473,10 +682,9 @@ export function AdminDashboardPage() {
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
-
-          {/* Recent Activity */}
+          {}
           <div className="mt-4 sm:mt-6 bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white mb-4">
               Actividad Reciente
@@ -516,11 +724,443 @@ export function AdminDashboardPage() {
           </div>
             </>
           )}
-
-          {/* Users Section */}
+          {}
+          {activeSection === 'reports' && (
+            <div className="space-y-6">
+              {}
+              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                  Generar Reporte Personalizado
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3 block">
+                      Selecciona las métricas a exportar
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                      {['USUARIOS', 'PARCHES', 'EVENTOS', 'MATCHES', 'ZONAS'].map((metric) => (
+                        <button
+                          key={metric}
+                          onClick={() => handleToggleMetric(metric)}
+                          className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                            selectedMetrics.includes(metric)
+                              ? 'bg-blue-600 text-white shadow-lg'
+                              : 'bg-gray-100 dark:bg-[#1A2F4A] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#233554]'
+                          }`}
+                        >
+                          {metric}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                        Fecha Inicio
+                      </label>
+                      <input
+                        type="date"
+                        value={reportStartDate}
+                        onChange={(e) => setReportStartDate(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                        Fecha Fin
+                      </label>
+                      <input
+                        type="date"
+                        value={reportEndDate}
+                        onChange={(e) => setReportEndDate(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowPreview(!showPreview)}
+                      disabled={selectedMetrics.length === 0}
+                      className="flex-1 px-4 py-3 rounded-xl bg-gray-100 dark:bg-[#1A2F4A] text-gray-700 dark:text-gray-300 font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#233554] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <Eye size={18} />
+                      {showPreview ? 'Ocultar Vista Previa' : 'Vista Previa (10 filas)'}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleGenerateReport}
+                      disabled={selectedMetrics.length === 0}
+                      className="flex-1 px-4 py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      style={{ background: GRADIENT }}
+                    >
+                      <Download size={18} />
+                      Generar Reporte CSV
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+              {}
+              <AnimatePresence>
+                {showPreview && selectedMetrics.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm overflow-x-auto"
+                  >
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-3">
+                      Vista Previa (Primeras 10 filas)
+                    </h4>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-[#1E3A5F]">
+                          <th className="text-left p-2 text-gray-600 dark:text-gray-400 font-semibold">ID</th>
+                          <th className="text-left p-2 text-gray-600 dark:text-gray-400 font-semibold">Tipo</th>
+                          <th className="text-left p-2 text-gray-600 dark:text-gray-400 font-semibold">Fecha</th>
+                          <th className="text-left p-2 text-gray-600 dark:text-gray-400 font-semibold">Detalles</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <tr key={i} className="border-b border-gray-100 dark:border-[#1A2F4A]">
+                            <td className="p-2 text-gray-900 dark:text-white">#{i + 1}</td>
+                            <td className="p-2 text-gray-700 dark:text-gray-300">
+                              {selectedMetrics[i % selectedMetrics.length]}
+                            </td>
+                            <td className="p-2 text-gray-600 dark:text-gray-400">2025-05-{10 + i}</td>
+                            <td className="p-2 text-gray-600 dark:text-gray-400">Datos de ejemplo {i + 1}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {}
+              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                  Programar Reporte Automático
+                </h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                        Frecuencia
+                      </label>
+                      <select
+                        value={scheduleFrequency}
+                        onChange={(e) => setScheduleFrequency(e.target.value as typeof scheduleFrequency)}
+                        className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="daily">Diario</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensual</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                        Correo de entrega
+                      </label>
+                      <input
+                        type="email"
+                        value={scheduleEmail}
+                        onChange={(e) => { setScheduleEmail(e.target.value); if (scheduleEmailError) setScheduleEmailError(''); }}
+                        placeholder="admin@escuelaing.edu.co"
+                        className={`w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border text-gray-900 dark:text-white focus:outline-none transition-colors ${scheduleEmailError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 dark:border-[#233554] focus:border-blue-500'}`}
+                      />
+                      {scheduleEmailError && (
+                        <p className="text-xs text-red-500 font-medium mt-1 flex items-center gap-1">
+                          <AlertTriangle size={11} />
+                          {scheduleEmailError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleScheduleReport}
+                    className="px-4 py-3 rounded-xl bg-purple-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-purple-700 transition-all"
+                  >
+                    <Calendar size={18} />
+                    Programar Reporte {scheduleFrequency === 'daily' ? 'Diario' : scheduleFrequency === 'weekly' ? 'Semanal' : 'Mensual'}
+                  </motion.button>
+                </div>
+              </div>
+              {}
+              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                  Historial de Reportes
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  Reportes disponibles por 30 días
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { id: 'r1', date: '2025-05-12', metrics: ['USUARIOS', 'PARCHES'], size: '2.4 MB' },
+                    { id: 'r2', date: '2025-05-10', metrics: ['EVENTOS', 'MATCHES'], size: '1.8 MB' },
+                    { id: 'r3', date: '2025-05-08', metrics: ['ZONAS'], size: '890 KB' },
+                  ].map((report) => (
+                    <div
+                      key={report.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-[#1E3A5F]"
+                    >
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
+                          Reporte del {report.date}
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {report.metrics.map((m) => (
+                            <span
+                              key={m}
+                              className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold"
+                            >
+                              {m}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{report.size}</p>
+                      </div>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-semibold text-sm flex items-center gap-2"
+                      >
+                        <Download size={16} />
+                        Descargar
+                      </motion.button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {}
+          {activeSection === 'institutional-stats' && (
+            <div className="space-y-6">
+              {}
+              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+                  Filtros de Estadísticas
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                      Fecha Inicio
+                    </label>
+                    <input
+                      type="date"
+                      value={statsStartDate}
+                      onChange={(e) => setStatsStartDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                      Fecha Fin
+                    </label>
+                    <input
+                      type="date"
+                      value={statsEndDate}
+                      onChange={(e) => setStatsEndDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
+                      Tipo de Estadística
+                    </label>
+                    <select
+                      value={statsType}
+                      onChange={(e) => setStatsType(e.target.value as typeof statsType)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="all">Todas</option>
+                      <option value="events">Eventos</option>
+                      <option value="participation">Participación</option>
+                      <option value="social">Actividad Social</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                  Período seleccionado: Semestre activo completo ({statsStartDate} - {statsEndDate})
+                </p>
+              </div>
+              {}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {}
+                {(statsType === 'all' || statsType === 'events') && (
+                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-gray-900 dark:text-white">Eventos Creados</h4>
+                      <Calendar size={20} style={{ color: '#10B981' }} />
+                    </div>
+                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-4">147</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Activos</span>
+                        <span className="font-bold text-green-600 dark:text-green-400">89 (60.5%)</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Finalizados</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400">52 (35.4%)</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Cancelados</span>
+                        <span className="font-bold text-red-600 dark:text-red-400">6 (4.1%)</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {}
+                {(statsType === 'all' || statsType === 'participation') && (
+                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-gray-900 dark:text-white">Participación Estudiantil</h4>
+                      <Users size={20} style={{ color: '#3B82F6' }} />
+                    </div>
+                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">2,847</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Estudiantes activos en el período
+                    </p>
+                    <div className="h-2 bg-gray-100 dark:bg-[#1A2F4A] rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: '71.2%' }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className="h-full rounded-full"
+                        style={{ background: '#3B82F6' }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      71.2% del total de estudiantes matriculados
+                    </p>
+                  </div>
+                )}
+                {}
+                {(statsType === 'all' || statsType === 'social') && (
+                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-gray-900 dark:text-white">Índice de Actividad Social</h4>
+                      <TrendingUp size={20} style={{ color: PINK }} />
+                    </div>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex-1">
+                        <p className="text-3xl font-black text-gray-900 dark:text-white">78.5</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">de 100</p>
+                      </div>
+                      <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(#10B981 0deg, #10B981 282deg, #E5E7EB 282deg)' }}>
+                        <div className="w-16 h-16 rounded-full bg-white dark:bg-[#112240] flex items-center justify-center">
+                          <span className="text-lg font-black text-green-600 dark:text-green-400">Alto</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Conexiones (35%)</span>
+                        <span className="font-bold text-gray-900 dark:text-white">82/100</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Parches (40%)</span>
+                        <span className="font-bold text-gray-900 dark:text-white">76/100</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Eventos (25%)</span>
+                        <span className="font-bold text-gray-900 dark:text-white">78/100</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {}
+                {statsType === 'all' && (
+                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-gray-900 dark:text-white">Tendencia Semanal</h4>
+                      <Activity size={20} style={{ color: ORANGE }} />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500" />
+                          <span className="text-2xl font-black text-green-600 dark:text-green-400">SUBIENDO</span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          +12.5% vs semana anterior
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Esta semana</p>
+                        <p className="text-xl font-bold text-gray-900 dark:text-white">3,204</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">interacciones</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {}
+              {(statsType === 'all' || statsType === 'social') && (
+                <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h4 className="font-bold text-gray-900 dark:text-white">Participación por Facultad</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Identificación de facultades con baja integración social
+                      </p>
+                    </div>
+                    <BarChart3 size={20} className="text-gray-400" />
+                  </div>
+                  <div className="space-y-4">
+                    {[
+                      { faculty: 'Ingeniería de Sistemas', value: 92, color: '#10B981' },
+                      { faculty: 'Ingeniería Industrial', value: 85, color: '#3B82F6' },
+                      { faculty: 'Ingeniería Civil', value: 78, color: '#8B5CF6' },
+                      { faculty: 'Ingeniería Mecánica', value: 65, color: '#F59E0B' },
+                      { faculty: 'Ingeniería Eléctrica', value: 52, color: '#EF4444' },
+                    ].map((item, index) => (
+                      <div key={index}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {item.faculty}
+                          </span>
+                          <span className="text-sm font-bold" style={{ color: item.color }}>
+                            {item.value}%
+                          </span>
+                        </div>
+                        <div className="h-3 bg-gray-100 dark:bg-[#1A2F4A] rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${item.value}%` }}
+                            transition={{ delay: index * 0.1 + 0.3, duration: 0.8 }}
+                            className="h-full rounded-full"
+                            style={{ background: item.color }}
+                          />
+                        </div>
+                        {item.value < 70 && (
+                          <p className="text-xs text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+                            <AlertTriangle size={12} />
+                            Baja integración - requiere atención
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {}
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
+                <p className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
+                  <ShieldCheck size={18} className="flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Datos anonimizados</strong> · No se expone información personal de estudiantes.
+                    Todos los datos se presentan de forma agregada para proteger la privacidad.
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+          {}
           {activeSection === 'users' && (
             <div className="space-y-4">
-              {/* Search */}
+              {}
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
                 <div className="relative">
                   <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -532,8 +1172,7 @@ export function AdminDashboardPage() {
                   />
                 </div>
               </div>
-
-              {/* Users List */}
+              {}
               <div className="space-y-3">
                 {filteredUsers.map((user) => (
                   <motion.div
@@ -614,8 +1253,7 @@ export function AdminDashboardPage() {
               </div>
             </div>
           )}
-
-          {/* Parches Section */}
+          {}
           {activeSection === 'parches' && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
@@ -666,8 +1304,7 @@ export function AdminDashboardPage() {
               </div>
             </div>
           )}
-
-          {/* Events Section */}
+          {}
           {activeSection === 'events' && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
@@ -725,8 +1362,7 @@ export function AdminDashboardPage() {
               </div>
             </div>
           )}
-
-          {/* Patricias Section */}
+          {}
           {activeSection === 'patricias' && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
@@ -741,7 +1377,6 @@ export function AdminDashboardPage() {
                     Nueva Patricia
                   </motion.button>
                 </div>
-
                 <div className="grid grid-cols-1 gap-3">
                   {patricias.map((patricia) => {
                     const rarityColors = {
@@ -751,7 +1386,6 @@ export function AdminDashboardPage() {
                       legendaria: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-400 dark:border-amber-600' },
                     };
                     const colors = rarityColors[patricia.rarity];
-
                     return (
                       <div
                         key={patricia.id}
@@ -788,7 +1422,6 @@ export function AdminDashboardPage() {
                               </span>
                             </div>
                           </div>
-
                           <div className="flex sm:flex-col gap-2 w-full sm:w-auto">
                             <motion.button
                               whileTap={{ scale: 0.9 }}
@@ -820,8 +1453,7 @@ export function AdminDashboardPage() {
                     );
                   })}
                 </div>
-
-                {/* Summary Stats */}
+                {}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-[#1E3A5F]">
                   <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-[#1A2F4A]">
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -851,8 +1483,7 @@ export function AdminDashboardPage() {
               </div>
             </div>
           )}
-
-          {/* Config Section */}
+          {}
           {activeSection === 'config' && (
             <div className="space-y-4">
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
@@ -883,7 +1514,6 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-
                   <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800">
                     <div className="flex items-start gap-3">
                       <Zap size={20} className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
@@ -906,7 +1536,6 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-
                   <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800">
                     <div className="flex items-start gap-3">
                       <ShieldCheck size={20} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
@@ -924,8 +1553,7 @@ export function AdminDashboardPage() {
           )}
         </div>
       </div>
-
-      {/* Parche Detail Modal */}
+      {}
       <AnimatePresence>
         {selectedParche && (
           <>
@@ -943,7 +1571,7 @@ export function AdminDashboardPage() {
                 onClick={(e) => e.stopPropagation()}
                 className="bg-white dark:bg-[#112240] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               >
-                {/* Modal Header */}
+                {}
                 <div className="sticky top-0 bg-white dark:bg-[#112240] border-b border-gray-200 dark:border-[#1E3A5F] p-4 sm:p-6 flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 sm:gap-3 mb-2">
@@ -963,10 +1591,9 @@ export function AdminDashboardPage() {
                     <X size={20} />
                   </button>
                 </div>
-
-                {/* Modal Content */}
+                {}
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                  {/* Basic Info */}
+                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
                       <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase mb-1">Creador</p>
@@ -993,8 +1620,7 @@ export function AdminDashboardPage() {
                       <p className="font-bold text-gray-900 dark:text-white">{selectedParche.reports}</p>
                     </div>
                   </div>
-
-                  {/* Status */}
+                  {}
                   <div className="p-4 rounded-xl border border-gray-200 dark:border-[#1E3A5F]">
                     <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">Estado</p>
                     <div className="flex items-center gap-2">
@@ -1015,8 +1641,7 @@ export function AdminDashboardPage() {
                       )}
                     </div>
                   </div>
-
-                  {/* Report Details (if flagged) */}
+                  {}
                   {selectedParche.reports > 0 && (
                     <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800">
                       <h4 className="font-bold text-red-900 dark:text-red-300 mb-3 flex items-center gap-2">
@@ -1039,8 +1664,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Actions */}
+                  {}
                   <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-4 border-t border-gray-200 dark:border-[#1E3A5F]">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
@@ -1067,8 +1691,7 @@ export function AdminDashboardPage() {
           </>
         )}
       </AnimatePresence>
-
-      {/* User Detail Modal */}
+      {}
       <AnimatePresence>
         {selectedUser && (
           <>
@@ -1086,7 +1709,7 @@ export function AdminDashboardPage() {
                 onClick={(e) => e.stopPropagation()}
                 className="bg-white dark:bg-[#112240] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               >
-                {/* Modal Header */}
+                {}
                 <div className="sticky top-0 bg-white dark:bg-[#112240] border-b border-gray-200 dark:border-[#1E3A5F] p-4 sm:p-6 flex items-start justify-between gap-3">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <img
@@ -1128,10 +1751,9 @@ export function AdminDashboardPage() {
                     <X size={20} />
                   </button>
                 </div>
-
-                {/* Modal Content */}
+                {}
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                  {/* Stats Grid */}
+                  {}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
                       <div className="flex items-center gap-2 mb-1">
@@ -1155,8 +1777,7 @@ export function AdminDashboardPage() {
                       <p className="font-bold text-gray-900 dark:text-white">{selectedUser.faculty}</p>
                     </div>
                   </div>
-
-                  {/* Verification Status */}
+                  {}
                   <div className="p-4 rounded-xl border border-gray-200 dark:border-[#1E3A5F]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -1175,32 +1796,55 @@ export function AdminDashboardPage() {
                       )}
                     </div>
                   </div>
-
-                  {/* Reports Section */}
+                  {}
                   {selectedUser.reports > 0 && (
-                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800">
-                      <h4 className="font-bold text-red-900 dark:text-red-300 mb-3 flex items-center gap-2">
-                        <AlertTriangle size={18} />
-                        Reportes recibidos
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-[#112240]">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Comportamiento inapropiado</span>
-                          <span className="px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-bold">
-                            {Math.floor(selectedUser.reports * 0.6)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded bg-white dark:bg-[#112240]">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Spam</span>
-                          <span className="px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-bold">
-                            {Math.floor(selectedUser.reports * 0.4)}
-                          </span>
-                        </div>
+                    <div className="rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-red-200 dark:border-red-800 flex items-center justify-between">
+                        <h4 className="font-bold text-red-900 dark:text-red-300 flex items-center gap-2 text-sm">
+                          <AlertTriangle size={16} />
+                          Reportes recibidos
+                        </h4>
+                        <span className="px-2.5 py-0.5 rounded-full bg-red-500 text-white text-xs font-black">
+                          {selectedUser.reports}
+                        </span>
+                      </div>
+                      <div className="divide-y divide-red-100 dark:divide-red-900/30">
+                        {(selectedUser.reportDetails ?? []).map((report) => {
+                          const categoryLabels: Record<string, string> = {
+                            comportamiento: 'Comportamiento inapropiado',
+                            spam: 'Spam',
+                            acoso: 'Acoso',
+                            contenido: 'Contenido inapropiado',
+                            otro: 'Otro',
+                          };
+                          const categoryColors: Record<string, string> = {
+                            comportamiento: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+                            spam: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+                            acoso: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+                            contenido: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+                            otro: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+                          };
+                          return (
+                            <div key={report.id} className="p-4 bg-white dark:bg-[#0D1E35]">
+                              <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${categoryColors[report.category]}`}>
+                                  {categoryLabels[report.category]}
+                                </span>
+                                <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{report.date}</span>
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-2">
+                                "{report.message}"
+                              </p>
+                              <p className="text-xs text-gray-400 dark:text-gray-500">
+                                Reportado por: {report.reporter}
+                              </p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
-
-                  {/* Activity Summary */}
+                  {}
                   <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554]">
                     <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                       <Activity size={18} />
@@ -1236,8 +1880,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Admin Actions */}
+                  {}
                   <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-4 border-t border-gray-200 dark:border-[#1E3A5F]">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
@@ -1275,7 +1918,6 @@ export function AdminDashboardPage() {
                       </motion.button>
                     )}
                   </div>
-
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedUser(null)}
@@ -1289,17 +1931,105 @@ export function AdminDashboardPage() {
           </>
         )}
       </AnimatePresence>
-
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-        />
-      )}
+      {}
+      <AnimatePresence>
+        {showErrorModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-5"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-[#112240] rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                  <XCircle size={20} className="text-red-500" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Atención</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">{errorMessage}</p>
+              <button
+                onClick={() => setShowErrorModal(false)}
+                className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors"
+              >
+                Entendido
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-5"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-[#112240] rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle size={20} className="text-green-500" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">¡Listo!</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">{successMessage}</p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-colors"
+                style={{ background: GRADIENT }}
+              >
+                Aceptar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {}
+      <AnimatePresence>
+        {confirmModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-5"
+            onClick={() => setConfirmModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-[#112240] rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={20} className="text-orange-500" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">{confirmModal.title}</h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">{confirmModal.message}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmModal(null)}
+                  className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-[#1A2F4A] text-gray-700 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-[#233554] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }}
+                  className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm transition-colors"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

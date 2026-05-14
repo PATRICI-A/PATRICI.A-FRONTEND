@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
@@ -8,13 +8,10 @@ import {
   UserCheck, Search, AlertCircle, Eraser, User, Flag,
   ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
-import { directChats, chatMessages, GOLD_LIGHT } from '../data/mockData';
-import { useApp } from '../context/AppContext';
+import { directChats, chatMessages, GOLD_LIGHT } from '../types/mockData';
+import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
-
-// ── Context-menu items for direct chats ──────────────────────────────────
 const CONTEXT_ACTIONS = [
   { icon: UserCheck, label: 'Ver perfil',              color: '#3B82F6', action: 'profile' },
   { icon: Search,    label: 'Buscar en el chat',       color: '#06B6D4', action: 'search' },
@@ -22,7 +19,6 @@ const CONTEXT_ACTIONS = [
   { icon: Eraser,    label: 'Vaciar chat',             color: '#EF4444', action: 'clear' },
   { icon: AlertCircle, label: 'Reportar chat',         color: '#DC2626', action: 'report' },
 ];
-
 export function DirectChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -43,13 +39,10 @@ export function DirectChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
-
   const accentColor = chat.accentColor;
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
   const handleSend = () => {
     if (!input.trim()) return;
     const newMsg = {
@@ -65,7 +58,6 @@ export function DirectChatPage() {
     setMessages(prev => [...prev, newMsg]);
     setInput('');
     setShowEmojis(false);
-
     if (Math.random() > 0.5) {
       setTimeout(() => {
         const replies = ['¡Genial! 🙌', 'Sí, me parece perfecto', '¿A qué hora nos vemos?', '👍👍', '¡Perfecto!', 'Ok, dale 😊'];
@@ -81,7 +73,6 @@ export function DirectChatPage() {
       }, 2000 + Math.random() * 2000);
     }
   };
-
   const handleContextAction = (action: string) => {
     setShowContextMenu(false);
     switch (action) {
@@ -101,10 +92,7 @@ export function DirectChatPage() {
         alert(`Función "${action}" próximamente ✨`);
     }
   };
-
   const isMuted = mutedChats.includes(chat.id);
-
-  // ── Report Message Modal ─────────────────────────────────────────────────
   const reportReasons = [
     { id: 'offensive', label: 'Contenido ofensivo', Icon: ShieldAlert, color: '#DC2626' },
     { id: 'harassment', label: 'Me molestó o incomodó', Icon: ThumbsDown, color: '#EA580C' },
@@ -112,15 +100,10 @@ export function DirectChatPage() {
     { id: 'inappropriate', label: 'Contenido inapropiado', Icon: TriangleAlert, color: '#D97706' },
     { id: 'other', label: 'Otro motivo', Icon: MessageSquare, color: '#6B7280' },
   ];
-
   const handleReportMessage = () => {
     if (!reportingMessage || !reportReason) return;
-    if (reportReason === 'Otro motivo' && !reportDescription.trim()) return;
-
-    // Simulate sending report to Bienestar team
+    if (!reportDescription.trim()) return;
     setReportSuccess(true);
-
-    // Auto-hide success message and reset after 3 seconds
     setTimeout(() => {
       setReportSuccess(false);
       setReportingMessage(null);
@@ -128,14 +111,92 @@ export function DirectChatPage() {
       setReportDescription('');
     }, 3000);
   };
-
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
+    <div className="flex h-screen overflow-hidden">
+      {}
+      <aside
+        className="hidden md:flex flex-col w-72 flex-shrink-0 border-r overflow-hidden"
+        style={{
+          background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.97)',
+          borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)',
+        }}
+      >
+        <div
+          className="px-4 py-4 border-b flex-shrink-0"
+          style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
+        >
+          <h2 className="font-bold text-sm" style={{ color: isDark ? '#E2E8F0' : '#1A202C' }}>
+            Mensajes directos
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: isDark ? '#64748B' : '#9CA3AF' }}>
+            {directChats.length} conversaciones
+          </p>
+        </div>
+        <div className="flex-1 overflow-y-auto py-2 space-y-0.5 px-2">
+          {directChats.map(dc => {
+            const isActive = dc.id === chat.id;
+            return (
+              <button
+                key={dc.id}
+                onClick={() => navigate(`/direct-chat/${dc.id}`)}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left transition-all active:scale-[0.98]"
+                style={{
+                  background: isActive
+                    ? isDark ? 'rgba(217,119,6,0.13)' : 'rgba(212,137,10,0.10)'
+                    : 'transparent',
+                  border: isActive
+                    ? `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(212,137,10,0.25)'}`
+                    : '1px solid transparent',
+                }}
+              >
+                <div className="relative flex-shrink-0">
+                  <img src={dc.avatar} alt={dc.name} className="w-10 h-10 rounded-xl object-cover" />
+                  {dc.online && (
+                    <div
+                      className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
+                      style={{
+                        background: dc.accentColor,
+                        borderColor: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.97)',
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="text-xs font-semibold truncate"
+                      style={{ color: isActive ? GOLD_LIGHT : (isDark ? '#E2E8F0' : '#1A202C') }}
+                    >
+                      {dc.name}
+                    </span>
+                    <span className="text-[10px] ml-1 flex-shrink-0" style={{ color: isDark ? '#64748B' : '#9CA3AF' }}>
+                      {dc.lastTime}
+                    </span>
+                  </div>
+                  <p className="text-[11px] truncate mt-0.5" style={{ color: isDark ? '#64748B' : '#9CA3AF' }}>
+                    {dc.lastMessage}
+                  </p>
+                </div>
+                {(dc.unread ?? 0) > 0 && (
+                  <span
+                    className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full text-white text-[9px] font-bold flex items-center justify-center px-1"
+                    style={{ background: dc.accentColor }}
+                  >
+                    {dc.unread}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+      {}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {}
       <div
         className="px-4 py-3 flex items-center gap-3 shadow-sm border-b"
         style={{
-          background: isDark ? 'rgba(17,34,64,0.97)' : 'rgba(255,255,255,0.97)',
+          background: isDark ? 'rgba(13,27,46,0.98)' : 'rgba(253,252,248,0.97)',
           borderColor: isDark ? '#233554' : '#F3F4F6',
           position: 'relative',
           zIndex: 10,
@@ -178,7 +239,7 @@ export function DirectChatPage() {
           >
             <Video size={18} />
           </button>
-          {/* Three-dot context menu */}
+          {}
           <div className="relative">
             <button
               ref={menuButtonRef}
@@ -202,8 +263,7 @@ export function DirectChatPage() {
             >
               <MoreVertical size={18} />
             </button>
-
-            {/* Dropdown rendered via portal */}
+            {}
             {showContextMenu && createPortal(
               <>
                 <div
@@ -235,7 +295,6 @@ export function DirectChatPage() {
                       }}
                     />
                   </div>
-
                   {CONTEXT_ACTIONS.map((item, i) => (
                     <button
                       key={item.action}
@@ -268,18 +327,15 @@ export function DirectChatPage() {
           </div>
         </div>
       </div>
-
-      {/* Messages area */}
+      {}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative" style={{ background: isDark ? '#0A192F' : '#EEF2FF', isolation: 'isolate' }}>
         <DoodleBackground isDark={isDark} opacity={isDark ? 1 : 0.8} />
-
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
             <div className="flex-1 h-px bg-white/10 dark:bg-white/10" />
             <span className="text-xs text-white/50 dark:text-white/40 bg-black/20 px-3 py-0.5 rounded-full">Hoy</span>
             <div className="flex-1 h-px bg-white/10 dark:bg-white/10" />
           </div>
-
           <div className="space-y-3">
             {messages.map((msg, i) => {
               if (msg.type === 'system') {
@@ -291,9 +347,7 @@ export function DirectChatPage() {
                   </div>
                 );
               }
-
               const isMe = msg.isMe || msg.senderId === 'u1';
-
               return (
                 <motion.div
                   key={msg.id}
@@ -309,7 +363,7 @@ export function DirectChatPage() {
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col relative`}>
-                    {/* Report icon - only shown on hover and for messages from others */}
+                    {}
                     {!isMe && msg.senderId !== 'u1' && hoveredMessageId === msg.id && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -334,7 +388,7 @@ export function DirectChatPage() {
                         {msg.content && (
                           <div
                             className="px-3 py-2 text-sm"
-                            style={isMe ? { background: accentColor, color: 'white' } : { background: 'rgba(255,255,255,0.9)' }}
+                            style={isMe ? { background: accentColor, color: 'white' } : { background: isDark ? '#152238' : 'rgba(253,252,248,0.9)', color: isDark ? '#D1D9E6' : '#111827' }}
                           >
                             {msg.content}
                           </div>
@@ -346,7 +400,7 @@ export function DirectChatPage() {
                         style={
                           isMe
                             ? { background: accentColor, color: 'white' }
-                            : { background: 'rgba(255,255,255,0.92)', color: '#1F2937' }
+                            : { background: isDark ? '#152238' : 'rgba(253,252,248,0.97)', color: isDark ? '#D1D9E6' : '#1F2937', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(10,25,47,0.08)' }
                         }
                       >
                         {msg.content}
@@ -368,8 +422,7 @@ export function DirectChatPage() {
           <div ref={messagesEndRef} />
         </div>
       </div>
-
-      {/* Emoji picker */}
+      {}
       <AnimatePresence>
         {showEmojis && (
           <motion.div
@@ -389,8 +442,7 @@ export function DirectChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Attachments panel */}
+      {}
       <AnimatePresence>
         {showAttachments && (
           <motion.div
@@ -420,8 +472,7 @@ export function DirectChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Input bar */}
+      {}
       <div
         className="px-4 py-3 border-t"
         style={{ background: isDark ? '#112240' : 'white', borderColor: isDark ? '#233554' : '#F3F4F6' }}
@@ -456,8 +507,7 @@ export function DirectChatPage() {
           </button>
         </div>
       </div>
-
-      {/* Report Message Modal */}
+      {}
       <AnimatePresence>
         {reportingMessage && (
           <>
@@ -511,8 +561,7 @@ export function DirectChatPage() {
                   </p>
                 </div>
               </div>
-
-              {/* Reason selection */}
+              {}
               <div className="mb-4">
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                   ¿Por qué reportas este mensaje?
@@ -567,9 +616,8 @@ export function DirectChatPage() {
                     </button>
                   ))}
                 </div>
-
-                {/* Custom description for "Otro motivo" */}
-                {reportReason === 'Otro motivo' && (
+                {}
+                {reportReason && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
@@ -577,12 +625,12 @@ export function DirectChatPage() {
                     className="mt-3"
                   >
                     <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                      Describe lo que te molestó
+                      Cuéntanos qué pasó y por qué te hizo sentir mal
                     </label>
                     <textarea
                       value={reportDescription}
                       onChange={(e) => setReportDescription(e.target.value.slice(0, 500))}
-                      placeholder="Escribe aquí los detalles..."
+                      placeholder="Describe con tus palabras lo que ocurrió..."
                       className="w-full px-3 py-2.5 rounded-xl text-sm resize-none focus:outline-none transition-all"
                       rows={4}
                       maxLength={500}
@@ -598,7 +646,6 @@ export function DirectChatPage() {
                   </motion.div>
                 )}
               </div>
-
               {!reportSuccess ? (
                 <div className="flex gap-3">
                   <button
@@ -650,6 +697,7 @@ export function DirectChatPage() {
           </>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
