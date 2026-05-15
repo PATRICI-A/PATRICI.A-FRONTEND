@@ -3,57 +3,70 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Heart, X, MapPin, Filter, ChevronDown, Sparkles, Users,
-  Star, Clock, LocateFixed, CheckCircle2, Navigation, Send,
-  UserPlus, UserCheck, Zap,
+  Heart, X, Filter, ChevronDown, Sparkles, Users,
+  Clock, LocateFixed, CheckCircle2, Navigation, Send,
+  UserPlus, UserCheck, Zap, Search,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { matchUsers, GRADIENT, TEAL, TEAL_GRADIENT, PINK } from '../types/mockData';
+import { matchUsers, GRADIENT, TEAL, TEAL_GRADIENT, interestOptions } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { Avatar } from '../components/ui/Avatar';
+
 const getCardGradient = (pct: number) => {
   if (pct >= 80) return 'linear-gradient(145deg, #064E3B 0%, #065F46 45%, #0D9488 100%)';
   if (pct >= 65) return 'linear-gradient(145deg, #0C4A6E 0%, #0E7490 55%, #06B6D4 100%)';
   if (pct >= 50) return 'linear-gradient(145deg, #312E81 0%, #4338CA 55%, #6366F1 100%)';
-  return   'linear-gradient(145deg, #3B0764 0%, #6D28D9 55%, #8B5CF6 100%)';
+  return 'linear-gradient(145deg, #3B0764 0%, #6D28D9 55%, #8B5CF6 100%)';
 };
 const getBadgeStyle = (pct: number): React.CSSProperties => {
   if (pct >= 80) return { background: 'rgba(16,185,129,0.88)', backdropFilter: 'blur(6px)' };
-  if (pct >= 65) return { background: 'rgba(6,182,212,0.88)',  backdropFilter: 'blur(6px)' };
+  if (pct >= 65) return { background: 'rgba(6,182,212,0.88)', backdropFilter: 'blur(6px)' };
   if (pct >= 50) return { background: 'rgba(99,102,241,0.88)', backdropFilter: 'blur(6px)' };
-  return               { background: 'rgba(139,92,246,0.88)', backdropFilter: 'blur(6px)' };
+  return { background: 'rgba(139,92,246,0.88)', backdropFilter: 'blur(6px)' };
 };
 const getBarColor = (pct: number) => {
   if (pct >= 80) return 'linear-gradient(90deg,#10B981,#06B6D4)';
   if (pct >= 65) return 'linear-gradient(90deg,#06B6D4,#3B82F6)';
   if (pct >= 50) return 'linear-gradient(90deg,#6366F1,#8B5CF6)';
-  return               'linear-gradient(90deg,#8B5CF6,#EC4899)';
+  return 'linear-gradient(90deg,#8B5CF6,#EC4899)';
 };
+
 export function MatchesPage() {
   const navigate = useNavigate();
   const { currentUser, isDark, geo } = useApp();
   const [selectedUser, setSelectedUser] = useState<typeof matchUsers[0] | null>(null);
   const [activeTab, setActiveTab] = useState<'explore' | 'sent' | 'received' | 'friends'>('explore');
-  const [filters, setFilters] = useState({ program: '', semester: '', interest: '' });
+  const [filters, setFilters] = useState({ program: '', semester: '', interest: '', location: '', availability: '' });
+  const [searchQuery, setSearchQuery] = useState('');
   const [showUnfriendModal, setShowUnfriendModal] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
   const [incomingRequests, setIncomingRequests] = useState<string[]>(['u4', 'u6', 'u18']);
+
   const uniquePrograms = Array.from(new Set(matchUsers.map(u => u.program)));
   const uniqueSemesters = Array.from(new Set(matchUsers.map(u => u.semester))).sort((a, b) => a - b);
+
   const calculateCompatibility = (user: typeof matchUsers[0]) => {
-    let score = 50;
     const userInterests = currentUser?.interests || [];
     const commonInterests = user.interests.filter(i => userInterests.includes(i));
-    score += commonInterests.length * 10;
-    if (user.program === currentUser?.program) score += 15;
+
+    const interestScore = userInterests.length > 0
+      ? Math.min(40, (commonInterests.length / userInterests.length) * 40)
+      : 0;
+
+    const programScore = user.program === currentUser?.program ? 20 : 0;
     const semesterDiff = Math.abs((user.semester || 0) - (currentUser?.semester || 0));
-    score += Math.max(10 - semesterDiff * 2, 0);
-    if (user.online) score += 5;
-    return Math.min(Math.max(score, 0), 100);
+    const semesterScore = Math.max(10 - semesterDiff * 3, 0);
+    const academicScore = Math.min(30, programScore + semesterScore);
+
+    const availabilityScore = user.online ? 30 : 15;
+
+    return Math.round(Math.min(100, Math.max(0, interestScore + academicScore + availabilityScore)));
   };
+
   const getConnectionStatus = (userId: string, originalStatus?: 'none' | 'pending' | 'connected') =>
     connectionStates[userId] || originalStatus || 'none';
+
   const filteredUsers = useMemo(() => {
     let filtered = matchUsers.map(u => ({ ...u, matchPercent: calculateCompatibility(u) }));
     if (activeTab === 'sent') {
@@ -69,13 +82,19 @@ export function MatchesPage() {
         getConnectionStatus(u.id, u.connectionStatus) === 'none' && !incomingRequests.includes(u.id)
       );
     }
+    if (searchQuery) {
+      filtered = filtered.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
     if (activeTab === 'explore') {
       if (filters.program) filtered = filtered.filter(u => u.program.toLowerCase().includes(filters.program.toLowerCase()));
       if (filters.semester) filtered = filtered.filter(u => u.semester.toString() === filters.semester);
       if (filters.interest) filtered = filtered.filter(u => u.interests.some(i => i.toLowerCase().includes(filters.interest.toLowerCase())));
+      if (filters.location === 'nearby') filtered = filtered.filter(u => nearbyUserIds.has(u.id));
+      if (filters.availability === 'online') filtered = filtered.filter(u => u.online);
     }
     return filtered.sort((a, b) => b.matchPercent - a.matchPercent);
-  }, [filters, activeTab, connectionStates, incomingRequests]);
+  }, [filters, activeTab, connectionStates, incomingRequests, searchQuery]);
+
   const handleConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
     const status = connectionStates[userId] || currentStatus || 'none';
     if (status === 'none') setConnectionStates(prev => ({ ...prev, [userId]: 'pending' }));
@@ -93,26 +112,34 @@ export function MatchesPage() {
     setConnectionStates(prev => ({ ...prev, [userId]: 'none' }));
     setShowUnfriendModal(null);
   };
-  const clearFilters = () => setFilters({ program: '', semester: '', interest: '' });
-  const activeFiltersCount = [filters.program, filters.semester, filters.interest].filter(Boolean).length;
+  const clearFilters = () => setFilters({ program: '', semester: '', interest: '', location: '', availability: '' });
+  const activeFiltersCount = [filters.program, filters.semester, filters.interest, filters.location, filters.availability].filter(Boolean).length;
+
   const nearbySuggestions = useMemo(() => {
     if (!geo.enabled || !geo.onCampus) return [];
     return matchUsers.slice(0, 3).map(u => ({ ...u, matchPercent: Math.max(u.matchPercent, 72) }));
   }, [geo.enabled, geo.onCampus]);
+
+  const nearbyUserIds = useMemo(
+    () => new Set(nearbySuggestions.map(u => u.id)),
+    [nearbySuggestions]
+  );
+
   const avgMatch = filteredUsers.length
     ? Math.round(filteredUsers.reduce((s, u) => s + u.matchPercent, 0) / filteredUsers.length)
     : 0;
   const connectedCount = matchUsers.filter(u => getConnectionStatus(u.id, u.connectionStatus) === 'connected').length;
+
   const tabs = [
-    { id: 'explore'  as const, label: 'Explorar',  icon: Sparkles,   badge: 0 },
-    { id: 'sent'     as const, label: 'Enviadas',  icon: Send,       badge: 0 },
-    { id: 'received' as const, label: 'Recibidas', icon: UserPlus,   badge: incomingRequests.length },
-    { id: 'friends'  as const, label: 'Amigos',    icon: UserCheck,  badge: 0 },
+    { id: 'explore' as const, label: 'Explorar', icon: Sparkles, badge: 0 },
+    { id: 'sent' as const, label: 'Enviadas', icon: Send, badge: 0 },
+    { id: 'received' as const, label: 'Recibidas', icon: UserPlus, badge: incomingRequests.length },
+    { id: 'friends' as const, label: 'Amigos', icon: UserCheck, badge: 0 },
   ];
+
   return (
     <div className="min-h-screen relative" style={{ background: 'transparent' }}>
       <DoodleBackground isDark={isDark} />
-      {}
       <div
         className="backdrop-blur-xl border-b"
         style={isDark
@@ -120,7 +147,6 @@ export function MatchesPage() {
           : { background: 'rgba(253,252,248,0.92)', borderColor: 'rgba(10,25,47,0.07)', boxShadow: '0 2px 16px rgba(10,25,47,0.07)' }
         }
       >
-        {}
         <div className="px-5 pt-4 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -141,7 +167,6 @@ export function MatchesPage() {
               )}
             </div>
           </div>
-          {}
           <div className="flex items-center gap-3 mb-3">
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
@@ -155,19 +180,18 @@ export function MatchesPage() {
               </h1>
               <p className="text-xs" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
                 {activeTab === 'explore' && 'Encuentra tu tribu universitaria'}
-                {activeTab === 'sent'    && `${filteredUsers.length} solicitudes enviadas`}
+                {activeTab === 'sent' && `${filteredUsers.length} solicitudes enviadas`}
                 {activeTab === 'received' && `${filteredUsers.length} solicitudes pendientes`}
                 {activeTab === 'friends' && `${connectedCount} conexiones activas`}
               </p>
             </div>
           </div>
-          {}
           {activeTab === 'explore' && (
             <div className="flex gap-2">
               {[
-                { icon: Users,    label: 'Compatibles', value: matchUsers.length, color: TEAL },
-                { icon: Heart,    label: 'Amigos',       value: connectedCount,   color: '#EC4899' },
-                { icon: Zap,      label: 'Match prom.',  value: `${avgMatch}%`,  color: '#F59E0B' },
+                { icon: Users, label: 'Compatibles', value: matchUsers.length, color: TEAL },
+                { icon: Heart, label: 'Amigos', value: connectedCount, color: '#EC4899' },
+                { icon: Zap, label: 'Match prom.', value: `${avgMatch}%`, color: '#F59E0B' },
               ].map(stat => (
                 <div
                   key={stat.label}
@@ -185,7 +209,7 @@ export function MatchesPage() {
             </div>
           )}
         </div>
-        {}
+
         <div className="border-t overflow-x-auto scrollbar-hide" style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}>
           <div className="flex gap-1.5 px-5 py-2.5">
             {tabs.map(tab => {
@@ -213,7 +237,37 @@ export function MatchesPage() {
             })}
           </div>
         </div>
-        {}
+
+        {(activeTab === 'explore' || activeTab === 'friends') && (
+          <div
+            className="border-t px-5 py-2.5"
+            style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
+          >
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+              style={{
+                background: isDark ? '#112240' : 'rgba(10,25,47,0.05)',
+                border: `1px solid ${isDark ? '#1E3A5F' : 'rgba(10,25,47,0.08)'}`,
+              }}
+            >
+              <Search size={14} style={{ color: isDark ? '#4A6080' : '#9CA3AF' }} />
+              <input
+                type="text"
+                placeholder={activeTab === 'friends' ? 'Buscar amigo por nombre...' : 'Buscar persona por nombre...'}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent text-xs outline-none"
+                style={{ color: isDark ? '#E2E8F0' : '#1A202C' }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')}>
+                  <X size={13} style={{ color: isDark ? '#4A6080' : '#9CA3AF' }} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'explore' && (
           <div
             className="border-t px-5 py-2 flex items-center gap-2"
@@ -250,7 +304,7 @@ export function MatchesPage() {
             </span>
           </div>
         )}
-        {}
+
         <AnimatePresence>
           {activeTab === 'explore' && showFilters && (
             <motion.div
@@ -302,14 +356,88 @@ export function MatchesPage() {
                     ))}
                   </div>
                 </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
+                    Intereses
+                  </label>
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {['', ...interestOptions.map(i => i.label)].map(label => (
+                      <button
+                        key={label || 'all-int'}
+                        onClick={() => setFilters({ ...filters, interest: label })}
+                        className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                        style={filters.interest === label
+                          ? { background: TEAL_GRADIENT, color: 'white' }
+                          : { background: isDark ? '#112240' : 'rgba(10,25,47,0.06)', color: isDark ? '#8A9BB0' : '#4A5568' }
+                        }
+                      >
+                        {label || 'Todos'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
+                    Ubicación
+                  </label>
+                  <div className="flex gap-2 pb-1">
+                    {[
+                      { value: '', label: 'Todos' },
+                      { value: 'nearby', label: '📍 Cerca de mí' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value || 'all-loc'}
+                        onClick={() => setFilters({ ...filters, location: opt.value })}
+                        className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                        style={filters.location === opt.value
+                          ? { background: TEAL_GRADIENT, color: 'white' }
+                          : { background: isDark ? '#112240' : 'rgba(10,25,47,0.06)', color: isDark ? '#8A9BB0' : '#4A5568' }
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
+                    Disponibilidad
+                  </label>
+                  <div className="flex gap-2 pb-1">
+                    {[
+                      { value: '', label: 'Cualquier momento' },
+                      { value: 'online', label: '🟢 Online ahora' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value || 'all-avail'}
+                        onClick={() => setFilters({ ...filters, availability: opt.value })}
+                        className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                        style={filters.availability === opt.value
+                          ? { background: TEAL_GRADIENT, color: 'white' }
+                          : { background: isDark ? '#112240' : 'rgba(10,25,47,0.06)', color: isDark ? '#8A9BB0' : '#4A5568' }
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    style={{ background: isDark ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.07)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)' }}
+                  >
+                    <X size={12} /> Limpiar todos los filtros
+                  </button>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-      {}
+
       <div className="px-4 py-5 pb-28">
-        {}
         <AnimatePresence>
           {activeTab === 'explore' && nearbySuggestions.length > 0 && (
             <motion.div
@@ -355,7 +483,7 @@ export function MatchesPage() {
             </motion.div>
           )}
         </AnimatePresence>
-        {}
+
         {activeTab === 'explore' && !geo.enabled && (
           <motion.button
             initial={{ opacity: 0 }}
@@ -374,7 +502,7 @@ export function MatchesPage() {
             <span className="text-[10px] font-bold text-cyan-500">Ir al mapa →</span>
           </motion.button>
         )}
-        {}
+
         {filteredUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <motion.div
@@ -384,22 +512,22 @@ export function MatchesPage() {
               className="w-24 h-24 rounded-3xl flex items-center justify-center mb-5 shadow-xl"
               style={{ background: TEAL_GRADIENT }}
             >
-              {activeTab === 'explore'  ? <Sparkles  size={36} color="white" /> :
-               activeTab === 'sent'     ? <Send      size={36} color="white" /> :
-               activeTab === 'received' ? <UserPlus  size={36} color="white" /> :
+              {activeTab === 'explore' ? <Sparkles size={36} color="white" /> :
+               activeTab === 'sent' ? <Send size={36} color="white" /> :
+               activeTab === 'received' ? <UserPlus size={36} color="white" /> :
                                           <UserCheck size={36} color="white" />}
             </motion.div>
             <h3 className="text-gray-800 dark:text-white font-black text-lg mb-2">
-              {activeTab === 'explore'  && 'Sin resultados'}
-              {activeTab === 'sent'     && 'Sin solicitudes enviadas'}
+              {activeTab === 'explore' && 'Sin resultados'}
+              {activeTab === 'sent' && 'Sin solicitudes enviadas'}
               {activeTab === 'received' && 'Sin solicitudes pendientes'}
-              {activeTab === 'friends'  && 'Aún sin conexiones'}
+              {activeTab === 'friends' && 'Aún sin conexiones'}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-              {activeTab === 'explore'  && 'Ajusta los filtros o vuelve más tarde para ver nuevas sugerencias'}
-              {activeTab === 'sent'     && 'Explora personas y envía solicitudes de conexión'}
+              {activeTab === 'explore' && 'Ajusta los filtros o busca por nombre para ver nuevas sugerencias'}
+              {activeTab === 'sent' && 'Explora personas y envía solicitudes de conexión'}
               {activeTab === 'received' && 'Las solicitudes que recibas aparecerán aquí'}
-              {activeTab === 'friends'  && 'Acepta solicitudes o conecta con nuevas personas'}
+              {activeTab === 'friends' && 'Acepta solicitudes o conecta con nuevas personas'}
             </p>
           </div>
         ) : (
@@ -416,57 +544,36 @@ export function MatchesPage() {
                   onClick={() => navigate(`/user/${user.id}`)}
                   className="rounded-2xl overflow-hidden cursor-pointer group"
                   style={{
-                    boxShadow: isDark
-                      ? '0 4px 16px rgba(0,0,0,0.35)'
-                      : '0 3px 12px rgba(10,25,47,0.10)',
+                    boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.35)' : '0 3px 12px rgba(10,25,47,0.10)',
                     border: isDark ? '1px solid rgba(30,58,95,0.6)' : '1px solid rgba(10,25,47,0.06)',
                   }}
                 >
-                  {}
                   <div className="relative" style={{ aspectRatio: '1/1' }}>
-                    {}
                     <div className="absolute inset-0" style={{ background: grad }} />
-                    {}
                     {user.avatar && (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="absolute inset-0 w-full h-full object-contain"
-                      />
+                      <img src={user.avatar} alt={user.name} className="absolute inset-0 w-full h-full object-contain" />
                     )}
-                    {}
                     <div
                       className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black text-white shadow-lg"
                       style={getBadgeStyle(user.matchPercent)}
                     >
                       {user.matchPercent}%
                     </div>
-                    {}
                     {user.online && (
-                      <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full border border-white/50"
-                        style={{ background: '#10B981' }} />
+                      <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full border border-white/50" style={{ background: '#10B981' }} />
                     )}
-                    {}
                     <div
                       className="absolute bottom-0 inset-x-0 h-1/2"
                       style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)' }}
                     />
-                    {}
                     <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
                       <h3 className="text-white font-black text-[11px] leading-tight truncate">
                         {user.name.split(' ')[0]}, {user.age}
                       </h3>
-                      <p className="text-white/70 text-[9px] truncate">
-                        {user.semester}° sem.
-                      </p>
+                      <p className="text-white/70 text-[9px] truncate">{user.semester}° sem.</p>
                     </div>
                   </div>
-                  {}
-                  <div
-                    className="p-2"
-                    style={{ background: isDark ? '#112240' : 'white' }}
-                  >
-                    {}
+                  <div className="p-2" style={{ background: isDark ? '#112240' : 'white' }}>
                     <div className="h-1 rounded-full overflow-hidden mb-1.5" style={{ background: isDark ? '#1A2F4A' : '#E5E7EB' }}>
                       <motion.div
                         initial={{ width: 0 }}
@@ -476,7 +583,6 @@ export function MatchesPage() {
                         style={{ background: getBarColor(user.matchPercent) }}
                       />
                     </div>
-                    {}
                     {activeTab === 'received' ? (
                       <div className="flex gap-1.5">
                         <motion.button
@@ -522,14 +628,14 @@ export function MatchesPage() {
                         className="w-full py-1.5 rounded-xl flex items-center justify-center gap-1 text-white text-[10px] font-bold transition-all"
                         style={{
                           background: status === 'connected' ? 'linear-gradient(135deg,#10B981,#059669)' :
-                                       status === 'pending'   ? 'linear-gradient(135deg,#F59E0B,#D97706)' :
+                                       status === 'pending' ? 'linear-gradient(135deg,#F59E0B,#D97706)' :
                                        GRADIENT,
                           boxShadow: status === 'none' ? '0 3px 10px rgba(6,182,212,0.3)' : 'none',
                         }}
                       >
                         {status === 'connected' ? <><Heart size={11} fill="white" /> Conectados</> :
-                         status === 'pending'   ? <><Clock  size={11} /> Pendiente</> :
-                                                  <><Heart  size={11} /> Conectar</>}
+                         status === 'pending' ? <><Clock size={11} /> Pendiente</> :
+                                                <><Heart size={11} /> Conectar</>}
                       </motion.button>
                     )}
                   </div>
@@ -539,7 +645,7 @@ export function MatchesPage() {
           </div>
         )}
       </div>
-      {}
+
       <AnimatePresence>
         {selectedUser && (
           <>
@@ -625,7 +731,7 @@ export function MatchesPage() {
           </>
         )}
       </AnimatePresence>
-      {}
+
       <AnimatePresence>
         {showUnfriendModal && (
           <>
