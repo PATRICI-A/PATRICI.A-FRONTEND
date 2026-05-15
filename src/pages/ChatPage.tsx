@@ -54,6 +54,15 @@ export function ChatPage() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
+  // reiniciar mensajes al cambiar de chat
+  useEffect(() => {
+    setMessages(chatMessages);
+    setInput('');
+    setShowEmojis(false);
+    setShowInfo(false);
+    setShowAttachments(false);
+    setShowContextMenu(false);
+  }, [id]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);

@@ -40,6 +40,15 @@ export function DirectChatPage() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
   const accentColor = chat.accentColor;
+  // reiniciar mensajes al cambiar de chat
+  useEffect(() => {
+    const currentChat = directChats.find(c => c.id === id) || directChats[0];
+    setMessages(chatMessages.filter(m => m.senderId === currentChat.userId || m.isMe));
+    setInput('');
+    setShowEmojis(false);
+    setShowAttachments(false);
+    setShowContextMenu(false);
+  }, [id]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
