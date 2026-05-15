@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Bell, Check, Trash2, MessageCircle, Users, Calendar, PartyPopper, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Bell, Check, Trash2, MessageCircle, Users, Calendar, PartyPopper, AlertCircle, Zap } from 'lucide-react';
 import { notifications as initialNotifications, type Notification } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 const NOTIFICATION_ICONS = {
   chat: MessageCircle,
   match: Users,
+  high_match: Zap,
   event: Calendar,
   parche_invitation: PartyPopper,
   event_reminder: AlertCircle,
@@ -15,6 +16,7 @@ const NOTIFICATION_ICONS = {
 const SECTION_BADGES: Record<string, { label: string; color: string; bg: string }> = {
   chat: { label: 'Chat', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
   match: { label: 'Matching', color: '#EC4899', bg: 'rgba(236,72,153,0.12)' },
+  high_match: { label: 'Alta compatibilidad', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
   event: { label: 'Eventos', color: '#D97706', bg: 'rgba(217,119,6,0.12)' },
   event_reminder: { label: 'Eventos', color: '#D97706', bg: 'rgba(217,119,6,0.12)' },
   parche_invitation: { label: 'Parches', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
