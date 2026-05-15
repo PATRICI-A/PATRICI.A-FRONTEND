@@ -103,7 +103,7 @@ export interface Mona {
 }
 export interface Notification {
   id: string;
-  type: 'chat' | 'event' | 'match' | 'parche_invitation' | 'event_reminder';
+  type: 'chat' | 'event' | 'match' | 'high_match' | 'parche_invitation' | 'event_reminder';
   title: string;
   message: string;
   avatar?: string;
@@ -1264,5 +1264,38 @@ export const notifications: Notification[] = [
     timestamp: 'Ayer',
     read: true,
     actionUrl: '/parches',
+  },
+  {
+    id: 'notif9',
+    type: 'high_match',
+    title: 'Compatibilidad alta con Valentina R.',
+    message: 'Tienen un 98% de compatibilidad. Comparten intereses en Fotografia, Jazz y Diseno.',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    color: '#F59E0B',
+    timestamp: 'Hace 10 min',
+    read: false,
+    actionUrl: '/matches',
+  },
+  {
+    id: 'notif10',
+    type: 'high_match',
+    title: 'Compatibilidad alta con Camila H.',
+    message: 'Tienen un 96% de compatibilidad. Comparten intereses en Musica y Jazz.',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    color: '#F59E0B',
+    timestamp: 'Hace 30 min',
+    read: false,
+    actionUrl: '/matches',
+  },
+  {
+    id: 'notif11',
+    type: 'high_match',
+    title: 'Compatibilidad alta con Lucia T.',
+    message: 'Tienen un 94% de compatibilidad. Comparten intereses en Musica, Programacion y Fotografia.',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    color: '#F59E0B',
+    timestamp: 'Hace 1 hora',
+    read: false,
+    actionUrl: '/matches',
   },
 ];
