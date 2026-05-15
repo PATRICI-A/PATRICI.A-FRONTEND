@@ -54,6 +54,15 @@ export function ChatPage() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
+  // reiniciar mensajes al cambiar de chat
+  useEffect(() => {
+    setMessages(chatMessages);
+    setInput('');
+    setShowEmojis(false);
+    setShowInfo(false);
+    setShowAttachments(false);
+    setShowContextMenu(false);
+  }, [id]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -131,7 +140,7 @@ export function ChatPage() {
         }}
       >
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/chat')}
           className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172A45] transition-colors active:scale-90"
         >
           <ArrowLeft size={20} />
