@@ -5,6 +5,7 @@ import { Users, Zap, Calendar, Heart, Sun, Moon, Send, ChevronLeft, ChevronRight
 import { useApp } from '../store/AppContext';
 import { GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
+import mascotImg from '../assets/mascota_cta.png';
 import slide1 from '../assets/imagen_1_u.jpg';
 import slide2 from '../assets/imagen_2_u.jpg';
 import slide3 from '../assets/imagen_3_u.jpg';
@@ -211,7 +212,7 @@ export function LandingPage() {
         </section>
 
         <section className="px-6 py-24 relative overflow-hidden bg-transparent">
-          <div className="text-center mb-16 relative z-10">
+          <div className="text-center mb-8 relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <h2 className="text-gray-900 dark:text-white mb-3 text-4xl md:text-5xl font-black tracking-tight">Todo lo que necesitas</h2>
               <p className="text-lg text-blue-600 dark:text-blue-400 font-medium">Una plataforma diseñada para el bienestar universitario</p>
@@ -282,7 +283,7 @@ export function LandingPage() {
           <div className="absolute inset-0 opacity-20 mix-blend-screen" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)' }} />
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
-          <div className="text-center mb-16 relative z-10">
+          <div className="text-center mb-8 relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <h2 className="text-white mb-3 text-4xl md:text-5xl font-black tracking-tight">Colecciona Patricias</h2>
               <p className="text-lg text-blue-400 font-medium">Mientras más patricias consigas, más XP sumas para subir de nivel</p>
@@ -381,7 +382,7 @@ export function LandingPage() {
         </section>
 
         <section className="px-6 py-24 bg-transparent relative">
-          <div className="text-center mb-16 relative z-10">
+          <div className="text-center mb-8 relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <h2 className="text-gray-900 dark:text-white mb-3 text-4xl md:text-5xl font-black tracking-tight">Voces de la comunidad</h2>
               <p className="text-lg text-blue-600 dark:text-blue-400 font-medium">Experiencias reales de estudiantes ECI</p>
@@ -460,18 +461,36 @@ export function LandingPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-[3rem] p-12 text-center shadow-2xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
-                <h3 className="text-3xl md:text-4xl font-black text-white mb-4 relative z-10 tracking-tight">¿Quieres ser parte de la historia?</h3>
-                <p className="text-lg md:text-xl text-blue-100 font-medium mb-8 relative z-10 max-w-2xl mx-auto">
-                  Únete a la comunidad de patrici.a, comparte tus experiencias, crea parches y cambia la forma de vivir el campus.
-                </p>
-                <button
-                  onClick={() => navigate('/register')}
-                  className="px-10 py-5 rounded-2xl bg-white text-blue-600 text-xl font-black transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.3)] relative z-10"
-                >
-                  Crear mi cuenta gratis
-                </button>
+              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-[3rem] p-12 text-center md:text-left shadow-2xl relative overflow-visible group flex flex-col md:flex-row items-center justify-between min-h-[350px]">
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500 rounded-[3rem]" />
+                
+                <div className="relative z-10 md:w-2/3 pr-0 md:pr-12 flex flex-col items-center md:items-start">
+                  <h3 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">¿Quieres ser parte de la historia?</h3>
+                  <p className="text-lg md:text-xl text-blue-100 font-medium mb-8 max-w-xl text-center md:text-left">
+                    Únete a la comunidad de patrici.a, comparte tus experiencias, crea parches y cambia la forma de vivir el campus.
+                  </p>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="px-10 py-5 rounded-2xl bg-white text-blue-600 text-xl font-black transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.3)] relative z-10"
+                  >
+                    Crear mi cuenta gratis
+                  </button>
+                </div>
+                
+                <div className="hidden md:block absolute right-0 bottom-0 w-[420px] translate-x-16 translate-y-10 z-20">
+                  <motion.img 
+                    src={mascotImg} 
+                    alt="Mascota patrici.a" 
+                    className="w-full h-auto drop-shadow-[0_30px_50px_rgba(0,0,0,0.4)] cursor-grab active:cursor-grabbing"
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    whileHover={{ scale: 1.05, rotate: -3 }}
+                    whileTap={{ scale: 0.95, rotate: 5 }}
+                    drag
+                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                    dragElastic={0.2}
+                  />
+                </div>
               </div>
             )}
           </div>
