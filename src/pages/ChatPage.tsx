@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ArrowLeft, Send, Smile, Plus, Phone, Video, MoreVertical,
+  ArrowLeft, Send, Smile, Plus, Phone, MoreVertical,
   Image as ImageIcon, Users, X, Bell, BellOff, Trash2,
   UserCheck, Film, ChevronRight, Search, AlertCircle, Eraser,
   MapPin, Clock, User, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
@@ -166,13 +166,6 @@ export function ChatPage() {
           </div>
         </button>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => alert('Videollamada grupal próximamente 📹')}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-[#172A45] transition-colors"
-          >
-            <Video size={18} />
-          </button>
-          {}
           <div className="relative">
             <button
               ref={menuButtonRef}
