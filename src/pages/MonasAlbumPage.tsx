@@ -336,89 +336,92 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
   );
 }
 function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; onClick: () => void }) {
+  const slotNumber = String(index + 1).padStart(2, '0');
+  
   return (
     <motion.button
       onClick={onClick}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
-      className="relative w-full"
+      className="relative w-full rounded-xl overflow-hidden group"
       style={{ aspectRatio: '3/4' }}
     >
-      {}
-      <div
-        className="absolute inset-0 rounded-xl"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.04) 100%)',
-          padding: '2px',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.7)',
-        }}
+      <div 
+        className="absolute inset-0 border-[2.5px] border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex flex-col items-center justify-center transition-colors group-hover:border-blue-400 dark:group-hover:border-blue-500 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/20"
       >
-        {}
-        <div
-          className="relative w-full h-full rounded-[9px] overflow-hidden flex flex-col"
-          style={{
-            background: 'linear-gradient(160deg, #030810 0%, #050d1a 100%)',
-            boxShadow: [
-              'inset 0 3px 10px rgba(0,0,0,0.97)',
-              'inset 0 -1px 3px rgba(255,255,255,0.025)',
-              'inset 3px 0 8px rgba(0,0,0,0.85)',
-              'inset -3px 0 8px rgba(0,0,0,0.85)',
-              'inset 0 0 20px rgba(0,0,0,0.6)',
-            ].join(', '),
-          }}
-        >
-          {}
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: 'repeating-linear-gradient(45deg, rgba(59,130,246,0.04) 0px, rgba(59,130,246,0.04) 1px, transparent 0px, transparent 6px)',
-              backgroundSize: '6px 6px',
-            }}
-          />
-          {}
-          <div className="absolute top-0 left-0 w-3 h-3" style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 50%, transparent 50%)',
-          }} />
-          {}
-          <div className="absolute top-1 left-1 z-10">
-            <span className="text-[6px] font-black text-white/15">#{String(index + 1).padStart(2, '0')}</span>
-          </div>
-          {}
-          <div className="flex-1 flex items-center justify-center relative z-10" style={{ marginTop: '12px', marginBottom: '2px' }}>
-            <EmojiIcon emoji={mona.emoji} size={24} color="white" strokeWidth={1.5} className="opacity-[0.05]" />
-          </div>
-          {}
-          <div className="absolute inset-0 flex items-center justify-center z-20">
-            <motion.div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{
-                background: GOLD_GRADIENT,
-                boxShadow: `0 0 16px ${GOLD_LIGHT}40`,
-              }}
-              animate={{
-                scale: [1, 1.1, 1],
-                boxShadow: [
-                  `0 0 16px ${GOLD_LIGHT}40`,
-                  `0 0 24px ${GOLD_LIGHT}60`,
-                  `0 0 16px ${GOLD_LIGHT}40`,
-                ],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              <span className="text-white font-black text-lg">+</span>
-            </motion.div>
-          </div>
-          {}
-          <div className="w-full py-1 text-center z-10" style={{ background: 'rgba(0,0,0,0.55)' }}>
-            <p className="text-[6px] font-black tracking-widest text-white/15">???</p>
-          </div>
+        {/* Silueta difuminada de la mona */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] grayscale">
+          <EmojiIcon emoji={mona.emoji} size={56} color="currentColor" strokeWidth={1} />
         </div>
+        
+        {/* Número Central Prominente (Estilo Panini) */}
+        <span className="text-4xl sm:text-5xl font-black text-slate-300 dark:text-slate-700 select-none z-10 transition-colors group-hover:text-blue-300 dark:group-hover:text-blue-500/50">
+          {slotNumber}
+        </span>
+        
+        {/* Indicador de acción (+) sutil */}
+        <motion.div
+          className="absolute bottom-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-500"
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <span className="text-sm font-bold leading-none mb-[1px]">+</span>
+        </motion.div>
       </div>
     </motion.button>
+  );
+}
+
+function MonaSlotRender({ mona, i, albumPage, monasPerPage, setPastingMonaId, pastingMonaId, setCollection, setSelectedMona }: any) {
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04, type: 'spring', stiffness: 200, damping: 22 }}>
+      {mona.unlocked ? (
+        <MonaCardUnlocked mona={mona} onClick={() => setSelectedMona(mona)} />
+      ) : pastingMonaId === mona.id ? (
+        <motion.div
+          className="relative w-full"
+          style={{ aspectRatio: '3/4', transformOrigin: 'center center' }}
+          initial={{ scale: 2.5, y: -200, opacity: 0, rotateZ: 25 }}
+          animate={{ scale: 1, y: 0, opacity: 1, rotateZ: (Math.random() * 4 - 2) }}
+          transition={{ type: 'spring', stiffness: 200, damping: 14 }}
+          onAnimationComplete={() => {
+            setCollection((prev: any) =>
+              prev.map((m: any) => m.id === mona.id ? { ...m, unlocked: true, unlockedAt: 'Pegado ahora' } : m)
+            );
+            setPastingMonaId(null);
+          }}
+        >
+          <motion.div 
+            className="absolute inset-0 bg-black/40 rounded-xl blur-md" 
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 0.3, y: 4 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 14 }}
+          />
+          <div className="relative z-10 w-full h-full">
+            <MonaCardUnlocked mona={{ ...mona, unlocked: true }} onClick={() => {}} />
+          </div>
+        </motion.div>
+      ) : (
+        <MonaCardLocked
+          mona={mona}
+          index={albumPage * monasPerPage + i}
+          onClick={() => setPastingMonaId(mona.id)}
+        />
+      )}
+    </motion.div>
+  );
+}
+
+function EmptySlotRender({ index }: { index: number }) {
+  const slotNumber = String(index + 1).padStart(2, '0');
+  return (
+    <div className="rounded-xl overflow-hidden relative" style={{ aspectRatio: '3/4' }}>
+      <div className="absolute inset-0 border-[2.5px] border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex flex-col items-center justify-center">
+        <span className="text-4xl sm:text-5xl font-black text-slate-200 dark:text-slate-700/50 select-none">
+          {slotNumber}
+        </span>
+      </div>
+    </div>
   );
 }
 function QRScannerModal({
@@ -1031,15 +1034,7 @@ export function MonasAlbumPage() {
           </div>
         )}
       </div>
-      <AnimatePresence>
-        {albumPage === 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -10 }} 
-            transition={{ duration: 0.3 }}
-            className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto flex flex-col gap-6 relative z-10"
-          >
+      <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto flex flex-col gap-6 relative z-10">
             {/* ROW 1: Stats & QR */}
             <div className="flex flex-col md:flex-row gap-6 w-full md:items-center">
               <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2rem] p-6 grid grid-cols-3 gap-y-6 md:flex md:flex-row items-center justify-around shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
@@ -1288,9 +1283,7 @@ export function MonasAlbumPage() {
               </div>
             </div>
 
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
       <div className="mt-5 w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto">
         <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide">
           {CATEGORIES.map(cat => {
@@ -1319,102 +1312,117 @@ export function MonasAlbumPage() {
       </div>
       {}
       <div
-        className="mt-4 relative select-none w-full md:w-[90%] max-w-[1400px] mx-auto px-4 md:px-0"
-        style={{ perspective: '1200px' }}
+        className="mt-6 relative select-none w-full md:w-[95%] max-w-[1500px] mx-auto px-4 md:px-0"
+        style={{ perspective: '1500px' }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={() => { swipeActive.current = false; }}
       >
-        {}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-5 rounded-l-sm flex items-center justify-center z-10 pointer-events-none"
-          style={{
-            background: 'linear-gradient(180deg, #1E3A5F 0%, #0A192F 40%, #1E3A5F 70%, #0A192F 100%)',
-            boxShadow: 'inset -3px 0 8px rgba(0,0,0,0.8), 2px 0 6px rgba(0,0,0,0.5)',
-          }}
-        >
-          <p
-            className="text-white/20 font-black tracking-widest"
-            style={{ writingMode: 'vertical-rl', fontSize: '7px', letterSpacing: '0.15em' }}
-          >
-            patrici.a • ÁLBUM 2025
-          </p>
-        </div>
-        {}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-1 pointer-events-none"
-          style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.4), transparent)' }}
-        />
-        <div className="px-7">
-        {activeCategory !== 'todas' && albumPage === 0 && (
-          <motion.div key={activeCategory} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2 mb-4 px-1">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${CATEGORIES.find(c => c.id === activeCategory)?.color ?? '#3B82F6'}33` }}>
-              <EmojiIcon emoji={CATEGORIES.find(c => c.id === activeCategory)?.emoji ?? '✨'} size={18} color={CATEGORIES.find(c => c.id === activeCategory)?.color ?? '#3B82F6'} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-white font-black">{CATEGORIES.find(c => c.id === activeCategory)?.label}</h3>
-              <p className="text-[10px] text-blue-400">{catProgress(activeCategory).done} de {catProgress(activeCategory).total} monas</p>
-            </div>
-            {catProgress(activeCategory).done === catProgress(activeCategory).total && (
-              <span className="ml-auto px-2.5 py-1 rounded-full text-[10px] font-black text-white flex items-center gap-1" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)' }}><CheckCircle size={10} /> COMPLETA</span>
-            )}
-          </motion.div>
-        )}
-        <AnimatePresence mode="wait" custom={flipDir}>
-          <motion.div
-            key={`page-${albumPage}-${activeCategory}`}
-            custom={flipDir}
-            variants={flipVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            {pageMonas.map((mona, i) => (
-              <motion.div key={mona.id} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04, type: 'spring', stiffness: 200, damping: 22 }}>
-                {mona.unlocked ? (
-                  <MonaCardUnlocked mona={mona} onClick={() => setSelectedMona(mona)} />
-                ) : pastingMonaId === mona.id ? (
-                  <motion.div
-                    className="relative w-full"
-                    style={{ aspectRatio: '3/4' }}
-                    initial={{ scale: 1.8, y: -120, opacity: 0, rotateZ: 12 }}
-                    animate={{ scale: 1, y: 0, opacity: 1, rotateZ: 0 }}
-                    transition={{ type: 'spring', stiffness: 160, damping: 16 }}
-                    onAnimationComplete={() => {
-                      setCollection(prev =>
-                        prev.map(m => m.id === mona.id ? { ...m, unlocked: true, unlockedAt: 'Pegado ahora' } : m)
-                      );
-                      setPastingMonaId(null);
-                    }}
-                  >
-                    <MonaCardUnlocked mona={{ ...mona, unlocked: true }} onClick={() => {}} />
-                  </motion.div>
-                ) : (
-                  <MonaCardLocked
-                    mona={mona}
-                    index={albumPage * monasPerPage + i}
-                    onClick={() => {
-                      setPastingMonaId(mona.id);
-                    }}
-                  />
-                )}
+        <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden bg-slate-50 dark:bg-[#0B1324] shadow-[0_20px_60px_rgb(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgb(0,0,0,0.5)] border border-slate-200 dark:border-white/5 transition-colors">
+          
+          {/* Lomo lateral (Mobile) */}
+          <div
+            className="md:hidden absolute left-0 top-0 bottom-0 w-6 z-20 pointer-events-none"
+            style={{
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
+              borderRight: '1px solid rgba(255,255,255,0.05)'
+            }}
+          />
+
+          {/* Lomo central (Desktop) */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-16 -ml-8 z-20 pointer-events-none" style={{
+            background: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.05) 70%, transparent 100%)',
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.1)',
+          }} />
+
+          {/* Sombreado de páginas (Desktop) */}
+          <div className="hidden md:block absolute inset-0 z-0 pointer-events-none" style={{
+            background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.02) 48%, rgba(0,0,0,0.08) 50%, rgba(255,255,255,0.02) 52%, rgba(255,255,255,0) 100%)'
+          }} />
+
+          <div className="relative z-10 w-full min-h-[500px] p-6 pb-12 md:p-12 flex flex-col items-center">
+            
+            {/* Encabezado Impreso */}
+            {activeCategory !== 'todas' && albumPage === 0 && (
+              <motion.div key={activeCategory} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="w-full flex justify-center mb-8 md:mb-12">
+                <div className="px-6 md:px-12 py-3 md:py-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 flex items-center gap-3 md:gap-4 shadow-sm backdrop-blur-sm z-30 relative">
+                  <EmojiIcon emoji={CATEGORIES.find(c => c.id === activeCategory)?.emoji ?? '✨'} size={28} color={CATEGORIES.find(c => c.id === activeCategory)?.color ?? '#3B82F6'} strokeWidth={1.5} />
+                  <div className="flex flex-col items-center">
+                    <h3 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">{CATEGORIES.find(c => c.id === activeCategory)?.label}</h3>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 tracking-widest">{catProgress(activeCategory).done} DE {catProgress(activeCategory).total} MONAS</p>
+                  </div>
+                </div>
               </motion.div>
-            ))}
-            {pageMonas.length < monasPerPage && albumPage === totalAlbumPages - 1 &&
-              Array.from({ length: monasPerPage - pageMonas.length }).map((_, i) => (
-                <div key={`e-${i}`} className="rounded-2xl" style={{ aspectRatio: '3/4', background: 'rgba(255,255,255,0.02)', border: '1.5px dashed rgba(255,255,255,0.05)' }} />
-              ))
-            }
-          </motion.div>
-        </AnimatePresence>
-        {filteredMonas.length === 0 && (
-          <div className="text-center py-16">
-            <Library size={48} className="mx-auto mb-3 text-white/20" />
-            <p className="text-white/50">No hay monas en esta categoría</p>
+            )}
+
+            <AnimatePresence mode="wait" custom={flipDir}>
+              <motion.div
+                key={`page-${albumPage}-${activeCategory}`}
+                custom={flipDir}
+                variants={{
+                  enter: (dir) => ({ opacity: 0, rotateY: dir > 0 ? 90 : -90, z: -200 }),
+                  center: { opacity: 1, rotateY: 0, z: 0, transition: { duration: 0.5, type: 'spring', stiffness: 80, damping: 15 } },
+                  exit: (dir) => ({ opacity: 0, rotateY: dir > 0 ? -90 : 90, z: -200, transition: { duration: 0.3 } })
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="w-full flex flex-col md:flex-row gap-8 md:gap-0"
+                style={{ transformStyle: 'preserve-3d', transformOrigin: 'center' }}
+              >
+                
+                {/* === MOBILE GRID (1 column wrapper) === */}
+                <div className="md:hidden w-full grid grid-cols-3 sm:grid-cols-4 gap-4">
+                  {pageMonas.map((mona, i) => (
+                    <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                  ))}
+                  {pageMonas.length < monasPerPage && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: monasPerPage - pageMonas.length }).map((_, i) => (
+                      <EmptySlotRender key={`e-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
+                    ))
+                  }
+                </div>
+
+                {/* === DESKTOP SPREAD (2 columns wrapper) === */}
+                {/* Left Page */}
+                <div className="hidden md:grid w-1/2 pr-12 grid-cols-3 gap-6 auto-rows-max">
+                  {pageMonas.slice(0, 6).map((mona, i) => (
+                    <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                  ))}
+                  {pageMonas.length < 6 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 6 - pageMonas.length }).map((_, i) => (
+                      <EmptySlotRender key={`el-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
+                    ))
+                  }
+                </div>
+
+                {/* Right Page */}
+                <div className="hidden md:grid w-1/2 pl-12 grid-cols-3 gap-6 auto-rows-max">
+                  {pageMonas.slice(6, 12).map((mona, i) => (
+                    <MonaSlotRender key={mona.id} mona={mona} i={i + 6} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                  ))}
+                  {pageMonas.length >= 6 && pageMonas.length < 12 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 12 - pageMonas.length }).map((_, i) => (
+                      <EmptySlotRender key={`er-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
+                    ))
+                  }
+                  {pageMonas.length < 6 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <EmptySlotRender key={`er-all-${i}`} index={6 + i + (albumPage * monasPerPage)} />
+                    ))
+                  }
+                </div>
+
+              </motion.div>
+            </AnimatePresence>
+
+            {filteredMonas.length === 0 && (
+              <div className="text-center py-20 w-full relative z-30">
+                <Library size={56} className="mx-auto mb-4 text-slate-300 dark:text-slate-600" />
+                <p className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest text-sm">Página en blanco</p>
+              </div>
+            )}
           </div>
-        )}
         </div>{}
         {}
         {albumPage < totalAlbumPages - 1 && (
