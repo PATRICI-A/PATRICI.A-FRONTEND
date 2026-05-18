@@ -22,7 +22,7 @@ import {
   Music, Mountain, BookOpen, Pizza, Gamepad2, Palette,
   Calendar, Tent, Code2, Smile, Users as UsersIcon, PartyPopper,
   Info, Handshake, Network, Award, Map, MapPin, Building2, MessageCircle,
-  Home, Rocket, Crown,
+  Home, Rocket, Crown, Shield,
 } from 'lucide-react';
 import {
   monas as initialMonas, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD,
@@ -465,23 +465,27 @@ function QRScannerModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-start overflow-y-auto"
-      style={{ background: 'rgba(2,8,20,0.97)' }}
+      className="absolute inset-0 z-50 pointer-events-none"
     >
-      {}
-      <div className="w-full flex items-center justify-between px-5 pt-12 pb-4">
-        <div>
-          <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
-          <h2 className="text-white font-black text-lg leading-none">Escanear QR</h2>
+      <div 
+        className="sticky top-0 w-full h-[100dvh] flex flex-col items-center justify-start overflow-y-auto pointer-events-auto" 
+        style={{ background: 'rgba(2,8,20,0.97)' }}
+      >
+        <div className="w-[90%] max-w-[600px] mx-auto flex flex-col items-center pb-12">
+          {}
+        <div className="w-full flex items-center justify-between px-5 pt-12 pb-4">
+          <div>
+            <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
+            <h2 className="text-white font-black text-lg leading-none">Escanear QR</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
+          >
+            <X size={18} className="text-white" />
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.1)' }}
-        >
-          <X size={18} className="text-white" />
-        </button>
-      </div>
       {}
       <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
         {}
@@ -619,7 +623,7 @@ function QRScannerModal({
       {}
       <div className="w-full px-5 mt-6 pb-8">
         <p className="text-white/30 text-xs mb-3 text-center">✦ Códigos de demostración disponibles</p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {DEMO_CODES.map(demo => {
             const isUsed = usedCodes.includes(demo.code);
             return (
@@ -653,6 +657,8 @@ function QRScannerModal({
             );
           })}
         </div>
+      </div>
+      </div>
       </div>
     </motion.div>
   );
@@ -870,22 +876,27 @@ export function MonasAlbumPage() {
   const [collection, setCollection] = useState<Mona[]>([...initialMonas]);
   const [activeCategory, setActiveCategory] = useState('todas');
   const [selectedMona, setSelectedMona] = useState<Mona | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [pendingEnvelope, setPendingEnvelope] = useState<{ envelope: QREnvelope; cards: Mona[] } | null>(null);
   const [usedQRCodes, setUsedQRCodes] = useState<string[]>([]);
   const [showRewardModal, setShowRewardModal] = useState<typeof REWARDS[0] | null>(null);
   const [claimedRewards, setClaimedRewards] = useState<string[]>([]);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
-  const [pastingMonaId, setPastingMonaId] = useState<string | null>(null);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
+  
   useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('patricias-album-welcome-seen');
-    if (!hasSeenWelcome) {
-      setShowWelcomeModal(true);
-    }
+    if (selectedMona || selectedBadge) setIsFlipped(false);
+  }, [selectedMona, selectedBadge]);
+
+  const [pastingMonaId, setPastingMonaId] = useState<string | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
+  const [monasPerPage, setMonasPerPage] = useState(18);
+  useEffect(() => {
+    const handleResize = () => setMonasPerPage(window.innerWidth < 768 ? 12 : 18);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const MONAS_PER_PAGE = 18;
   const [albumPage, setAlbumPage] = useState(0);
   const [flipDir, setFlipDir] = useState(1);
   const totalMonas = collection.length;
@@ -930,8 +941,8 @@ export function MonasAlbumPage() {
         const mappedCategories = categoryMap[activeCategory];
         return mappedCategories ? mappedCategories.includes(m.category) : false;
       });
-  const totalAlbumPages = Math.ceil(filteredMonas.length / MONAS_PER_PAGE);
-  const pageMonas = filteredMonas.slice(albumPage * MONAS_PER_PAGE, (albumPage + 1) * MONAS_PER_PAGE);
+  const totalAlbumPages = Math.ceil(filteredMonas.length / monasPerPage);
+  const pageMonas = filteredMonas.slice(albumPage * monasPerPage, (albumPage + 1) * monasPerPage);
   const goToPage = (dir: 1 | -1) => {
     const next = albumPage + dir;
     if (next < 0 || next >= totalAlbumPages) return;
@@ -978,11 +989,7 @@ export function MonasAlbumPage() {
     setShowRewardModal(null);
   };
   const handleCloseWelcome = () => {
-    if (dontShowAgain) {
-      localStorage.setItem('patricias-album-welcome-seen', 'true');
-    }
     setShowWelcomeModal(false);
-    setDontShowAgain(false);
   };
   const handleOpenWelcomeFromInfo = () => {
     setShowWelcomeModal(true);
@@ -991,7 +998,7 @@ export function MonasAlbumPage() {
   return (
     <div className="min-h-screen pb-32 relative overflow-x-hidden">
       {}
-      <div className="relative px-5 pt-4 pb-8 overflow-hidden" style={{ background: 'transparent' }}>
+      <div className="sticky top-0 z-40 px-5 pt-4 pb-4 mb-4 backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border-b border-slate-200/50 dark:border-white/10 transition-all overflow-hidden shadow-sm">
         {}
         <div className="absolute inset-0 opacity-30 pointer-events-none"
           style={{
@@ -1004,7 +1011,7 @@ export function MonasAlbumPage() {
           }}
         />
         {}
-        <div className="flex items-center justify-between mb-6">
+        <div className="w-[90%] max-w-[1400px] mx-auto flex items-center justify-between mb-6">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}>
             <ArrowLeft size={18} style={{ color: isDark ? '#fff' : '#1e293b' }} />
           </button>
@@ -1013,254 +1020,279 @@ export function MonasAlbumPage() {
             <h2 className="font-black text-lg leading-none" style={{ color: isDark ? '#fff' : '#1e293b' }}>Álbum de Patricias</h2>
           </div>
           <div className="flex items-center gap-2">
-            {}
-            <motion.button
-              onClick={() => setShowQRModal(true)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.92 }}
-              className="relative flex flex-col items-center"
-            >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                style={{ background: availableQRCodes > 0 ? GOLD_GRADIENT : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }}
-              >
-                <QrCode size={20} style={{ color: availableQRCodes > 0 ? '#fff' : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }} />
-              </div>
-              <span className="text-[9px] font-bold mt-0.5" style={{ color: availableQRCodes > 0 ? GOLD_LIGHT : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>
-                {availableQRCodes} QR
-              </span>
-              {availableQRCodes > 0 && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white"
-                  style={{ background: GOLD_LIGHT }}
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  {availableQRCodes}
-                </motion.div>
-              )}
-            </motion.button>
+            {/* Espacio reservado si se requiere otro botón en el header futuro */}
           </div>
         </div>
-        {}
-        <AnimatePresence>
-        {albumPage === 0 && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <svg width={130} height={130} viewBox="0 0 130 130">
-              <circle cx={65} cy={65} r={RADIUS} fill="none" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)'} strokeWidth={10} />
-              <motion.circle
-                cx={65} cy={65} r={RADIUS}
-                fill="none"
-                stroke="url(#ringGrad)"
-                strokeWidth={10}
-                strokeLinecap="round"
-                strokeDasharray={CIRC}
-                initial={{ strokeDashoffset: CIRC }}
-                animate={{ strokeDashoffset: CIRC - (completionPct / 100) * CIRC }}
-                transition={{ duration: 1.6, ease: 'easeOut', delay: 0.3 }}
-                style={{ transform: 'rotate(-90deg)', transformOrigin: '65px 65px' }}
-              />
-              <defs>
-                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#1E3A8A" />
-                  <stop offset="50%" stopColor="#3B82F6" />
-                  <stop offset="85%" stopColor="#06B6D4" />
-                  <stop offset="100%" stopColor="#F59E0B" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.span
-                className="text-3xl font-black"
-                style={{ color: isDark ? '#fff' : '#1e293b' }}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
-                {completionPct}%
-              </motion.span>
-              <span className="text-[9px] font-medium" style={{ color: isDark ? '#93c5fd' : '#3b82f6' }}>completado</span>
-              <motion.button
-                onClick={handleOpenWelcomeFromInfo}
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.9 }}
-                className="mt-1 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)' }}
-              >
-                <Info size={11} className="text-blue-400" />
-              </motion.button>
-            </div>
-          </div>
-          <div className="flex gap-6 mt-3">
-            {[
-              { label: 'Monas', value: `${unlockedCount}/${totalMonas}`, Icon: Library },
-              { label: 'XP Total', value: `${totalXP.toLocaleString()}`, Icon: Zap },
-              { label: 'Escaneados', value: `${scannedCount} QR`, Icon: Smartphone },
-            ].map(stat => (
-              <div key={stat.label} className="text-center">
-                <p className="text-xs font-black flex items-center justify-center gap-1" style={{ color: isDark ? '#fff' : '#1e293b' }}>
-                  <stat.Icon size={11} className="opacity-70" /> {stat.value}
-                </p>
-                <p className="text-[9px]" style={{ color: isDark ? '#60a5fa' : '#3b82f6' }}>{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        </motion.div>
-        )}
-        </AnimatePresence>
+        
+        {/* Pagination Info for Monas Grid */}
         {albumPage > 0 && (
           <div className="flex justify-center mt-2">
             <span className="text-xs font-bold tracking-widest uppercase" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)' }}>Página {albumPage + 1} / {totalAlbumPages}</span>
           </div>
         )}
       </div>
-      {}
-      {albumPage === 0 && <div className="px-5 mt-5 relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black flex items-center gap-1.5" style={{ color: isDark ? '#fff' : '#1e293b' }}>
-            <Trophy size={14} style={{ color: GOLD_LIGHT }} /> Recompensas del Álbum
-          </h3>
-          <span className="text-[10px]" style={{ color: isDark ? '#60a5fa' : '#3b82f6' }}>Desbloquea completando</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {REWARDS.map((reward, i) => {
-            const reached = completionPct >= reward.pct;
-            const claimed = claimedRewards.includes(reward.id);
-            const isGold = reward.pct === 100;
-            return (
-              <motion.button
-                key={reward.id}
-                onClick={() => reached && !claimed && setShowRewardModal(reward)}
-                whileHover={{ scale: reached && !claimed ? 1.04 : 1 }}
-                whileTap={{ scale: reached && !claimed ? 0.96 : 1 }}
-                className="flex-shrink-0 rounded-2xl p-3 flex flex-col items-center gap-1.5 relative overflow-hidden"
-                style={{
-                  width: 110,
-                  background: reached
-                    ? reward.bg
-                    : isDark ? 'rgba(255,255,255,0.04)' : '#EEEEEF',
-                  border: `1.5px solid ${reached
-                    ? (isGold ? GOLD_LIGHT : reward.color)
-                    : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)'}`,
-                  boxShadow: reached ? `0 4px 20px ${reward.color}33` : 'none',
-                  opacity: claimed ? 0.6 : 1,
-                }}
-              >
-                {}
-                {isGold && reached && !claimed && (
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    animate={{ opacity: [0.3, 0.8, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    style={{ background: 'linear-gradient(135deg, transparent 30%, rgba(245,158,11,0.25) 50%, transparent 70%)' }}
-                  />
-                )}
-                {reached && !claimed && !isGold && (
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    animate={{ x: ['-100%', '200%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
-                    style={{ background: `linear-gradient(90deg, transparent, ${reward.color}25, transparent)`, width: '60%' }}
-                  />
-                )}
-                {claimed
-                  ? <CheckCircle size={22} color={GOLD_LIGHT} />
-                  : <EmojiIcon
-                      emoji={reward.emoji}
-                      size={22}
-                      color={reached ? reward.color : isDark ? 'rgba(255,255,255,0.25)' : '#6B7280'}
-                      strokeWidth={2}
-                    />}
-                <div className="text-center">
-                  <p
-                    className="text-[10px] font-black leading-tight"
-                    style={{ color: reached ? (isDark ? '#fff' : '#1e293b') : isDark ? '#fff' : '#2D2D2D' }}
-                  >
-                    {reward.title}
-                  </p>
-                  <p
-                    className="text-[8px] mt-0.5"
-                    style={{ color: reached ? (isGold ? GOLD_LIGHT : reward.color) : isDark ? 'rgba(255,255,255,0.3)' : '#5A5A5A' }}
-                  >
-                    {reward.subtitle}
-                  </p>
+      <AnimatePresence>
+        {albumPage === 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -10 }} 
+            transition={{ duration: 0.3 }}
+            className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto flex flex-col gap-6 relative z-10"
+          >
+            {/* ROW 1: Stats & QR */}
+            <div className="flex flex-col md:flex-row gap-6 w-full md:items-center">
+              <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2rem] p-6 grid grid-cols-3 gap-y-6 md:flex md:flex-row items-center justify-around shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+                {/* Circular Progress */}
+                <div className="col-span-3 flex flex-col items-center justify-center w-full md:w-auto md:mb-0">
+                  <div className="relative mx-auto flex justify-center" style={{ width: 130, height: 130 }}>
+                    <svg width={130} height={130} viewBox="0 0 130 130">
+                      <circle cx={65} cy={65} r={RADIUS} fill="none" stroke={isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9"} strokeWidth={10} />
+                      <motion.circle
+                        cx={65} cy={65} r={RADIUS}
+                        fill="none"
+                        stroke="url(#ringGrad)"
+                        strokeWidth={10}
+                        strokeLinecap="round"
+                        strokeDasharray={CIRC}
+                        initial={{ strokeDashoffset: CIRC }}
+                        animate={{ strokeDashoffset: CIRC - (completionPct / 100) * CIRC }}
+                        transition={{ duration: 1.6, ease: 'easeOut', delay: 0.3 }}
+                        style={{ transform: 'rotate(-90deg)', transformOrigin: '65px 65px' }}
+                      />
+                      <defs>
+                        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#1E3A8A" />
+                          <stop offset="50%" stopColor="#3B82F6" />
+                          <stop offset="85%" stopColor="#06B6D4" />
+                          <stop offset="100%" stopColor="#F59E0B" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <motion.span
+                        className="text-3xl font-black text-slate-800 dark:text-white"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5, duration: 0.5 }}
+                      >
+                        {completionPct}%
+                      </motion.span>
+                      <span className="text-[10px] font-bold text-blue-500">completado</span>
+                      <Star size={12} className="text-blue-500 mt-1" />
+                    </div>
+                  </div>
                 </div>
-                <div
-                  className="w-full h-1 rounded-full"
-                  style={{ background: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)' }}
-                >
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: isGold && reached ? GOLD_GRADIENT : reward.color }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min((completionPct / reward.pct) * 100, 100)}%` }}
-                    transition={{ duration: 1.2, delay: 0.5 + i * 0.1 }}
-                  />
+                
+                <div className="hidden md:block w-px h-16 bg-slate-100 dark:bg-white/10" />
+
+                {/* --- MOBILE STATS ROW (2x2 Grid) --- */}
+                <div className="md:hidden grid grid-cols-2 w-full mt-8 gap-y-8 self-stretch">
+                  <div className="flex flex-col items-center justify-center">
+                    <Library size={24} className="text-blue-500 mb-2" />
+                    <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">{unlockedCount}/{totalMonas}</span>
+                    <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Monas</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center">
+                    <Star size={24} className="text-blue-500 mb-2" />
+                    <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">{totalXP.toLocaleString()}</span>
+                    <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">XP Total</span>
+                  </div>
+                  <div className="col-span-2 flex flex-col items-center justify-center">
+                    <QrCode size={24} className="text-blue-500 mb-2" />
+                    <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">{scannedCount}</span>
+                    <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">QR Escan.</span>
+                  </div>
                 </div>
-                <p
-                  className="text-[8px] font-bold"
-                  style={{ color: reached ? (isGold ? GOLD_LIGHT : reward.color) : isDark ? 'rgba(255,255,255,0.3)' : '#4A4A4A' }}
+
+                {/* --- DESKTOP STATS (Flat structure via display: contents) --- */}
+                <div className="hidden md:contents">
+                  <div className="flex flex-col items-center justify-center">
+                    <Library size={24} className="text-blue-500 mb-2" />
+                    <span className="text-2xl font-black text-slate-800 dark:text-white">{unlockedCount}/{totalMonas}</span>
+                    <span className="text-xs sm:text-sm font-bold text-blue-500">Monas</span>
+                  </div>
+
+                  <div className="w-px h-16 bg-slate-100 dark:bg-white/10" />
+
+                  <div className="flex flex-col items-center justify-center">
+                    <Star size={24} className="text-blue-500 mb-2" />
+                    <span className="text-2xl font-black text-slate-800 dark:text-white">{totalXP.toLocaleString()}</span>
+                    <span className="text-xs sm:text-sm font-bold text-blue-500">XP Total</span>
+                  </div>
+
+                  <div className="w-px h-16 bg-slate-100 dark:bg-white/10" />
+
+                  <div className="flex flex-col items-center justify-center">
+                    <QrCode size={24} className="text-blue-500 mb-2" />
+                    <span className="text-2xl font-black text-slate-800 dark:text-white">{scannedCount}</span>
+                    <span className="text-xs sm:text-sm font-bold text-blue-500 whitespace-nowrap">QR Escan.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating QR Button */}
+              <div className="flex flex-col items-center shrink-0 w-full md:w-auto mt-4 md:mt-0">
+                <motion.button
+                  onClick={() => setShowQRModal(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full md:w-20 h-16 md:h-20 rounded-[1.5rem] flex items-center justify-center bg-orange-500 shadow-lg shadow-orange-500/30"
                 >
-                  {claimed ? '¡Reclamado!' : reached ? '¡RECLAMAR!' : `${reward.pct}% necesario`}
-                </p>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>}
-      {}
-      {albumPage === 0 && <div className="px-5 mt-5 relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black flex items-center gap-1.5" style={{ color: isDark ? '#fff' : '#1e293b' }}>
-            <Trophy size={14} style={{ color: GOLD_LIGHT }} /> Medallas
-          </h3>
-          <span className="text-[10px]" style={{ color: isDark ? '#60a5fa' : '#3b82f6' }}>{BADGES.filter(b => b.unlocked).length}/{BADGES.length} desbloqueadas</span>
-        </div>
-        <div className="space-y-4">
-          {}
-          <div>
-            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Conexiones sociales</p>
-            <div className="grid grid-cols-6 gap-1.5">
-              {BADGES.filter(b => b.category === 'conexiones').map((badge, i) => (
-                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
-              ))}
+                  <QrCode size={32} className="text-white" />
+                </motion.button>
+                <span className="hidden md:block text-sm font-bold text-orange-500 mt-2">QR</span>
+              </div>
             </div>
-          </div>
-          {}
-          <div>
-            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Parches</p>
-            <div className="grid grid-cols-6 gap-1.5">
-              {BADGES.filter(b => b.category === 'parches').map((badge, i) => (
-                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
-              ))}
+
+            {/* ROW 2: Recompensas */}
+            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                  <Trophy size={20} className="text-orange-500" /> Recompensas del Álbum
+                </h3>
+                <button className="text-sm font-bold text-blue-500 hover:text-blue-600 transition-colors">
+                  Ver todas las recompensas
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {REWARDS.map((reward, i) => {
+                  const reached = completionPct >= reward.pct;
+                  const claimed = claimedRewards.includes(reward.id);
+                  const isGold = reward.pct === 100;
+                  
+                  return (
+                    <button
+                      key={reward.id}
+                      onClick={() => reached && !claimed && setShowRewardModal(reward)}
+                      className={`relative rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all ${
+                        reached && !claimed 
+                          ? 'bg-[#F0FAFD] dark:bg-cyan-900/20 border-2 border-[#5CE1E6] cursor-pointer hover:shadow-lg' 
+                          : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 opacity-90'
+                      }`}
+                    >
+                      {reached && !claimed && (
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none rounded-2xl"
+                          animate={{ opacity: [0.1, 0.3, 0.1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          style={{ background: 'linear-gradient(135deg, transparent, rgba(92,225,230,0.4), transparent)' }}
+                        />
+                      )}
+                      
+                      {claimed ? (
+                        <CheckCircle size={32} className="text-[#FFB13B]" />
+                      ) : (
+                        <div className={`p-3 rounded-full ${reached ? 'bg-[#E0F7FA] dark:bg-cyan-900/40' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                           <EmojiIcon emoji={reward.emoji} size={28} color={reached ? '#00BCD4' : '#94a3b8'} strokeWidth={2} />
+                        </div>
+                      )}
+                      
+                      <div className="text-center z-10">
+                        <h4 className="text-sm font-black text-slate-800 dark:text-white">{reward.title}</h4>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{reward.subtitle}</p>
+                      </div>
+                      
+                      {reached && !claimed ? (
+                        <div className="w-full mt-2 py-2 rounded-xl bg-[#E0F7FA] dark:bg-cyan-900/60 text-[#00BCD4] text-xs font-black z-10">
+                          ¡RECLAMAR!
+                        </div>
+                      ) : claimed ? (
+                        <div className="w-full mt-2 py-2 rounded-xl bg-orange-100 dark:bg-orange-900/40 text-orange-500 text-xs font-black z-10">
+                          ¡RECLAMADO!
+                        </div>
+                      ) : (
+                        <div className="w-full mt-2 flex items-center justify-center py-2 rounded-xl bg-slate-100 dark:bg-slate-800 z-10">
+                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            <span className={isGold ? "text-[#FFB13B]" : "text-[#4ADE80]"}>{reward.pct}%</span> necesario
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          {}
-          <div>
-            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Campus</p>
-            <div className="grid grid-cols-6 gap-1.5">
-              {BADGES.filter(b => b.category === 'campus').map((badge, i) => (
-                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
-              ))}
+
+            {/* ROW 3: Medallas (Conexiones, Parches, Campus) */}
+            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-white/10">
+              
+              {/* Conexiones */}
+              <div className="flex flex-col md:pr-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                    <Award size={18} className="text-blue-500" /> Medallas
+                  </h3>
+                  <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todas</button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {BADGES.filter(b => b.category === 'conexiones').map((badge, i) => (
+                    <div key={badge.id} className="w-[85px] shrink-0">
+                      <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Parches */}
+              <div className="flex flex-col pt-6 md:pt-0 md:px-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                    <Shield size={18} className="text-blue-500" /> Parches
+                  </h3>
+                  <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todas</button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {BADGES.filter(b => b.category === 'parches').map((badge, i) => (
+                    <div key={badge.id} className="w-[85px] shrink-0">
+                      <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Campus */}
+              <div className="flex flex-col pt-6 md:pt-0 md:pl-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                    <Building2 size={18} className="text-blue-500" /> Campus
+                  </h3>
+                  <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todas</button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {BADGES.filter(b => b.category === 'campus').map((badge, i) => (
+                    <div key={badge.id} className="w-[85px] shrink-0">
+                      <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
-          </div>
-          {}
-          <div>
-            <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)' }}>Especiales</p>
-            <div className="grid grid-cols-6 gap-1.5">
-              {BADGES.filter(b => b.category === 'especiales').map((badge, i) => (
-                <BadgeCard key={badge.id} badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} legendaryGlow={badge.rarity === 'legendario'} />
-              ))}
+
+            {/* ROW 4: Especiales */}
+            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
+                  <Sparkles size={18} className="text-orange-500" /> Especiales
+                </h3>
+                <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todos</button>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {BADGES.filter(b => b.category === 'especiales').map((badge, i) => (
+                  <div key={badge.id} className="w-[85px] shrink-0">
+                    <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} legendaryGlow={badge.rarity === 'legendario'} />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-      </div>}
-      {}
-      <div className="mt-5">
-        <div className="flex gap-2 overflow-x-auto pb-2 px-5 scrollbar-hide">
+
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="mt-5 w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto">
+        <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide">
           {CATEGORIES.map(cat => {
             const prog = catProgress(cat.id);
             const isActive = activeCategory === cat.id;
@@ -1287,7 +1319,7 @@ export function MonasAlbumPage() {
       </div>
       {}
       <div
-        className="mt-4 relative select-none"
+        className="mt-4 relative select-none w-full md:w-[90%] max-w-[1400px] mx-auto px-4 md:px-0"
         style={{ perspective: '1200px' }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
@@ -1336,7 +1368,7 @@ export function MonasAlbumPage() {
             initial="enter"
             animate="center"
             exit="exit"
-            className="grid grid-cols-6 gap-1.5"
+            className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2"
             style={{ transformStyle: 'preserve-3d' }}
           >
             {pageMonas.map((mona, i) => (
@@ -1362,7 +1394,7 @@ export function MonasAlbumPage() {
                 ) : (
                   <MonaCardLocked
                     mona={mona}
-                    index={albumPage * MONAS_PER_PAGE + i}
+                    index={albumPage * monasPerPage + i}
                     onClick={() => {
                       setPastingMonaId(mona.id);
                     }}
@@ -1370,8 +1402,8 @@ export function MonasAlbumPage() {
                 )}
               </motion.div>
             ))}
-            {pageMonas.length < MONAS_PER_PAGE && albumPage === totalAlbumPages - 1 &&
-              Array.from({ length: MONAS_PER_PAGE - pageMonas.length }).map((_, i) => (
+            {pageMonas.length < monasPerPage && albumPage === totalAlbumPages - 1 &&
+              Array.from({ length: monasPerPage - pageMonas.length }).map((_, i) => (
                 <div key={`e-${i}`} className="rounded-2xl" style={{ aspectRatio: '3/4', background: 'rgba(255,255,255,0.02)', border: '1.5px dashed rgba(255,255,255,0.05)' }} />
               ))
             }
@@ -1420,10 +1452,10 @@ export function MonasAlbumPage() {
       </div>{}
       {}
       {totalAlbumPages > 1 && (
-        <div className="px-4 mt-6 flex items-center justify-between">
+        <div className="px-4 mt-6 flex items-center justify-between w-full md:w-[90%] max-w-[1400px] mx-auto">
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => goToPage(-1)} disabled={albumPage === 0}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white disabled:opacity-30"
-            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ background: albumPage > 0 ? GOLD_GRADIENT : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
             <ChevronLeft size={16} /> Anterior
           </motion.button>
@@ -1469,30 +1501,42 @@ export function MonasAlbumPage() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-40"
               onClick={() => setSelectedMona(null)}
             />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 rounded-3xl overflow-hidden max-h-[85vh] overflow-y-auto"
-              style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.1)' }}
+            {/* Botón X fuera de la carta */}
+            <button
+              onClick={() => setSelectedMona(null)}
+              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
             >
-              {selectedMona.unlocked ? (
-                <div>
-                  <div className="p-5 flex gap-4">
-                    <motion.div
-                      initial={{ scale: 0.7, rotate: -5 }} animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                      className="w-28 h-36 rounded-2xl flex flex-col items-center justify-between py-3 px-2 flex-shrink-0 relative overflow-hidden"
-                      style={{
-                        background: R[selectedMona.rarity].cardBg,
-                        border: `2px solid ${R[selectedMona.rarity].border}`,
-                        boxShadow: `0 8px 32px ${R[selectedMona.rarity].glow}`,
-                      }}
-                    >
+              <X size={20} className="text-white" />
+            </button>
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+              style={{ perspective: '1200px' }}
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                animate={{ scale: 1, opacity: 1, y: 0, rotateY: isFlipped ? 180 : 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                onClick={() => setIsFlipped(!isFlipped)}
+                className="relative w-[320px] sm:w-[360px] cursor-pointer pointer-events-auto"
+                style={{ aspectRatio: '3/4', transformStyle: 'preserve-3d' }}
+              >
+                {/* CARA FRONTAL (FRONT FACE) */}
+                <div
+                  className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col items-center justify-between py-8 px-6"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    background: selectedMona.unlocked ? R[selectedMona.rarity].cardBg : 'linear-gradient(160deg, #0A1628, #112240)',
+                    border: `2px solid ${selectedMona.unlocked ? R[selectedMona.rarity].border : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: selectedMona.unlocked ? `0 12px 48px ${R[selectedMona.rarity].glow}` : '0 12px 48px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {selectedMona.unlocked ? (
+                    <>
                       {selectedMona.rarity === 'legendario' && (
                         <motion.div
                           className="absolute inset-0"
@@ -1502,74 +1546,125 @@ export function MonasAlbumPage() {
                         />
                       )}
                       <div className="flex justify-between w-full z-10">
-                        <span className="text-[7px] font-black" style={{ color: R[selectedMona.rarity].textColor }}>
+                        <span className="text-[10px] font-black tracking-widest" style={{ color: R[selectedMona.rarity].textColor }}>
                           {R[selectedMona.rarity].label.toUpperCase()}
                         </span>
                         <RarityStars count={R[selectedMona.rarity].stars} color={R[selectedMona.rarity].textColor} />
                       </div>
-                      <div className="flex items-center justify-center z-10">
-                        <EmojiIcon emoji={selectedMona.emoji} size={40} color="white" strokeWidth={1.5} />
-                      </div>
-                      <div className="w-full text-center z-10" style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 6, padding: '3px 4px' }}>
-                        <p className="text-[9px] font-black" style={{ color: R[selectedMona.rarity].textColor }}>{selectedMona.name}</p>
-                      </div>
-                    </motion.div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-black text-lg">{selectedMona.name}</h3>
-                      <p className="text-blue-400 text-xs mt-0.5">{selectedMona.category.charAt(0).toUpperCase() + selectedMona.category.slice(1)}</p>
-                      <p className="text-white/70 text-xs mt-2 leading-relaxed">{selectedMona.description}</p>
-                      <div className="flex items-center gap-3 mt-3">
-                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full" style={{ background: R[selectedMona.rarity].tagBg }}>
-                          <Zap size={10} style={{ color: R[selectedMona.rarity].textColor }} />
-                          <span className="text-[10px] font-black" style={{ color: R[selectedMona.rarity].textColor }}>+{selectedMona.xp} XP</span>
+                      <div className="flex-1 flex items-center justify-center z-10 w-full">
+                        <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${R[selectedMona.rarity].glow}40` }}>
+                          <EmojiIcon emoji={selectedMona.emoji} size={80} color="white" strokeWidth={1.2} />
                         </div>
+                      </div>
+                      <div className="w-full text-center z-10 bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
+                        <p className="text-xl font-black mb-1" style={{ color: R[selectedMona.rarity].textColor }}>{selectedMona.name}</p>
+                        <p className="text-xs uppercase tracking-widest" style={{ color: `${R[selectedMona.rarity].textColor}99` }}>
+                          {selectedMona.category}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between w-full z-10 opacity-30">
+                        <span className="text-[10px] font-black tracking-widest text-white">BLOQUEADA</span>
+                        <Lock size={14} className="text-white" />
+                      </div>
+                      <div className="flex-1 flex items-center justify-center z-10">
+                        <div className="w-32 h-32 flex items-center justify-center rounded-full bg-white/5">
+                          <Lock size={48} className="text-white/20" />
+                        </div>
+                      </div>
+                      <div className="w-full text-center z-10 bg-black/40 rounded-2xl py-4 px-3 border border-white/5">
+                        <p className="text-xl font-black mb-1 text-white/40">???</p>
+                        <p className="text-xs uppercase tracking-widest text-white/20">{selectedMona.category}</p>
+                      </div>
+                    </>
+                  )}
+                  {/* Hint to flip */}
+                  <div className="absolute bottom-3 left-0 right-0 text-center z-10">
+                    <p className="text-[9px] text-white/30 uppercase tracking-widest animate-pulse">Toca para girar</p>
+                  </div>
+                </div>
+
+                {/* CARA TRASERA (BACK FACE) */}
+                <div
+                  className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col px-6 py-8"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    background: '#0A1628',
+                    border: `2px solid ${selectedMona.unlocked ? R[selectedMona.rarity].border : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: selectedMona.unlocked ? `0 12px 48px ${R[selectedMona.rarity].glow}` : '0 12px 48px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {selectedMona.unlocked ? (
+                    <div className="flex flex-col h-full">
+                      <div className="text-center mb-6">
+                        <h3 className="text-white font-black text-2xl leading-tight">{selectedMona.name}</h3>
+                        <p className="text-blue-400 text-xs uppercase tracking-widest mt-1">{selectedMona.category}</p>
+                      </div>
+                      
+                      <div className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/10 overflow-y-auto">
+                        <p className="text-white/80 text-sm leading-relaxed text-center">"{selectedMona.description}"</p>
+                      </div>
+
+                      <div className="mt-6 space-y-3">
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2">
+                            <Zap size={14} style={{ color: R[selectedMona.rarity].textColor }} />
+                            <span className="text-xs font-bold text-white/60">Recompensa</span>
+                          </div>
+                          <span className="text-sm font-black" style={{ color: R[selectedMona.rarity].textColor }}>+{selectedMona.xp} XP</span>
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+                          <span className="text-[10px] uppercase tracking-widest text-white/40">Condición de desbloqueo</span>
+                          <p className="text-xs text-white/70">{selectedMona.condition}</p>
+                        </div>
+                        
                         {selectedMona.unlockedAt && (
-                          <span className="text-[10px] text-green-400 flex items-center gap-1">
-                            <CheckCircle size={10} /> {selectedMona.unlockedAt}
-                          </span>
+                          <div className="flex items-center justify-center gap-1.5 pt-2">
+                            <CheckCircle size={12} className="text-green-400" />
+                            <span className="text-[10px] text-green-400 font-bold tracking-wide">Obtenida: {selectedMona.unlockedAt}</span>
+                          </div>
                         )}
                       </div>
-                      <p className="text-[11px] text-white/50 mt-3 leading-relaxed">
-                        <span className="text-white/30">Condición: </span>{selectedMona.condition}
-                      </p>
                     </div>
+                  ) : (
+                    <div className="flex flex-col h-full items-center justify-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                        <Lock size={24} className="text-white/30" />
+                      </div>
+                      <h3 className="text-white/70 font-black text-xl mb-2">Mona Bloqueada</h3>
+                      <p className="text-white/40 text-sm leading-relaxed px-4 mb-8">
+                        Para revelar esta lámina, necesitas cumplir su condición o escanear un código QR válido.
+                      </p>
+                      
+                      <div className="w-full flex flex-col gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 mb-8 text-left">
+                        <span className="text-[10px] uppercase tracking-widest text-white/40">Condición requerida</span>
+                        <p className="text-xs text-white/70">{selectedMona.condition}</p>
+                      </div>
+
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedMona(null); setTimeout(() => setShowQRModal(true), 200); }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-white text-sm font-bold shadow-lg"
+                        style={{ background: GOLD_GRADIENT }}
+                      >
+                        <QrCode size={16} />
+                        Escanear Código QR
+                      </motion.button>
+                    </div>
+                  )}
+                  {/* Hint to flip back */}
+                  <div className="absolute bottom-3 left-0 right-0 text-center z-10 pointer-events-none">
+                    <p className="text-[9px] text-white/30 uppercase tracking-widest">Toca para regresar</p>
                   </div>
                 </div>
-              ) : (
-                <div className="p-5 flex gap-4">
-                  <div
-                    className="w-28 h-36 rounded-2xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(160deg, #0A1628, #112240)', border: '2px solid rgba(255,255,255,0.08)' }}
-                  >
-                    <Lock size={24} className="text-white/30" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-black text-lg">Mona Bloqueada</h3>
-                    <p className="text-blue-400 text-xs mt-0.5">{selectedMona.category}</p>
-                    <p className="text-white/50 text-xs mt-2 leading-relaxed">Desbloquea esta mona escaneando un QR o cumpliendo la condición requerida.</p>
-                    <p className="text-[11px] text-white/40 mt-3 leading-relaxed">
-                      <span className="text-white/25">Condición: </span>{selectedMona.condition}
-                    </p>
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => { setSelectedMona(null); setTimeout(() => setShowQRModal(true), 200); }}
-                      className="mt-3 flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-bold"
-                      style={{ background: GOLD_GRADIENT }}
-                    >
-                      <QrCode size={14} />
-                      Escanear QR para desbloquear
-                    </motion.button>
-                  </div>
-                </div>
-              )}
-              <button
-                onClick={() => setSelectedMona(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
-              >
-                <X size={16} className="text-white" />
-              </button>
-            </motion.div>
+
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -1579,33 +1674,72 @@ export function MonasAlbumPage() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 z-40"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-40"
               onClick={() => setShowRewardModal(null)}
             />
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="fixed inset-x-5 top-1/2 -translate-y-1/2 z-50 rounded-3xl p-6"
-              style={{ background: '#0A1628', border: `1.5px solid ${showRewardModal.color}44` }}
+            {/* Botón X fuera de la carta */}
+            <button
+              onClick={() => setShowRewardModal(null)}
+              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
             >
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto" style={{ background: `${showRewardModal.color}22`, border: `2px solid ${showRewardModal.color}66` }}>
-                  <EmojiIcon emoji={showRewardModal.emoji} size={40} color={showRewardModal.color} strokeWidth={1.5} />
+              <X size={20} className="text-white" />
+            </button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                className="relative w-[320px] sm:w-[360px] rounded-3xl overflow-hidden flex flex-col items-center justify-between py-8 px-6 pointer-events-auto"
+                style={{
+                  aspectRatio: '3/4',
+                  background: `linear-gradient(135deg, ${showRewardModal.color}40 0%, ${showRewardModal.color}10 100%)`,
+                  border: `2px solid ${showRewardModal.color}`,
+                  boxShadow: `0 12px 48px ${showRewardModal.color}60`,
+                }}
+              >
+                {showRewardModal.pct === 100 && (
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    style={{ background: `linear-gradient(135deg, transparent, ${showRewardModal.color}40, transparent)` }}
+                  />
+                )}
+                
+                <div className="flex justify-between w-full z-10">
+                  <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: showRewardModal.color }}>
+                    RECOMPENSA
+                  </span>
+                  <Trophy size={16} style={{ color: showRewardModal.color }} />
                 </div>
-                <h3 className="text-white font-black text-xl mt-3">{showRewardModal.title}</h3>
-                <p className="text-blue-400 text-sm mt-1">{showRewardModal.subtitle}</p>
-                <p className="text-white/60 text-xs mt-3 leading-relaxed">{showRewardModal.description}</p>
+                
+                <div className="flex-1 flex flex-col items-center justify-center z-10 w-full gap-6">
+                  <div className="w-32 h-32 flex items-center justify-center rounded-full relative" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${showRewardModal.color}40` }}>
+                    <EmojiIcon emoji={showRewardModal.emoji} size={64} color={showRewardModal.color} strokeWidth={1.5} />
+                  </div>
+                  
+                  <div className="w-full text-center bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
+                    <h3 className="text-xl font-black mb-1" style={{ color: showRewardModal.color }}>{showRewardModal.title}</h3>
+                    <p className="text-xs uppercase tracking-widest text-white/50">{showRewardModal.subtitle}</p>
+                    <p className="text-white/80 text-sm mt-3 leading-relaxed">"{showRewardModal.description}"</p>
+                  </div>
+                </div>
+
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => claimReward(showRewardModal)}
-                  className="w-full mt-5 py-3.5 rounded-2xl text-white font-black"
-                  style={{ background: showRewardModal.pct === 100 ? GOLD_GRADIENT : `linear-gradient(135deg, ${showRewardModal.color}, ${showRewardModal.color}CC)` }}
+                  className="w-full mt-4 py-4 rounded-2xl text-white font-black text-sm uppercase tracking-widest z-10 flex items-center justify-center gap-2"
+                  style={{
+                    background: showRewardModal.pct === 100 ? GOLD_GRADIENT : `linear-gradient(135deg, ${showRewardModal.color}, ${showRewardModal.color}CC)`,
+                    boxShadow: `0 8px 24px ${showRewardModal.color}40`
+                  }}
                 >
-                  ¡Reclamar recompensa!
+                  <Gift size={18} />
+                  ¡Reclamar!
                 </motion.button>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -1615,76 +1749,168 @@ export function MonasAlbumPage() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 z-40"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-40"
               onClick={() => setSelectedBadge(null)}
             />
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="fixed inset-x-5 top-1/2 -translate-y-1/2 z-50 rounded-3xl p-6"
-              style={{ background: '#0A1628', border: `1.5px solid ${selectedBadge.color}44` }}
+            {/* Botón X fuera de la carta */}
+            <button
+              onClick={() => setSelectedBadge(null)}
+              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
             >
-              <button
-                onClick={() => setSelectedBadge(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
+              <X size={20} className="text-white" />
+            </button>
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+              style={{ perspective: '1200px' }}
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                animate={{ scale: 1, opacity: 1, y: 0, rotateY: isFlipped ? 180 : 0 }}
+                exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                onClick={() => setIsFlipped(!isFlipped)}
+                className="relative w-[320px] sm:w-[360px] cursor-pointer pointer-events-auto"
+                style={{ aspectRatio: '3/4', transformStyle: 'preserve-3d' }}
               >
-                <X size={16} className="text-white" />
-              </button>
-              <div className="text-center">
+                {/* CARA FRONTAL (FRONT FACE) */}
                 <div
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto relative"
+                  className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col items-center justify-between py-8 px-6"
                   style={{
-                    background: selectedBadge.unlocked
-                      ? `linear-gradient(135deg, ${selectedBadge.color}25 0%, ${selectedBadge.color}15 100%)`
-                      : 'rgba(255,255,255,0.05)',
-                    border: `2px solid ${selectedBadge.unlocked ? `${selectedBadge.color}66` : 'rgba(255,255,255,0.1)'}`,
-                    boxShadow: selectedBadge.unlocked ? `0 0 24px ${selectedBadge.color}50` : 'none',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    background: selectedBadge.unlocked ? `linear-gradient(135deg, ${selectedBadge.color}40 0%, ${selectedBadge.color}10 100%)` : 'linear-gradient(160deg, #0A1628, #112240)',
+                    border: `2px solid ${selectedBadge.unlocked ? selectedBadge.color : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: selectedBadge.unlocked ? `0 12px 48px ${selectedBadge.color}60` : '0 12px 48px rgba(0,0,0,0.5)',
                   }}
                 >
-                  {!selectedBadge.unlocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-2xl">
-                      <Lock size={20} className="text-white/40" />
+                  {selectedBadge.unlocked ? (
+                    <>
+                      {selectedBadge.rarity === 'legendario' && (
+                        <motion.div
+                          className="absolute inset-0"
+                          animate={{ opacity: [0.3, 0.7, 0.3] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          style={{ background: `linear-gradient(135deg, transparent, ${selectedBadge.color}40, transparent)` }}
+                        />
+                      )}
+                      <div className="flex justify-between w-full z-10">
+                        <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: selectedBadge.color }}>
+                          {selectedBadge.rarity}
+                        </span>
+                        <selectedBadge.Icon size={16} style={{ color: selectedBadge.color }} />
+                      </div>
+                      <div className="flex-1 flex items-center justify-center z-10 w-full relative">
+                        {selectedBadge.imgSrc ? (
+                          <div className="w-48 h-48 flex items-center justify-center">
+                            <img src={selectedBadge.imgSrc} alt={selectedBadge.name} className="w-full h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)]" />
+                          </div>
+                        ) : (
+                          <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${selectedBadge.color}40` }}>
+                            <selectedBadge.Icon size={80} color={selectedBadge.color} strokeWidth={1.2} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-full text-center z-10 bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
+                        <p className="text-xl font-black mb-1" style={{ color: selectedBadge.color }}>{selectedBadge.name}</p>
+                        <p className="text-xs uppercase tracking-widest text-white/50">
+                          Medalla de {selectedBadge.category}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between w-full z-10 opacity-30">
+                        <span className="text-[10px] font-black tracking-widest text-white">BLOQUEADA</span>
+                        <Lock size={14} className="text-white" />
+                      </div>
+                      <div className="flex-1 flex items-center justify-center z-10 relative">
+                        {selectedBadge.imgSrc ? (
+                          <div className="w-40 h-40 flex items-center justify-center opacity-20 grayscale brightness-50">
+                            <img src={selectedBadge.imgSrc} alt="Locked" className="w-full h-full object-contain" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Lock size={48} className="text-white drop-shadow-lg" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-32 h-32 flex items-center justify-center rounded-full bg-white/5">
+                            <Lock size={48} className="text-white/20" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-full text-center z-10 bg-black/40 rounded-2xl py-4 px-3 border border-white/5">
+                        <p className="text-xl font-black mb-1 text-white/40">???</p>
+                        <p className="text-xs uppercase tracking-widest text-white/20">Medalla Oculta</p>
+                      </div>
+                    </>
+                  )}
+                  {/* Hint to flip */}
+                  <div className="absolute bottom-3 left-0 right-0 text-center z-10">
+                    <p className="text-[9px] text-white/30 uppercase tracking-widest animate-pulse">Toca para girar</p>
+                  </div>
+                </div>
+
+                {/* CARA TRASERA (BACK FACE) */}
+                <div
+                  className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col px-6 py-8"
+                  style={{
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    transform: 'rotateY(180deg)',
+                    background: '#0A1628',
+                    border: `2px solid ${selectedBadge.unlocked ? selectedBadge.color : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: selectedBadge.unlocked ? `0 12px 48px ${selectedBadge.color}60` : '0 12px 48px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {selectedBadge.unlocked ? (
+                    <div className="flex flex-col h-full">
+                      <div className="text-center mb-6">
+                        <h3 className="text-white font-black text-2xl leading-tight">{selectedBadge.name}</h3>
+                        <p className="text-blue-400 text-xs uppercase tracking-widest mt-1" style={{ color: selectedBadge.color }}>{selectedBadge.category}</p>
+                      </div>
+                      
+                      <div className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/10 overflow-y-auto custom-scrollbar">
+                        <p className="text-white/80 text-sm leading-relaxed text-center">"{selectedBadge.description}"</p>
+                      </div>
+
+                      <div className="mt-6 space-y-3">
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex items-center gap-2">
+                            <Zap size={14} style={{ color: selectedBadge.color }} />
+                            <span className="text-xs font-bold text-white/60">Recompensa</span>
+                          </div>
+                          <span className="text-sm font-black" style={{ color: selectedBadge.color }}>+{selectedBadge.xp} XP</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-center gap-1.5 pt-2">
+                          <CheckCircle size={14} className="text-green-400" />
+                          <span className="text-[11px] text-green-400 font-bold tracking-wide">Medalla Desbloqueada</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col h-full items-center justify-center text-center">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                        <Lock size={24} className="text-white/30" />
+                      </div>
+                      <h3 className="text-white/70 font-black text-xl mb-2">Medalla Bloqueada</h3>
+                      <p className="text-white/40 text-sm leading-relaxed px-4 mb-8">
+                        Para revelar esta medalla, necesitas completar su desafío correspondiente en la aplicación.
+                      </p>
+                      
+                      <div className="w-full flex flex-col gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 mb-8 text-left">
+                        <span className="text-[10px] uppercase tracking-widest text-white/40">Recompensa esperada</span>
+                        <p className="text-xs font-bold" style={{ color: selectedBadge.color }}>+{selectedBadge.xp} XP</p>
+                      </div>
                     </div>
                   )}
-                  <selectedBadge.Icon
-                    size={40}
-                    style={{ color: selectedBadge.unlocked ? selectedBadge.color : 'rgba(255,255,255,0.3)' }}
-                  />
-                </div>
-                <h3 className="text-white font-black text-xl mt-4">{selectedBadge.name}</h3>
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <span
-                    className="text-xs font-bold px-2.5 py-1 rounded-full"
-                    style={{
-                      background: `${selectedBadge.color}20`,
-                      color: selectedBadge.color,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {selectedBadge.rarity}
-                  </span>
-                  <span className="text-xs font-bold text-white/70">
-                    +{selectedBadge.xp} XP
-                  </span>
-                </div>
-                <p className="text-white/70 text-sm mt-4 leading-relaxed">{selectedBadge.description}</p>
-                {selectedBadge.unlocked ? (
-                  <div className="mt-4 px-4 py-2 rounded-xl" style={{ background: `${selectedBadge.color}15` }}>
-                    <p className="text-xs font-bold flex items-center justify-center gap-1.5" style={{ color: selectedBadge.color }}>
-                      <CheckCircle size={14} /> Medalla Desbloqueada
-                    </p>
+                  {/* Hint to flip back */}
+                  <div className="absolute bottom-3 left-0 right-0 text-center z-10 pointer-events-none">
+                    <p className="text-[9px] text-white/30 uppercase tracking-widest">Toca para regresar</p>
                   </div>
-                ) : (
-                  <div className="mt-4 px-4 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                    <p className="text-xs font-bold flex items-center justify-center gap-1.5 text-white/40">
-                      <Lock size={14} /> Medalla Bloqueada
-                    </p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
+                </div>
+
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -1694,14 +1920,27 @@ export function MonasAlbumPage() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/85 backdrop-blur-md z-40"
             />
+            {/* Botón X fuera de la carta */}
+            <button
+              onClick={handleCloseWelcome}
+              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
+            >
+              <X size={20} className="text-white" />
+            </button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-5">
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="fixed inset-x-5 top-1/2 -translate-y-1/2 z-50 rounded-3xl p-6 max-h-[85vh] overflow-y-auto"
-              style={{ background: '#0A1628', border: '1.5px solid rgba(59,130,246,0.3)' }}
+              transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+              className="relative w-full max-w-[400px] rounded-3xl p-6 max-h-[85vh] overflow-y-auto pointer-events-auto custom-scrollbar"
+              style={{ 
+                background: 'linear-gradient(160deg, #0A1628, #112240)', 
+                border: '2px solid rgba(59,130,246,0.4)',
+                boxShadow: '0 12px 48px rgba(59,130,246,0.2)'
+              }}
             >
               <div className="text-center mb-5">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: GOLD_GRADIENT }}>
@@ -1711,64 +1950,41 @@ export function MonasAlbumPage() {
                 <p className="text-blue-400 text-sm mt-1">Colecciona Patricias y gana recompensas</p>
               </div>
               <div className="space-y-4 mb-6">
-                {}
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59,130,246,0.15)' }}>
-                    <Sparkles size={20} className="text-blue-400" />
+                    <Library size={20} className="text-blue-400" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">¿Qué son las Patricias?</h3>
+                    <h3 className="text-white font-bold text-sm">Patricias (Láminas)</h3>
                     <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Láminas coleccionables que se ganan participando en parches, eventos y actividades del campus.
+                      Son coleccionables que obtienes al asistir a parches o escaneando códigos QR ocultos en el campus.
                     </p>
                   </div>
                 </div>
-                {}
+                
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(6,182,212,0.15)' }}>
-                    <QrCode size={20} className="text-cyan-400" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)' }}>
+                    <Award size={20} className="text-purple-400" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">¿Cómo se obtienen?</h3>
+                    <h3 className="text-white font-bold text-sm">Medallas</h3>
                     <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Asistiendo a parches, escaneando sobres QR físicos distribuidos en el campus y completando logros.
+                      Reconocimientos especiales que desbloqueas al alcanzar grandes hitos (conectar con gente, asistir a eventos y liderar parches).
                     </p>
                   </div>
                 </div>
-                {}
+                
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)' }}>
                     <Trophy size={20} className="text-amber-400" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">¿Para qué sirven?</h3>
+                    <h3 className="text-white font-bold text-sm">El Gran Objetivo</h3>
                     <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Completar el álbum desbloquea recompensas académicas reales como décimas y puntos en tus materias.
+                      Coleccionar patricias y medallas suma <strong className="text-white font-black">XP</strong>. Al alcanzar metas de XP, ¡desbloquearás recompensas académicas como décimas y puntos reales para tus materias!
                     </p>
                   </div>
                 </div>
-              </div>
-              {}
-              <div className="mb-5">
-                <button
-                  onClick={() => setDontShowAgain(!dontShowAgain)}
-                  className="flex items-center gap-2 w-full justify-center"
-                >
-                  <div
-                    className="w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
-                    style={{
-                      borderColor: dontShowAgain ? '#3B82F6' : 'rgba(255,255,255,0.2)',
-                      background: dontShowAgain ? '#3B82F6' : 'transparent',
-                    }}
-                  >
-                    {dontShowAgain && (
-                      <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
-                        <path d="M1 5L4.5 8.5L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-white/60 text-xs">No volver a mostrar</span>
-                </button>
               </div>
               {}
               <motion.button
@@ -1780,6 +1996,7 @@ export function MonasAlbumPage() {
                 ¡Entendido!
               </motion.button>
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
