@@ -5,22 +5,27 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Camera, Check, X, Upload, AlertCircle,
   Trophy, Palette, Compass, UtensilsCrossed, Leaf, Gamepad2, Music, Heart, ChevronRight,
-  Eye, EyeOff, Lock, Globe, Users,
+  Lock, Globe, Users,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
 
-const faculties = [
-  'Ingeniería en Sistemas',
-  'Ingeniería de Software',
+const careers = [
+  'Ingeniería Civil',
+  'Ingeniería Eléctrica',
+  'Ingeniería de Sistemas',
   'Ingeniería Industrial',
-  'Diseño Gráfico',
+  'Ingeniería Electrónica',
+  'Economía',
   'Administración de Empresas',
-  'Ciencias Económicas',
-  'Derecho',
-  'Medicina',
-  'Arquitectura',
-  'Artes',
+  'Matemáticas',
+  'Ingeniería Mecánica',
+  'Ingeniería Biomédica',
+  'Ingeniería Ambiental',
+  'Ingeniería Estadística',
+  'Ingeniería de Inteligencia Artificial',
+  'Ingeniería de Ciberseguridad',
+  'Ingeniería en Biotecnología',
 ];
 
 const interestCategories = [
@@ -74,7 +79,7 @@ const interestCategories = [
 
 const privacyOptions = [
   { value: 'PUBLICO', label: 'Perfil público', desc: 'Cualquier estudiante puede verte', icon: Globe, color: '#10B981' },
-  { value: 'SOLO_MATCHES', label: 'Solo conexiones', desc: 'Solo tus conexiones pueden verte', icon: Users, color: '#06B6D4' },
+  { value: 'SOLO_MATCHES', label: 'Solo amigos', desc: 'Solo tus amigos pueden verte', icon: Users, color: '#06B6D4' },
   { value: 'PRIVADO', label: 'Privado', desc: 'Solo tú puedes ver tu perfil', icon: Lock, color: '#8B5CF6' },
 ];
 
@@ -185,17 +190,19 @@ export function EditProfilePage() {
   const [semester, setSemester] = useState(String(currentUser?.semester || 1));
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
-  const [tipoDoc, setTipoDoc] = useState<'CC' | 'TI' | 'CE'>('CC');
-  const [identificacion, setIdentificacion] = useState('');
-  const [edad, setEdad] = useState('');
+  const [secondCareer, setSecondCareer] = useState('');
   const [genero, setGenero] = useState<'M' | 'F' | 'O' | 'PREFER_NOT_TO_SAY'>('M');
   const [privacidad, setPrivacidad] = useState<'PUBLICO' | 'SOLO_MATCHES' | 'PRIVADO'>('PUBLICO');
 
   const totalSelected = selectedInterests.length;
-  const canSave = !isSaving && !saved && totalSelected >= 3;
+  const canSave = !isSaving && !saved && totalSelected >= 3 && totalSelected <= 10;
 
   const toggleInterest = (key: string) => {
-    setSelectedInterests(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+    setSelectedInterests(prev => {
+      if (prev.includes(key)) return prev.filter(k => k !== key);
+      if (prev.length >= 10) return prev;
+      return [...prev, key];
+    });
   };
 
   const handleSave = async () => {
@@ -322,85 +329,62 @@ export function EditProfilePage() {
           <p className="text-right text-[10px] text-gray-400 mt-0.5">{bio.length}/200</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipo de documento</label>
-            <div className="flex gap-1.5">
-              {(['CC', 'TI', 'CE'] as const).map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTipoDoc(t)}
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95"
-                  style={tipoDoc === t
-                    ? { background: GRADIENT, color: 'white' }
-                    : { background: isDark ? '#1E2038' : '#F3F4F6', color: isDark ? '#CBD5E1' : '#374151' }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Identificación</label>
-            <input
-              value={identificacion}
-              onChange={e => setIdentificacion(e.target.value.replace(/\D/g, '').slice(0, 15))}
-              placeholder="5-15 dígitos"
-              className={inputClass}
-              inputMode="numeric"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Edad</label>
-            <input
-              value={edad}
-              onChange={e => {
-                const v = e.target.value.replace(/\D/g, '');
-                if (v === '' || (Number(v) >= 1 && Number(v) <= 80)) setEdad(v);
-              }}
-              placeholder="15-80"
-              className={inputClass}
-              inputMode="numeric"
-              maxLength={2}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Género</label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {([
-                { value: 'M', label: 'Masc.' },
-                { value: 'F', label: 'Fem.' },
-                { value: 'O', label: 'Otro' },
-                { value: 'PREFER_NOT_TO_SAY', label: 'N/D' },
-              ] as const).map(g => (
-                <button
-                  key={g.value}
-                  type="button"
-                  onClick={() => setGenero(g.value)}
-                  className="py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                  style={genero === g.value
-                    ? { background: GRADIENT, color: 'white' }
-                    : { background: isDark ? '#1E2038' : '#F3F4F6', color: isDark ? '#CBD5E1' : '#374151' }}
-                >
-                  {g.label}
-                </button>
-              ))}
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Código estudiantil</label>
+          <div
+            className="w-full px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-[#1E2038] border border-gray-200 dark:border-[#2A2D4A] text-gray-500 dark:text-gray-400 text-sm"
+          >
+            {currentUser.studentId || 'No disponible'}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Facultad / Carrera</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Género</label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {([
+              { value: 'M', label: 'Masc.' },
+              { value: 'F', label: 'Fem.' },
+              { value: 'O', label: 'Otro' },
+              { value: 'PREFER_NOT_TO_SAY', label: 'N/D' },
+            ] as const).map(g => (
+              <button
+                key={g.value}
+                type="button"
+                onClick={() => setGenero(g.value)}
+                className="py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95"
+                style={genero === g.value
+                  ? { background: GRADIENT, color: 'white' }
+                  : { background: isDark ? '#1E2038' : '#F3F4F6', color: isDark ? '#CBD5E1' : '#374151' }}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Carrera</label>
           <select
             value={faculty}
             onChange={e => setFaculty(e.target.value)}
             className="w-full px-4 py-3.5 rounded-xl bg-white dark:bg-[#151729] border border-gray-200 dark:border-[#2A2D4A] text-gray-800 dark:text-white focus:outline-none focus:border-[#E8245A] transition-all appearance-none"
           >
-            {faculties.map(f => <option key={f} value={f}>{f}</option>)}
+            <option value="">Selecciona tu carrera</option>
+            {careers.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Segunda carrera <span className="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <select
+            value={secondCareer}
+            onChange={e => setSecondCareer(e.target.value)}
+            className="w-full px-4 py-3.5 rounded-xl bg-white dark:bg-[#151729] border border-gray-200 dark:border-[#2A2D4A] text-gray-800 dark:text-white focus:outline-none focus:border-[#E8245A] transition-all appearance-none"
+          >
+            <option value="">Ninguna</option>
+            {careers.filter(c => c !== faculty).map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
 
@@ -462,16 +446,16 @@ export function EditProfilePage() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Intereses</label>
-              <p className="text-[11px] text-gray-400 mt-0.5">Selecciona al menos 3</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Selecciona entre 3 y 10</p>
             </div>
             {totalSelected > 0 && (
               <span
                 className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                style={totalSelected >= 3
+                style={totalSelected >= 3 && totalSelected <= 10
                   ? { background: `${PINK}18`, color: PINK }
                   : { background: 'rgba(239,68,68,0.1)', color: '#EF4444' }}
               >
-                {totalSelected} / mín. 3
+                {totalSelected} / 10
               </span>
             )}
           </div>
@@ -480,10 +464,12 @@ export function EditProfilePage() {
               <InterestCategory key={cat.id} cat={cat} selected={selectedInterests} onToggle={toggleInterest} isDark={isDark} />
             ))}
           </div>
-          {totalSelected < 3 && (
+          {(totalSelected < 3 || totalSelected > 10) && (
             <div className="flex items-center gap-2 mt-3 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
               <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
-              <p className="text-xs text-red-500">Selecciona al menos 3 intereses para guardar</p>
+              <p className="text-xs text-red-500">
+                {totalSelected < 3 ? 'Selecciona al menos 3 intereses para guardar' : 'Máximo 10 intereses permitidos'}
+              </p>
             </div>
           )}
         </div>
