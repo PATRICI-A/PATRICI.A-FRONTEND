@@ -5,7 +5,7 @@ import { Users, Zap, Calendar, Heart, Sun, Moon, Send, ChevronLeft, ChevronRight
 import { useApp } from '../store/AppContext';
 import { GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
-import mascotImg from '../assets/mascota_cta.png';
+import mascotImg from '../assets/mascota_cta_2.png';
 import slide1 from '../assets/imagen_1_u.jpg';
 import slide2 from '../assets/imagen_2_u.jpg';
 import slide3 from '../assets/imagen_3_u.jpg';
@@ -501,7 +501,7 @@ export function LandingPage() {
                   </button>
                 </div>
                 
-                <div className="hidden md:block absolute right-0 bottom-0 w-[420px] translate-x-16 translate-y-10 z-20">
+                <div className="hidden md:block absolute right-0 bottom-0 w-[620px] translate-x-32 translate-y-14 z-20 pointer-events-auto">
                   <motion.img 
                     src={mascotImg} 
                     alt="Mascota patrici.a" 
