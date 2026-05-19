@@ -55,10 +55,28 @@ export function LandingPage() {
   const isAuthenticated = false;
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const slideTimer = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % slides.length);
     }, 6000);
-    return () => clearInterval(timer);
+    
+    const featureTimer = setInterval(() => {
+      setCurrentFeatureIndex(prev => (prev + 1) % features.length);
+    }, 5000);
+    
+    const rarityTimer = setInterval(() => {
+      setCurrentRarityIndex(prev => (prev + 1) % patriciaRarities.length);
+    }, 7000);
+    
+    const testimonialTimer = setInterval(() => {
+      setCurrentTestimonialIndex(prev => (prev + 1) % testimonials.length);
+    }, 8000);
+
+    return () => {
+      clearInterval(slideTimer);
+      clearInterval(featureTimer);
+      clearInterval(rarityTimer);
+      clearInterval(testimonialTimer);
+    };
   }, []);
 
   const nextFeature = () => setCurrentFeatureIndex((prev) => (prev + 1) % features.length);
