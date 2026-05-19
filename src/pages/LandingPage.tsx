@@ -11,14 +11,17 @@ import slide2 from '../assets/imagen_2_u.jpg';
 import slide3 from '../assets/imagen_3_u.jpg';
 import slide4 from '../assets/foto 1 u.jpg';
 import slide6 from '../assets/foto 3 u.jpg';
+import slideNuevo1 from '../assets/slide_nuevo_1.jpg';
+import slideNuevo2 from '../assets/slide_nuevo_2.jpg';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 
 const slides = [
-  { title: 'Conecta con tu', highlight: 'tribu universitaria', description: 'Encuentra personas con tus mismos intereses y arma el parche perfecto en el campus.', image: slide1, color: '#3B82F6' },
-  { title: 'El mejor campus', highlight: 'a tu disposición', description: 'Disfruta de instalaciones modernas para estudiar y relajarte con la mejor compañía.', image: slide4, color: '#10B981' },
-  { title: 'Descubre', highlight: 'parches increíbles', description: 'Desde sesiones de estudio hasta conciertos. Siempre hay algo para ti.', image: slide2, color: '#8B5CF6' },
-  { title: 'Colecciona', highlight: 'patricias únicas', description: 'Gana patricias coleccionables y sube de nivel mientras construyes tu red social.', image: slide3, color: '#F59E0B' },
-  { title: 'Momentos', highlight: 'inolvidables', description: 'Crea recuerdos que durarán toda la vida con tu parche favorito.', image: slide6, color: '#EC4899' },
+  { title: 'Conecta con tu', highlight: 'tribu universitaria', description: 'Encuentra personas con tus mismos intereses y arma el parche perfecto en el campus.', image: slide1, color: '#3B82F6', position: 'center' },
+  { title: 'El mejor campus', highlight: 'a tu disposición', description: 'Disfruta de instalaciones modernas para estudiar y relajarte con la mejor compañía.', image: slide4, color: '#10B981', position: 'center' },
+  { title: 'Momentos', highlight: 'inolvidables', description: 'Crea recuerdos que durarán toda la vida con tu grupo de amigos.', image: slideNuevo2, color: '#F43F5E', position: 'top' },
+  { title: 'Descubre', highlight: 'parches increíbles', description: 'Desde sesiones de estudio hasta conciertos. Siempre hay algo para ti.', image: slide3, color: '#8B5CF6', position: 'center 20%' },
+  { title: 'Experiencias', highlight: 'que transforman', description: 'Aprovecha cada rincón de la universidad para crecer personal y académicamente.', image: slide6, color: '#EC4899', position: 'center' },
+  { title: 'Comunidad', highlight: 'siempre activa', description: 'Nunca te perderás de lo que está pasando gracias a nuestra red integrada.', image: slide2, color: '#06B6D4', position: 'top' },
 ];
 
 const features = [
@@ -104,7 +107,10 @@ export function LandingPage() {
                   src={slide.image}
                   alt={slide.title}
                   className="w-full h-full object-cover transform transition-transform duration-[15000ms] ease-out"
-                  style={{ transform: i === currentSlide ? 'scale(1.08)' : 'scale(1)' }}
+                  style={{ 
+                    transform: i === currentSlide ? 'scale(1.08)' : 'scale(1)',
+                    objectPosition: slide.position || 'center'
+                  }}
                 />
               </div>
             ))}
