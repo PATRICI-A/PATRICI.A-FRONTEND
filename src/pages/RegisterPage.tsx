@@ -112,17 +112,26 @@ const interestCategories = [
 ];
 const pregradoPrograms = [
   'Ingeniería Civil',
+  'Ingeniería Eléctrica',
   'Ingeniería de Sistemas',
   'Ingeniería Industrial',
-  'Ingeniería Mecánica',
-  'Ingeniería Eléctrica',
   'Ingeniería Electrónica',
-  'Ingeniería Ambiental',
-  'Ingeniería Biomédica',
-  'Ingeniería Estadística',
-  'Administración de Empresas',
   'Economía',
+  'Administración de Empresas',
   'Matemáticas',
+  'Ingeniería Mecánica',
+  'Ingeniería Biomédica',
+  'Ingeniería Ambiental',
+  'Ingeniería Estadística',
+  'Ingeniería de Inteligencia Artificial',
+  'Ingeniería de Ciberseguridad',
+  'Ingeniería en Biotecnología',
+];
+
+const EXISTING_EMAILS = [
+  'test@mail.escuelaing.edu.co',
+  'patricia@mail.escuelaing.edu.co',
+  'demo@mail.escuelaing.edu.co',
 ];
 const maestriaPrograms = [
   'Maestría en Ingeniería Civil',
@@ -302,12 +311,14 @@ export function RegisterPage() {
   const [otpStatus, setOtpStatus]     = useState<'idle' | 'invalid' | 'expired' | 'locked'>('idle');
   const [resendCooldown, setResendCooldown] = useState(0);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
-  const [program, setProgram]     = useState('');
-  const [semester, setSemester]   = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [program, setProgram]           = useState('');
+  const [secondProgram, setSecondProgram] = useState('');
+  const [semester, setSemester]         = useState('');
+  const [studentId, setStudentId]       = useState('');
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading]       = useState(false);
+  const [errors, setErrors]             = useState<Record<string, string>>({});
+  const [showEmailExistsModal, setShowEmailExistsModal] = useState(false);
   const pwStrength  = getPasswordStrength(password);
   const today       = new Date().toISOString().split('T')[0];
   const minBirthDate = new Date(new Date().setFullYear(new Date().getFullYear() - 100)).toISOString().split('T')[0];
@@ -320,13 +331,17 @@ export function RegisterPage() {
     if (birthDate < minBirthDate) return false;
     return true;
   })();
+  const passwordValid =
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[!@#$,.]/.test(password);
   const step1Valid =
     firstName.trim().length >= 2 &&
     lastName.trim().length >= 2 &&
     emailValid &&
     birthDateValid &&
     gender !== '' &&
-    password.length >= 8 &&
+    passwordValid &&
     password === confirmPassword;
   const step3Valid = program !== '' && semester !== '' && /^\d{10}$/.test(studentId);
   useEffect(() => {
@@ -439,6 +454,10 @@ export function RegisterPage() {
   };
   const handleNext = () => {
     if (step === 1) {
+      if (EXISTING_EMAILS.includes(email.toLowerCase())) {
+        setShowEmailExistsModal(true);
+        return;
+      }
       setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
       setOtpAttempts(0); setOtpStatus('idle'); setResendCooldown(0);
       setStep(2);
@@ -498,10 +517,10 @@ export function RegisterPage() {
       <div className="relative w-full md:max-w-lg md:my-8 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 transition-colors duration-300" style={{ zIndex: 1 }}>
         {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
-          <button onClick={handleBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-800 dark:text-gray-200 active:scale-90 transition-transform">
+          <button onClick={handleBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-900 dark:text-white active:scale-90 transition-transform">
             <ArrowLeft size={18} />
           </button>
-          <button onClick={toggleTheme} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-800 dark:text-gray-200 active:scale-90 transition-transform">
+          <button onClick={toggleTheme} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-900 dark:text-white active:scale-90 transition-transform">
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
@@ -523,7 +542,7 @@ export function RegisterPage() {
                     >
                       {i + 1 < step ? <Check size={12} /> : i + 1}
                     </div>
-                    <span className="text-[9px] sm:text-[10px] text-gray-800 dark:text-gray-200 text-center leading-tight">{s}</span>
+                    <span className="text-[9px] sm:text-[10px] text-gray-900 dark:text-white text-center leading-tight">{s}</span>
                   </div>
                   {i < steps.length - 1 && (
                     <div className="flex-1 h-0.5 mx-1 rounded-full bg-gray-200 dark:bg-[#233554] overflow-hidden mb-3">
@@ -543,13 +562,13 @@ export function RegisterPage() {
                     <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
                   </div>
                   <h1 className="text-gray-900 dark:text-white">Crea tu cuenta</h1>
-                  <p className="text-sm text-gray-800 dark:text-gray-200">Comienza tu viaje en patrici.a</p>
+                  <p className="text-sm text-gray-900 dark:text-white">Comienza tu viaje en patrici.a</p>
                 </div>
                 <div className="space-y-3 sm:space-y-4">
                   {}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Nombre</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Nombre</label>
                       <div className="relative">
                         <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                         <input value={firstName} onChange={e => setFirstName(e.target.value)} onFocus={() => setFocused('firstName')} onBlur={() => { setFocused(''); markTouched('firstName'); }} placeholder="Tu nombre" className={`${inputBase} pl-10 pr-4 ${inputBorder('firstName')}`} />
@@ -558,7 +577,7 @@ export function RegisterPage() {
                       {touched.firstName && focused !== 'firstName' && errors.firstName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.firstName}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Apellidos</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Apellidos</label>
                       <div className="relative">
                         <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                         <input value={lastName} onChange={e => setLastName(e.target.value)} onFocus={() => setFocused('lastName')} onBlur={() => { setFocused(''); markTouched('lastName'); }} placeholder="Tus apellidos" className={`${inputBase} pl-10 pr-4 ${inputBorder('lastName')}`} />
@@ -569,19 +588,19 @@ export function RegisterPage() {
                   </div>
                   {}
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Correo institucional</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Correo institucional</label>
                     <div className="relative">
                       <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)} onFocus={() => setFocused('email')} onBlur={() => { setFocused(''); markTouched('email'); }} placeholder="usuario@mail.escuelaing.edu.co" className={`${inputBase} pl-10 pr-4 text-sm ${inputBorder('email')}`} />
                       {touched.email && focused !== 'email' && emailValid && <Check size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />}
                     </div>
                     {touched.email && focused !== 'email' && errors.email && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.email}</p>}
-                    <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-1">Solo correos @mail.escuelaing.edu.co</p>
+                    <p className="text-[10px] text-gray-600 dark:text-gray-200 mt-1">Solo correos @mail.escuelaing.edu.co</p>
                   </div>
                   {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Fecha de nacimiento</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Fecha de nacimiento</label>
                       <div className="relative">
                         <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
                         <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} onFocus={() => setFocused('birthDate')} onBlur={() => { setFocused(''); markTouched('birthDate'); }} min={minBirthDate} max={maxBirthDate} className={`${inputBase} pl-10 pr-2 ${inputBorder('birthDate')}`} />
@@ -589,7 +608,7 @@ export function RegisterPage() {
                       {touched.birthDate && focused !== 'birthDate' && errors.birthDate && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.birthDate}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Género</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Género</label>
                       <div className="grid grid-cols-2 gap-1.5">
                         {genderOptions.map(opt => (
                           <button key={opt.id} type="button" onClick={() => { setGender(opt.id); markTouched('gender'); }}
@@ -607,7 +626,7 @@ export function RegisterPage() {
                   {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Contraseña</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Contraseña</label>
                       <div className="relative">
                         <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                         <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} onFocus={() => setFocused('password')} onBlur={() => { setFocused(''); markTouched('password'); }} placeholder="Mín. 8 caracteres" className={`${inputBase} pl-10 pr-9 ${inputBorder('password')}`} />
@@ -615,30 +634,30 @@ export function RegisterPage() {
                       </div>
                       {touched.password && focused !== 'password' && errors.password && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.password}</p>}
                       {password.length > 0 && (
-                        <div className="mt-2">
+                        <div className="mt-2 space-y-1.5">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] font-medium" style={{ color: pwStrength.color }}>
-                              {pwStrength.label}
-                            </span>
-                            {pwStrength.hint && (
-                              <span className="text-[9px] text-gray-600 dark:text-gray-400">
-                                {pwStrength.hint}
-                              </span>
-                            )}
+                            <span className="text-[10px] font-medium" style={{ color: pwStrength.color }}>{pwStrength.label}</span>
                           </div>
-                          <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-[#1A304F] overflow-hidden">
-                            <motion.div
-                              className="h-full rounded-full transition-all duration-300"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${pwStrength.pct}%` }}
-                              style={{ background: pwStrength.color }}
-                            />
+                          <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-[#1A304F] overflow-hidden mb-2">
+                            <motion.div className="h-full rounded-full transition-all duration-300" initial={{ width: 0 }} animate={{ width: `${pwStrength.pct}%` }} style={{ background: pwStrength.color }} />
                           </div>
+                          {[
+                            { ok: password.length >= 8,         text: 'Mínimo 8 caracteres' },
+                            { ok: /[A-Z]/.test(password),       text: 'Mínimo una mayúscula' },
+                            { ok: /[!@#$,.]/.test(password),    text: 'Mínimo un caracter especial (!@#$,.)' },
+                          ].map(r => (
+                            <p key={r.text} className={`text-[10px] flex items-center gap-1.5 ${r.ok ? 'text-emerald-500' : 'text-gray-400 dark:text-white/70'}`}>
+                              {r.ok
+                                ? <Check size={9} strokeWidth={3} />
+                                : <span className="w-2 h-2 rounded-full border border-current flex-shrink-0" />}
+                              {r.text}
+                            </p>
+                          ))}
                         </div>
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Confirmar contraseña</label>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Confirmar contraseña</label>
                       <div className="relative">
                         <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                         <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} onFocus={() => setFocused('confirmPassword')} onBlur={() => { setFocused(''); markTouched('confirmPassword'); }} placeholder="Repite tu contraseña" className={`${inputBase} pl-10 pr-9 ${inputBorder('confirmPassword')}`} />
@@ -657,7 +676,7 @@ export function RegisterPage() {
                   >
                     Continuar <ArrowRight size={18} />
                   </motion.button>
-                  <p className="text-center text-sm text-gray-800 dark:text-gray-200">
+                  <p className="text-center text-sm text-gray-900 dark:text-white">
                     ¿Ya tienes cuenta?{' '}
                     <button onClick={() => navigate('/login')} className="font-semibold" style={{ color: PINK }}>Iniciar Sesión</button>
                   </p>
@@ -672,7 +691,7 @@ export function RegisterPage() {
                     <ShieldCheck size={28} color="white" strokeWidth={2} />
                   </div>
                   <h1 className="text-gray-900 dark:text-white">Verifica tu correo</h1>
-                  <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">Enviamos un código de 6 dígitos a</p>
+                  <p className="text-sm text-gray-900 dark:text-white mt-1">Enviamos un código de 6 dígitos a</p>
                   <p className="text-sm font-semibold mt-0.5" style={{ color: TEAL }}>{maskEmail(email)}</p>
                 </div>
                 {}
@@ -756,12 +775,12 @@ export function RegisterPage() {
               <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="mb-6">
                   <h1 className="text-gray-900 dark:text-white">Tu perfil académico</h1>
-                  <p className="text-sm text-gray-800 dark:text-gray-200">Ayúdanos a conectarte mejor</p>
+                  <p className="text-sm text-gray-900 dark:text-white">Ayúdanos a conectarte mejor</p>
                 </div>
                 <div className="space-y-5">
                   {}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Programa académico</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Carrera</label>
                     <div className="relative">
                       <BookOpen size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
                       <select
@@ -769,7 +788,7 @@ export function RegisterPage() {
                         onChange={e => setProgram(e.target.value)}
                         className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#06B6D4] transition-all appearance-none"
                       >
-                        <option value="">Selecciona tu programa</option>
+                        <option value="">Selecciona tu carrera</option>
                         {pregradoPrograms.map(p => (
                           <option key={p} value={p}>{p}</option>
                         ))}
@@ -780,7 +799,27 @@ export function RegisterPage() {
                   </div>
                   {}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Semestre actual</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
+                      Segunda carrera <span className="text-gray-500 font-normal">(opcional)</span>
+                    </label>
+                    <div className="relative">
+                      <BookOpen size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none z-10" />
+                      <select
+                        value={secondProgram}
+                        onChange={e => setSecondProgram(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#06B6D4] transition-all appearance-none"
+                      >
+                        <option value="">Ninguna</option>
+                        {pregradoPrograms.filter(p => p !== program).map(p => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  {}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Semestre actual</label>
                     <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
                       {Array.from({ length: 10 }, (_, i) => i + 1).map(s => (
                         <button key={s} type="button" onClick={() => setSemester(String(s))}
@@ -795,7 +834,7 @@ export function RegisterPage() {
                   </div>
                   {}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5">Código estudiantil</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Código estudiantil</label>
                     <div className="relative">
                       <IdCard size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                       <input value={studentId} onChange={e => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 10))} onBlur={() => markTouched('studentId')} placeholder="Ej: 2023123456" inputMode="numeric" maxLength={10}
@@ -805,7 +844,7 @@ export function RegisterPage() {
                     </div>
                     <div className="flex justify-between mt-1">
                       {touched.studentId && errors.studentId ? <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle size={11} />{errors.studentId}</p> : <span />}
-                      <span className={`text-[10px] ml-auto ${studentId.length === 10 ? 'text-emerald-500' : 'text-gray-600 dark:text-gray-400'}`}>{studentId.length}/10</span>
+                      <span className={`text-[10px] ml-auto ${studentId.length === 10 ? 'text-emerald-500' : 'text-gray-600 dark:text-gray-200'}`}>{studentId.length}/10</span>
                     </div>
                   </div>
                 </div>
@@ -825,7 +864,7 @@ export function RegisterPage() {
                 {}
                 <div className="mb-5">
                   <h1 className="text-gray-900 dark:text-white">¿Qué te apasiona?</h1>
-                  <p className="text-sm text-gray-800 dark:text-gray-200">Explora las categorías y elige lo que más te gusta</p>
+                  <p className="text-sm text-gray-900 dark:text-white">Explora las categorías y elige lo que más te gusta</p>
                 </div>
                 {}
                 <div className="sticky top-0 z-10 mb-4">
@@ -851,7 +890,7 @@ export function RegisterPage() {
                         <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
                           {selectedInterests.length >= MIN_INTERESTS ? '¡Listo para continuar!' : `Selecciona al menos ${MIN_INTERESTS}`}
                         </p>
-                        <p className="text-[10px] text-gray-600 dark:text-gray-400">
+                        <p className="text-[10px] text-gray-600 dark:text-gray-200">
                           {selectedInterests.length} seleccionado{selectedInterests.length !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -965,7 +1004,7 @@ export function RegisterPage() {
                       </>
                     )}
                   </motion.button>
-                  <p className="text-center text-sm text-gray-800 dark:text-gray-200">
+                  <p className="text-center text-sm text-gray-900 dark:text-white">
                     ¿Ya tienes cuenta?{' '}
                     <button onClick={() => navigate('/login')} className="font-semibold" style={{ color: PINK }}>Iniciar Sesión</button>
                   </p>
@@ -976,6 +1015,52 @@ export function RegisterPage() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showEmailExistsModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowEmailExistsModal(false)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 rounded-3xl p-6 shadow-2xl"
+              style={{ background: isDark ? '#0D1B2E' : 'white', border: `1px solid ${isDark ? '#1E3A5F' : 'rgba(10,25,47,0.08)'}` }}
+            >
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                  <Mail size={26} className="text-red-500" />
+                </div>
+                <h3 className="text-gray-900 dark:text-white font-black text-lg">Correo ya registrado</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  El correo <span className="font-semibold text-gray-700 dark:text-gray-300">{email}</span> ya está asociado a una cuenta en PATRICI.A.
+                </p>
+                <div className="flex flex-col gap-2 w-full mt-2">
+                  <button
+                    onClick={() => { setShowEmailExistsModal(false); navigate('/login'); }}
+                    className="w-full py-3 rounded-2xl text-white font-semibold text-sm"
+                    style={{ background: GRADIENT }}
+                  >
+                    Iniciar sesión
+                  </button>
+                  <button
+                    onClick={() => setShowEmailExistsModal(false)}
+                    className="w-full py-3 rounded-2xl text-sm font-medium text-gray-600 dark:text-gray-300"
+                    style={{ background: isDark ? '#1A304F' : '#F3F4F6' }}
+                  >
+                    Usar otro correo
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

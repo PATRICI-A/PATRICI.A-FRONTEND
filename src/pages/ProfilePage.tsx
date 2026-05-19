@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, Shield, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
+import patyImg from '../assets/patyProfile.png';
 import { useApp } from '../store/AppContext';
 import { monas, achievements, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
@@ -73,7 +74,7 @@ const RARITY_CFG = {
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useApp();
+  const { currentUser, logout, isDark } = useApp();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
 
@@ -113,6 +114,7 @@ export function ProfilePage() {
             <ChevronLeft size={20} />
           </button>
           <h1 className="text-gray-900 dark:text-white">Mi Perfil</h1>
+          <img src={patyImg} alt="Paty" className="h-24 w-auto" style={{ mixBlendMode: isDark ? 'screen' : 'multiply' }} />
         </div>
         <div className="flex items-center gap-2">
           <motion.button
@@ -240,9 +242,8 @@ export function ProfilePage() {
       </div>
 
       <div className="px-5 mb-4">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { icon: Heart, value: currentUser.socialImpact.toLocaleString(), label: 'Impacto Social', color: PINK },
             { icon: Zap, value: `${currentUser.xp.toLocaleString()} XP`, label: 'Puntos XP', color: ORANGE },
             { icon: Users, value: currentUser.activeParches, label: 'Parches Activos', color: '#3B82F6' },
             { icon: TrendingUp, value: `${currentUser.streak} días`, label: 'Racha Activa', color: '#10B981' },
@@ -306,7 +307,7 @@ export function ProfilePage() {
             </div>
             <div className="text-right">
               <p className="font-black text-2xl" style={{ color: GOLD_LIGHT }}>#{campusRank}</p>
-              <p className="text-[10px] text-white/40">de {rankingUsers.length} students</p>
+              <p className="text-[10px] text-white/40">de {rankingUsers.length} estudiantes</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

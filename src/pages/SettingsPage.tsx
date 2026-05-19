@@ -9,7 +9,7 @@ type PrivacyLevel = 'PUBLICO' | 'SOLO_MATCHES' | 'PRIVADO';
 
 const privacyOptions: { value: PrivacyLevel; label: string; desc: string; icon: React.ElementType; color: string }[] = [
   { value: 'PUBLICO', label: 'Perfil público', desc: 'Cualquier estudiante puede verte', icon: Globe, color: '#10B981' },
-  { value: 'SOLO_MATCHES', label: 'Solo conexiones', desc: 'Solo tus conexiones pueden verte', icon: Users, color: '#06B6D4' },
+  { value: 'SOLO_MATCHES', label: 'Solo amigos', desc: 'Solo tus amigos pueden verte', icon: Users, color: '#06B6D4' },
   { value: 'PRIVADO', label: 'Privado', desc: 'Solo tú puedes ver tu perfil', icon: Lock, color: '#8B5CF6' },
 ];
 

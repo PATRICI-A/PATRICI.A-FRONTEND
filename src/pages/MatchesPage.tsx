@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
+import patyImg from '../assets/patyMatch.png';
 import {
   Heart, X, Filter, ChevronDown, Sparkles, Users,
   Clock, LocateFixed, CheckCircle2, Navigation, Send,
@@ -149,42 +150,26 @@ export function MatchesPage() {
       >
         <div className="px-5 pt-4 pb-3">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              {geo.enabled && (
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate('/campus-map')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold"
-                  style={{
-                    background: geo.onCampus ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
-                    color: geo.onCampus ? '#10B981' : '#F59E0B',
-                    border: `1px solid ${geo.onCampus ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)'}`,
-                  }}
-                >
-                  <LocateFixed size={12} />
-                  {geo.onCampus ? geo.detectedZone?.replace('Cerca de ', '') ?? 'En campus' : 'GPS activo'}
-                </motion.button>
-              )}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                style={{ background: TEAL_GRADIENT }}
+              >
+                <Sparkles size={20} color="white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 className="text-gray-900 dark:text-white font-black" style={{ fontSize: '1.3rem', lineHeight: 1.2 }}>
+                  🎯 Perfect Match
+                </h1>
+                <p className="text-xs" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
+                  {activeTab === 'explore' && 'Encuentra tu tribu universitaria'}
+                  {activeTab === 'sent' && `${filteredUsers.length} solicitudes enviadas`}
+                  {activeTab === 'received' && `${filteredUsers.length} solicitudes pendientes`}
+                  {activeTab === 'friends' && `${connectedCount} conexiones activas`}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
-              style={{ background: TEAL_GRADIENT }}
-            >
-              <Sparkles size={20} color="white" strokeWidth={2.5} />
-            </div>
-            <div>
-              <h1 className="text-gray-900 dark:text-white font-black" style={{ fontSize: '1.3rem', lineHeight: 1.2 }}>
-                🎯 Perfect Match
-              </h1>
-              <p className="text-xs" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
-                {activeTab === 'explore' && 'Encuentra tu tribu universitaria'}
-                {activeTab === 'sent' && `${filteredUsers.length} solicitudes enviadas`}
-                {activeTab === 'received' && `${filteredUsers.length} solicitudes pendientes`}
-                {activeTab === 'friends' && `${connectedCount} conexiones activas`}
-              </p>
-            </div>
+            <img src={patyImg} alt="Paty" className="h-36 w-auto drop-shadow-lg" />
           </div>
           {activeTab === 'explore' && (
             <div className="flex gap-2">
