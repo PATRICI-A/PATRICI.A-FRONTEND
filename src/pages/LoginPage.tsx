@@ -146,11 +146,11 @@ export function LoginPage() {
                   style={{ '--tw-ring-color': PINK } as any}
                 />
               </div>
-              <p className={`text-xs mt-1.5 transition-colors ${emailHintColor}`}>
-                {emailTouched && email.length > 0 ? (emailValid ? '✓ ' : '✗ ') : ''}
-                Debe terminar en{' '}
-                <span className="font-medium">@mail.escuelaing.edu.co</span>
-              </p>
+              {emailTouched && email.length > 0 && !emailValid && (
+                <p className="text-xs mt-1.5 text-red-400 transition-colors">
+                  Debe terminar en <span className="font-medium">@mail.escuelaing.edu.co</span>
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
