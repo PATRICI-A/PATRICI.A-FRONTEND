@@ -7,6 +7,7 @@ import {
 import { useNotifications } from '../../hooks/useNotifications';
 import { useApp } from '../../store/AppContext';
 import type { NotificationVariant } from '../../types/notification';
+import mascotImg from '../../assets/mascota_sticker.png';
 
 interface VariantStyle {
   icon: React.ElementType;
@@ -161,7 +162,7 @@ export function ToastNotification() {
                 />
               )}
 
-              {/* Avatar o icono */}
+              {/* Avatar o mascota sticker */}
               {notif.avatar ? (
                 <img
                   src={notif.avatar}
@@ -178,17 +179,50 @@ export function ToastNotification() {
               ) : (
                 <div
                   style={{
-                    width: 38,
-                    height: 38,
+                    width: 42,
+                    height: 42,
                     borderRadius: 12,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
+                    position: 'relative',
                     background: isDark ? style.bgDark : style.bgLight,
+                    overflow: 'visible',
                   }}
                 >
-                  <Icon size={20} style={{ color: style.color }} />
+                  <motion.img
+                    src={mascotImg}
+                    alt="Mascota PATRICI.A"
+                    initial={{ scale: 0.6, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', damping: 12, stiffness: 200 }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      objectFit: 'contain',
+                      borderRadius: 8,
+                    }}
+                  />
+                  {/* Small variant icon overlay */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: -3,
+                      right: -3,
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: style.color,
+                      boxShadow: `0 2px 6px ${style.color}60`,
+                      border: `1.5px solid ${isDark ? '#0D1B2E' : '#FDFCF8'}`,
+                    }}
+                  >
+                    <Icon size={10} style={{ color: '#fff' }} />
+                  </div>
                 </div>
               )}
 
