@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import fondoClaro from '../assets/fondoClaroPATRICIA.png';
+import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -133,14 +135,19 @@ export function ForgotPasswordPage() {
   };
   const inputBase = `w-full py-3.5 rounded-xl border transition-all focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 bg-white dark:bg-[#112240]`;
   return (
-    <div className="min-h-screen transition-colors duration-300 flex flex-col md:items-center md:justify-center relative overflow-hidden">
+    <div className="min-h-screen transition-colors duration-300 flex flex-col relative md:justify-center">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("${isDark ? fondoOscuro : fondoClaro}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+      />
       {}
-      <div className="hidden md:block pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.07]" style={{ background: GRADIENT }} />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
-      </div>
-      {}
-      <div className="relative w-full md:max-w-md md:my-10 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300">
+      <div className="relative w-full mx-auto md:max-w-md md:my-0 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
         {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
           <button
