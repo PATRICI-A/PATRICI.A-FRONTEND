@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Mail, Lock, Eye, EyeOff, Check, AlertCircle,
-  Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle, KeyRound,
+  Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle,
   CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
+import patiContrasena from '../assets/Pati-Contrasena.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -147,7 +148,23 @@ export function ForgotPasswordPage() {
         }}
       />
       {}
-      <div className="relative w-full mx-auto md:max-w-md md:my-0 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-6xl relative" style={{ zIndex: 1 }}>
+        <div className="grid md:grid-cols-2 items-center gap-8">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+            className="hidden md:flex justify-center md:justify-start"
+          >
+            <div className="w-full max-w-[460px] lg:max-w-[820px] xl:max-w-[920px] bg-transparent">
+              <img
+                src={patiContrasena}
+                alt="Patricia ilustración de contraseña"
+                className="w-full h-auto object-contain bg-transparent drop-shadow-none"
+              />
+            </div>
+          </motion.div>
+          <div className="relative w-full mx-auto md:max-w-md md:my-0 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
         {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
           <button
@@ -179,14 +196,15 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="text-center mb-8 mt-2">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
-                      <KeyRound size={28} color="white" strokeWidth={2} />
+                  <div className="mb-8 mt-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="text-left">
+                        <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                          Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
+                        </p>
+                        </div>
                     </div>
-                    <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
-                      Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
-                    </p>
                   </div>
                   {}
                   <div className="mb-5">
@@ -571,6 +589,8 @@ export function ForgotPasswordPage() {
               )}
             </AnimatePresence>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>
