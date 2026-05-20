@@ -102,12 +102,37 @@ export function LoginPage() {
         </div>
 
         <div className="flex-1 px-6 pb-8 w-full">
+          <div className="mx-auto w-full max-w-6xl lg:hidden">
+            <div className="grid grid-cols-[0.92fr_1.08fr] items-center gap-3 mb-6">
+              <div className="flex justify-center">
+                <div className="w-full max-w-[180px] bg-transparent">
+                  <img
+                    src={loginIllustration}
+                    alt="Patricia usando un portátil en la pantalla de inicio de sesión"
+                    className="w-full h-auto object-contain bg-transparent drop-shadow-none"
+                  />
+                </div>
+              </div>
+              <div className="text-left">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-lg mb-2">
+                  <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
+                </div>
+                <h1 className="text-gray-900 dark:text-white mb-1 text-[clamp(1.15rem,4.5vw,1.8rem)] leading-tight font-semibold">
+                  Bienvenido de vuelta
+                </h1>
+                <p className="text-[clamp(0.72rem,2.8vw,0.95rem)] text-gray-800 dark:text-white leading-snug">
+                  Conecta con tu comunidad universitaria
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4 }}
-              className="flex justify-center lg:justify-end"
+              className="hidden lg:flex justify-center lg:justify-end"
             >
               <div className="w-full max-w-[520px] bg-transparent">
                 <img
@@ -118,13 +143,13 @@ export function LoginPage() {
               </div>
             </motion.div>
 
-            <div className="flex flex-col justify-center max-w-md mx-auto w-full">
+            <div className="flex flex-col justify-center max-w-md mx-auto w-full lg:col-start-2">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="text-center mb-8">
+                <div className="hidden lg:block text-center mb-8">
                   <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 bg-white shadow-lg">
                     <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
                   </div>
