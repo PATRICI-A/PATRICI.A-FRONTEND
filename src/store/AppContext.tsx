@@ -1,4 +1,5 @@
-﻿import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { notifications as initialNotifications, type Notification } from '../types/mockData';
 export interface User {
   id: string;
   name: string;
@@ -50,6 +51,8 @@ interface AppContextType {
   login: (user: User) => void;
   logout: () => void;
   notifications: number;
+  notificationsList: Notification[];
+  setNotificationsList: React.Dispatch<React.SetStateAction<Notification[]>>;
   geo: GeoState;
   updateGeo: (patch: Partial<GeoState>) => void;
   toggleGeo: () => void;
@@ -78,6 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(mockCurrentUser);
+  const [notificationsList, setNotificationsList] = useState<Notification[]>(initialNotifications);
   const [geo, setGeoState] = useState<GeoState>(GEO_INITIAL);
   useEffect(() => {
     const saved = localStorage.getItem('patricia-theme');
@@ -131,12 +135,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return { ...prev, enabled: true, loading: true, error: null };
     });
   }, []);
+  const unreadNotificationsCount = notificationsList.filter(n => !n.read).length;
+
   return (
     <AppContext.Provider
       value={{
         isDark, toggleTheme,
         isLoggedIn, currentUser, login, logout,
-        notifications: 3,
+        notifications: unreadNotificationsCount,
+        notificationsList,
+        setNotificationsList,
         geo, updateGeo, toggleGeo,
       }}
     >
