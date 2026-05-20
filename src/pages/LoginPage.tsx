@@ -143,11 +143,12 @@ export function LoginPage() {
               </div>
             </motion.div>
 
-            <div className="flex flex-col justify-center max-w-md mx-auto w-full lg:col-start-2">
+            <div className="relative w-full max-w-md mx-auto flex flex-col dark:bg-[#0D1F3C] bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden lg:col-start-2">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
+                className="flex flex-col justify-center px-6 sm:px-8 py-8"
               >
                 <div className="hidden lg:block text-center mb-8">
                   <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 bg-white shadow-lg">
