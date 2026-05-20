@@ -11,6 +11,7 @@ import {
 import { directChats, chatMessages, GOLD_LIGHT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
+import { ChatSidebar } from '../components/chat/ChatSidebar';
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
 const CONTEXT_ACTIONS = [
   { icon: UserCheck, label: 'Ver perfil',              color: '#3B82F6', action: 'profile' },
@@ -24,13 +25,13 @@ export function DirectChatPage() {
   const { id } = useParams();
   const { currentUser, isDark } = useApp();
   const chat = directChats.find(c => c.id === id) || directChats[0];
-  const [messages, setMessages] = useState(chatMessages.filter(m => m.senderId === chat.userId || m.isMe));
+  const [messages, setMessages] = useState<typeof chatMessages>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [mutedChats, setMutedChats] = useState<string[]>([]);
-  const [reportingMessage, setReportingMessage] = useState<typeof messages[0] | null>(null);
+  const [reportingMessage, setReportingMessage] = useState<typeof chatMessages[0] | null>(null);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
@@ -40,45 +41,53 @@ export function DirectChatPage() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
   const accentColor = chat.accentColor;
+
   // reiniciar mensajes al cambiar de chat
   useEffect(() => {
     const currentChat = directChats.find(c => c.id === id) || directChats[0];
-    setMessages(chatMessages.filter(m => m.senderId === currentChat.userId || m.isMe));
+    setMessages(chatMessages.filter(m => m.chatId === currentChat.id));
     setInput('');
     setShowEmojis(false);
     setShowAttachments(false);
     setShowContextMenu(false);
   }, [id]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
   const handleSend = () => {
     if (!input.trim()) return;
     const newMsg = {
-      id: `m${Date.now()}`,
+      id: `m_${Date.now()}`,
+      chatId: chat.id,
       sender: 'Tú',
       senderId: 'u1',
       avatar: currentUser?.avatar || '',
       content: input.trim(),
-      timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
       type: 'text' as const,
       isMe: true,
     };
+    chatMessages.push(newMsg); // Mutar arreglo global
     setMessages(prev => [...prev, newMsg]);
     setInput('');
     setShowEmojis(false);
     if (Math.random() > 0.5) {
       setTimeout(() => {
         const replies = ['¡Genial! 🙌', 'Sí, me parece perfecto', '¿A qué hora nos vemos?', '👍👍', '¡Perfecto!', 'Ok, dale 😊'];
-        setMessages(prev => [...prev, {
-          id: `m${Date.now()}`,
+        const replyMsg = {
+          id: `m_${Date.now()}`,
+          chatId: chat.id,
           sender: chat.name,
           senderId: chat.userId,
           avatar: chat.avatar,
           content: replies[Math.floor(Math.random() * replies.length)],
-          timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+          timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
           type: 'text' as const,
-        }]);
+        };
+        chatMessages.push(replyMsg); // Mutar arreglo global
+        setMessages(prev => [...prev, replyMsg]);
       }, 2000 + Math.random() * 2000);
     }
   };
@@ -121,86 +130,30 @@ export function DirectChatPage() {
     }, 3000);
   };
   return (
-    <div className="flex h-screen overflow-hidden">
-      {}
-      <aside
-        className="hidden md:flex flex-col w-72 flex-shrink-0 border-r overflow-hidden"
-        style={{
-          background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.97)',
-          borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)',
+    <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden flex items-center justify-center py-6 px-4">
+      {/* Background wallpaper */}
+      <DoodleBackground isDark={isDark} opacity={isDark ? 0.95 : 0.8} />
+
+      {/* Centered Dashboard Wrapper at exactly 4/6 width */}
+      <div 
+        className="relative z-10 w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-120px)] min-h-[560px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-row transition-all"
+        style={isDark ? {
+          background: 'rgba(6, 13, 26, 0.75)',
+          borderColor: 'rgba(30, 58, 95, 0.45)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+        } : {
+          background: 'rgba(255, 255, 255, 0.85)',
+          borderColor: 'rgba(10, 25, 47, 0.08)',
+          boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
         }}
       >
-        <div
-          className="px-4 py-4 border-b flex-shrink-0"
-          style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
-        >
-          <h2 className="font-bold text-sm" style={{ color: isDark ? '#E2E8F0' : '#1A202C' }}>
-            Mensajes directos
-          </h2>
-          <p className="text-xs mt-0.5" style={{ color: isDark ? '#64748B' : '#9CA3AF' }}>
-            {directChats.length} conversaciones
-          </p>
+        {/* Left Side: Shared ChatSidebar List (hidden on mobile, visible on md: and up) */}
+        <div className="hidden md:block md:w-[340px] lg:w-[380px] h-full flex-shrink-0">
+          <ChatSidebar activeId={chat.id} />
         </div>
-        <div className="flex-1 overflow-y-auto py-2 space-y-0.5 px-2">
-          {directChats.map(dc => {
-            const isActive = dc.id === chat.id;
-            return (
-              <button
-                key={dc.id}
-                onClick={() => navigate(`/direct-chat/${dc.id}`)}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-left transition-all active:scale-[0.98]"
-                style={{
-                  background: isActive
-                    ? isDark ? 'rgba(217,119,6,0.13)' : 'rgba(212,137,10,0.10)'
-                    : 'transparent',
-                  border: isActive
-                    ? `1px solid ${isDark ? 'rgba(217,119,6,0.3)' : 'rgba(212,137,10,0.25)'}`
-                    : '1px solid transparent',
-                }}
-              >
-                <div className="relative flex-shrink-0">
-                  <img src={dc.avatar} alt={dc.name} className="w-10 h-10 rounded-xl object-cover" />
-                  {dc.online && (
-                    <div
-                      className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
-                      style={{
-                        background: dc.accentColor,
-                        borderColor: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.97)',
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="text-xs font-semibold truncate"
-                      style={{ color: isActive ? GOLD_LIGHT : (isDark ? '#E2E8F0' : '#1A202C') }}
-                    >
-                      {dc.name}
-                    </span>
-                    <span className="text-[10px] ml-1 flex-shrink-0" style={{ color: isDark ? '#64748B' : '#9CA3AF' }}>
-                      {dc.lastTime}
-                    </span>
-                  </div>
-                  <p className="text-[11px] truncate mt-0.5" style={{ color: isDark ? '#64748B' : '#9CA3AF' }}>
-                    {dc.lastMessage}
-                  </p>
-                </div>
-                {(dc.unread ?? 0) > 0 && (
-                  <span
-                    className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full text-white text-[9px] font-bold flex items-center justify-center px-1"
-                    style={{ background: dc.accentColor }}
-                  >
-                    {dc.unread}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </aside>
-      {}
-      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Right Side: Active direct chat conversation */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {}
       <div
         className="px-4 py-3 flex items-center gap-3 shadow-sm border-b"
@@ -509,7 +462,12 @@ export function DirectChatPage() {
           </button>
         </div>
       </div>
-      {}
+      
+      {/* Close Right Side & Centered Dashboard Wrapper */}
+      </div>
+      </div>
+
+      {/* Report Modal */}
       <AnimatePresence>
         {reportingMessage && (
           <>
@@ -699,7 +657,6 @@ export function DirectChatPage() {
           </>
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 }

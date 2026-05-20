@@ -12,6 +12,7 @@ import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { parches, chatMessages, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
+import { ChatSidebar } from '../components/chat/ChatSidebar';
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
 function extractGradientColors(coverColor: string) {
   const hexes = coverColor.match(/#[0-9A-Fa-f]{6}/g);
@@ -37,14 +38,14 @@ export function ChatPage() {
   const { id } = useParams();
   const { currentUser, isDark } = useApp();
   const parche = parches.find(p => p.id === id) || parches[0];
-  const [messages, setMessages] = useState(chatMessages);
+  const [messages, setMessages] = useState<typeof chatMessages>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [mutedChats, setMutedChats] = useState<string[]>([]);
-  const [reportingMessage, setReportingMessage] = useState<typeof messages[0] | null>(null);
+  const [reportingMessage, setReportingMessage] = useState<typeof chatMessages[0] | null>(null);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
@@ -54,22 +55,27 @@ export function ChatPage() {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
+
   // reiniciar mensajes al cambiar de chat
   useEffect(() => {
-    setMessages(chatMessages);
+    const currentParche = parches.find(p => p.id === id) || parches[0];
+    setMessages(chatMessages.filter(m => m.chatId === currentParche.id));
     setInput('');
     setShowEmojis(false);
     setShowInfo(false);
     setShowAttachments(false);
     setShowContextMenu(false);
   }, [id]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
   const handleSend = () => {
     if (!input.trim()) return;
     const newMsg = {
-      id: `m${Date.now()}`,
+      id: `m_${Date.now()}`,
+      chatId: parche.id,
       sender: 'Tú',
       senderId: 'u1',
       avatar: currentUser?.avatar || '',
@@ -78,21 +84,25 @@ export function ChatPage() {
       type: 'text' as const,
       isMe: true,
     };
+    chatMessages.push(newMsg); // Mutar arreglo global en memoria
     setMessages(prev => [...prev, newMsg]);
     setInput('');
     setShowEmojis(false);
     if (Math.random() > 0.5) {
       setTimeout(() => {
         const replies = ['¡Genial! 🙌', 'Sí, ya voy para allá', '¿A qué hora llegas?', '👍👍', '¡Perfecto!', 'Ok, nos vemos 😊'];
-        setMessages(prev => [...prev, {
-          id: `m${Date.now()}`,
+        const replyMsg = {
+          id: `m_${Date.now()}`,
+          chatId: parche.id,
           sender: 'Diego Fabian',
           senderId: 'u3',
           avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
           content: replies[Math.floor(Math.random() * replies.length)],
           timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
           type: 'text' as const,
-        }]);
+        };
+        chatMessages.push(replyMsg); // Mutar arreglo global
+        setMessages(prev => [...prev, replyMsg]);
       }, 2000 + Math.random() * 2000);
     }
   };
@@ -128,7 +138,7 @@ export function ChatPage() {
     }, 3000);
   };
   const chatView = (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full overflow-hidden">
       {}
       <div
         className="px-4 py-3 flex items-center gap-3 shadow-sm border-b"
@@ -704,71 +714,34 @@ export function ChatPage() {
     </AnimatePresence>
   );
   return (
-    <div className="flex h-screen overflow-hidden">
-      {}
-      <aside
-        className="hidden md:flex flex-col w-80 flex-shrink-0 border-r overflow-hidden"
-        style={{
-          background: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.98)',
-          borderColor: isDark ? '#1E3A5F' : '#F3F4F6',
+    <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden flex items-center justify-center py-6 px-4">
+      {/* Background wallpaper */}
+      <DoodleBackground isDark={isDark} opacity={isDark ? 0.95 : 0.8} />
+
+      {/* Centered Dashboard Wrapper at exactly 4/6 width */}
+      <div 
+        className="relative z-10 w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-120px)] min-h-[560px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-row transition-all"
+        style={isDark ? {
+          background: 'rgba(6, 13, 26, 0.75)',
+          borderColor: 'rgba(30, 58, 95, 0.45)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+        } : {
+          background: 'rgba(255, 255, 255, 0.85)',
+          borderColor: 'rgba(10, 25, 47, 0.08)',
+          boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
         }}
       >
-        <div className="px-4 pt-5 pb-3 border-b" style={{ borderColor: isDark ? '#1E3A5F44' : '#F3F4F6' }}>
-          <h2 className="text-gray-900 dark:text-white font-semibold mb-3">Chats</h2>
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              placeholder="Buscar..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl text-sm focus:outline-none"
-              style={{ background: isDark ? '#172A45' : '#F3F4F6', color: isDark ? 'white' : '#1F2937' }}
-            />
-          </div>
+        {/* Left Side: Shared ChatSidebar List (hidden on mobile, visible on md: and up) */}
+        <div className="hidden md:block md:w-[340px] lg:w-[380px] h-full flex-shrink-0">
+          <ChatSidebar activeId={parche.id} />
         </div>
-        <div className="flex-1 overflow-y-auto py-2">
-          {chatList.map(chat => {
-            const isSelected = chat.id === parche.id;
-            const hex = chat.coverColor.match(/#[0-9A-Fa-f]{6}/g);
-            const chatAccent = hex ? hex[hex.length - 1] : '#3B82F6';
-            return (
-              <button
-                key={chat.id}
-                onClick={() => navigate(`/chat/${chat.id}`)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
-                style={{
-                  background: isSelected ? `${chatAccent}18` : 'transparent',
-                  borderLeft: isSelected ? `3px solid ${chatAccent}` : '3px solid transparent',
-                }}
-              >
-                <div className="relative flex-shrink-0">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: chat.coverColor }}>
-                    <EmojiIcon emoji={chat.emoji} size={20} color="white" strokeWidth={2} />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-white truncate">{chat.name}</p>
-                    <span className="text-[10px] text-gray-400 flex-shrink-0 ml-1">{chat.lastTime}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-0.5">
-                    <p className="text-xs text-gray-400 truncate">{chat.lastMessage}</p>
-                    {chat.unread > 0 && (
-                      <span className="ml-1 flex-shrink-0 min-w-[18px] h-[18px] rounded-full text-white text-[9px] font-bold flex items-center justify-center"
-                        style={{ background: chatAccent }}>
-                        {chat.unread}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+
+        {/* Right Side: Active group chat conversation */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+          {chatView}
         </div>
-      </aside>
-      {}
-      <div className="flex-1 overflow-hidden">
-        {chatView}
       </div>
-      {}
+
       {reportModal}
     </div>
   );
