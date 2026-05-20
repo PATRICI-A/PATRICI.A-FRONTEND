@@ -148,7 +148,7 @@ export function ForgotPasswordPage() {
         }}
       />
       {}
-      <div className="mx-auto w-full max-w-6xl relative" style={{ zIndex: 1 }}>
+      <div className="mx-auto w-full max-w-6xl relative px-4 sm:px-6" style={{ zIndex: 1 }}>
         <div className="grid md:grid-cols-2 items-center gap-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -164,7 +164,7 @@ export function ForgotPasswordPage() {
               />
             </div>
           </motion.div>
-          <div className="relative w-full mx-auto md:max-w-md md:my-0 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
+          <div className="relative w-full mx-auto md:max-w-md my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
         {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
           <button
