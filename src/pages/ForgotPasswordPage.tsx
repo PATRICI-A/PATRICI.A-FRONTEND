@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
-import logoImg from '../assets/logo_nuevo_patricia.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -33,7 +32,6 @@ export function ForgotPasswordPage() {
   const { isDark, toggleTheme } = useApp();
   const [phase, setPhase] = useState<'email' | 'reset' | 'success'>('email');
   const [email, setEmail]       = useState('');
-  const [emailTouched, setEmailTouched] = useState(false);
   const [sendLoading, setSendLoading]   = useState(false);
   const [sendAttempts, setSendAttempts] = useState(0);
   const [blockCooldown, setBlockCooldown] = useState(0);
@@ -50,7 +48,6 @@ export function ForgotPasswordPage() {
   const [resetLoading, setResetLoading]     = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
   const emailValid = email.toLowerCase().endsWith('@mail.escuelaing.edu.co') && email.includes('@');
-  const emailError = emailTouched && !emailValid ? 'Introduce un correo válido de la institución.' : '';
   const strength   = getStrength(newPassword);
   const codeStr    = code.join('');
   const codeValid  = /^\d{6}$/.test(codeStr);
@@ -198,28 +195,18 @@ export function ForgotPasswordPage() {
                         autoComplete="email"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        onBlur={() => setEmailTouched(true)}
                         placeholder="tu.nombre@mail.escuelaing.edu.co"
                         className={`${inputBase} pl-10 pr-10 ${
-                          emailTouched && emailError
+                          email.length > 0 && !emailValid
                             ? 'border-red-400 focus:border-red-500'
-                            : emailTouched && emailValid
+                            : email.length > 0 && emailValid
                             ? 'border-emerald-400 focus:border-emerald-500'
                             : 'border-gray-200 dark:border-[#233554] focus:border-[#06B6D4]'
                         }`}
                         aria-describedby="fp-email-error"
                       />
-                      {emailTouched && emailValid && (
-                        <Check size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />
-                      )}
                     </div>
-                    <div id="fp-email-error" aria-live="polite" className="mt-1 min-h-[18px]">
-                      {emailError && (
-                        <p className="text-xs text-red-500 flex items-center gap-1">
-                          <AlertCircle size={11} />{emailError}
-                        </p>
-                      )}
-                    </div>
+                    <div id="fp-email-error" aria-live="polite" className="mt-1 min-h-[18px]" />
                     {}
                     <p className="mt-1.5 text-[11px] transition-colors duration-200"
                       style={{
@@ -230,9 +217,12 @@ export function ForgotPasswordPage() {
                           : '#EF4444',
                       }}
                     >
-                      {emailValid ? '✓ ' : email.length > 0 ? '✗ ' : ''}
-                      Debe terminar en{' '}
-                      <span className="font-medium">@mail.escuelaing.edu.co</span>
+                      {email.length > 0 && !emailValid ? '✗ ' : ''}
+                      {email.length > 0 && !emailValid ? (
+                        <>
+                          Debe terminar en <span className="font-medium">@mail.escuelaing.edu.co</span>
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   {}
