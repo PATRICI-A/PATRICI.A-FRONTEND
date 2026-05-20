@@ -148,18 +148,18 @@ export function MatchesPage() {
           : { background: 'rgba(253,252,248,0.92)', borderColor: 'rgba(10,25,47,0.07)', boxShadow: '0 2px 16px rgba(10,25,47,0.07)' }
         }
       >
-        <div className="px-5 pt-4 pb-3">
+        <div className="max-w-2xl mx-auto px-5 pt-4 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
                 style={{ background: TEAL_GRADIENT }}
               >
-                <Sparkles size={20} color="white" strokeWidth={2.5} />
+                <Sparkles size={22} color="white" strokeWidth={2.5} />
               </div>
               <div>
-                <h1 className="text-gray-900 dark:text-white font-black" style={{ fontSize: '1.3rem', lineHeight: 1.2 }}>
-                  🎯 Perfect Match
+                <h1 className="text-gray-900 dark:text-white font-black" style={{ fontSize: '1.7rem', lineHeight: 1.1 }}>
+                  Perfect Match
                 </h1>
                 <p className="text-xs" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
                   {activeTab === 'explore' && 'Encuentra tu tribu universitaria'}
@@ -168,8 +168,8 @@ export function MatchesPage() {
                   {activeTab === 'friends' && `${connectedCount} conexiones activas`}
                 </p>
               </div>
+              <img src={patyImg} alt="Paty" className="h-36 w-auto drop-shadow-lg" />
             </div>
-            <img src={patyImg} alt="Paty" className="h-36 w-auto drop-shadow-lg" />
           </div>
           {activeTab === 'explore' && (
             <div className="flex gap-2">
@@ -196,7 +196,7 @@ export function MatchesPage() {
         </div>
 
         <div className="border-t overflow-x-auto scrollbar-hide" style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}>
-          <div className="flex gap-1.5 px-5 py-2.5">
+          <div className="flex gap-1.5 px-5 py-2.5 max-w-2xl mx-auto">
             {tabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -225,7 +225,7 @@ export function MatchesPage() {
 
         {(activeTab === 'explore' || activeTab === 'friends') && (
           <div
-            className="border-t px-5 py-2.5"
+            className="border-t px-5 py-2.5 max-w-2xl mx-auto w-full"
             style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
           >
             <div
@@ -255,7 +255,7 @@ export function MatchesPage() {
 
         {activeTab === 'explore' && (
           <div
-            className="border-t px-5 py-2 flex items-center gap-2"
+            className="border-t px-5 py-2 flex items-center gap-2 max-w-2xl mx-auto w-full"
             style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
           >
             <button
@@ -300,7 +300,7 @@ export function MatchesPage() {
               className="overflow-hidden border-t"
               style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
             >
-              <div className="px-5 py-4 space-y-3">
+              <div className="px-5 py-4 space-y-3 max-w-2xl mx-auto w-full">
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
                     Programa
@@ -422,7 +422,7 @@ export function MatchesPage() {
         </AnimatePresence>
       </div>
 
-      <div className="px-4 py-5 pb-28">
+      <div className="px-4 py-5 pb-28 max-w-2xl mx-auto w-full">
         <AnimatePresence>
           {activeTab === 'explore' && nearbySuggestions.length > 0 && (
             <motion.div
