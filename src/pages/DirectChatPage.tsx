@@ -156,9 +156,9 @@ export function DirectChatPage() {
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {}
       <div
-        className="px-4 py-3 flex items-center gap-3 shadow-sm border-b"
+        className="px-4 py-3 flex items-center gap-3 shadow-sm border-b backdrop-blur-md"
         style={{
-          background: isDark ? 'rgba(13,27,46,0.98)' : 'rgba(253,252,248,0.97)',
+          background: isDark ? 'rgba(13, 27, 46, 0.85)' : 'rgba(255, 255, 255, 0.85)',
           borderColor: isDark ? '#233554' : '#F3F4F6',
           position: 'relative',
           zIndex: 10,
@@ -283,8 +283,7 @@ export function DirectChatPage() {
         </div>
       </div>
       {}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative" style={{ background: isDark ? '#0A192F' : '#EEF2FF', isolation: 'isolate' }}>
-        <DoodleBackground isDark={isDark} opacity={isDark ? 1 : 0.8} />
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative" style={{ background: isDark ? 'rgba(6, 13, 26, 0.3)' : 'rgba(255, 255, 255, 0.35)', isolation: 'isolate' }}>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
             <div className="flex-1 h-px bg-white/10 dark:bg-white/10" />
@@ -384,8 +383,8 @@ export function DirectChatPage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t px-4 py-3"
-            style={{ background: isDark ? '#112240' : 'white', borderColor: isDark ? '#233554' : '#F3F4F6' }}
+            className="border-t px-4 py-3 backdrop-blur-md"
+            style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
           >
             <div className="flex gap-3">
               {EMOJIS.map(emoji => (
@@ -404,8 +403,8 @@ export function DirectChatPage() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t px-4 py-3 overflow-hidden"
-            style={{ background: isDark ? '#112240' : 'white', borderColor: isDark ? '#233554' : '#F3F4F6' }}
+            className="border-t px-4 py-3 overflow-hidden backdrop-blur-md"
+            style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
           >
             <div className="flex gap-4">
               {[
@@ -429,8 +428,8 @@ export function DirectChatPage() {
       </AnimatePresence>
       {}
       <div
-        className="px-4 py-3 border-t"
-        style={{ background: isDark ? '#112240' : 'white', borderColor: isDark ? '#233554' : '#F3F4F6' }}
+        className="px-4 py-3 border-t backdrop-blur-md"
+        style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
       >
         <div className="flex items-center gap-2">
           <button
