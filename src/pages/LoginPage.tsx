@@ -103,7 +103,7 @@ export function LoginPage() {
 
         <div className="flex-1 px-6 pb-8 w-full">
           <div className="mx-auto w-full max-w-6xl lg:hidden">
-            <div className="grid grid-cols-[0.92fr_1.08fr] items-center gap-3 mb-6">
+            <div className="grid grid-cols-[0.92fr_1.08fr] items-center justify-items-center gap-3 mb-6">
               <div className="flex justify-center">
                 <div className="w-full max-w-[180px] bg-transparent">
                   <img
@@ -113,8 +113,8 @@ export function LoginPage() {
                   />
                 </div>
               </div>
-              <div className="text-left">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-lg mb-2">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-lg mb-2 mx-auto">
                   <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
                 </div>
                 <h1 className="text-gray-900 dark:text-white mb-1 text-[clamp(1.15rem,4.5vw,1.8rem)] leading-tight font-semibold">
