@@ -60,7 +60,7 @@ export function DirectChatPage() {
       senderId: 'u1',
       avatar: currentUser?.avatar || '',
       content: input.trim(),
-      timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       type: 'text' as const,
       isMe: true,
     };
@@ -76,7 +76,7 @@ export function DirectChatPage() {
           senderId: chat.userId,
           avatar: chat.avatar,
           content: replies[Math.floor(Math.random() * replies.length)],
-          timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
           type: 'text' as const,
         }]);
       }, 2000 + Math.random() * 2000);
