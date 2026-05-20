@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, Shield, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { monas, achievements, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
+import { monas, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
   const N = 21;
@@ -423,47 +423,7 @@ export function ProfilePage() {
           Escanear QR para desbloquear más patricias
         </motion.button>
       </div>
-      {}
-      <div className="px-5 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-800 dark:text-white">Hitos Recientes</h3>
-          <button
-            onClick={() => navigate('/stats')}
-            className="text-xs font-semibold flex items-center gap-1"
-            style={{ color: PINK }}
-          >
-            Ver Stats <ChevronRight size={12} />
-          </button>
-        </div>
-        <div className="space-y-3">
-          {achievements.slice(0, 3).map((achievement, i) => (
-            <motion.div
-              key={achievement.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 flex items-center gap-3 shadow-sm"
-            >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: i === 0 ? GRADIENT : i === 1 ? 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' : 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' }}
-              >
-                <EmojiIcon emoji={achievement.emoji} size={20} color="white" strokeWidth={2} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-800 dark:text-white text-sm">{achievement.title}</p>
-                <p className="text-xs text-gray-400 line-clamp-1">{achievement.description}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{achievement.date}</p>
-              </div>
-              <div className="flex-shrink-0 text-right">
-                <span className="text-xs font-bold" style={{ color: ORANGE }}>+{achievement.xp}</span>
-                <p className="text-[10px] text-gray-400">XP</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-      {}
+
       <div className="px-5 mb-4">
         <div className="bg-white dark:bg-[#112240] rounded-2xl shadow-sm overflow-hidden">
           {[

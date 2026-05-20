@@ -94,12 +94,12 @@ export interface Mona {
   emoji: string;
   color: string;
   bgColor: string;
-  rarity: 'común' | 'raro' | 'épico' | 'legendario';
+  rarity: 'común' | 'poco común' | 'raro' | 'épico' | 'legendario';
   category: 'tecnología' | 'social' | 'deporte' | 'cultura' | 'bienestar' | 'academia' | 'especial';
   unlocked: boolean;
-  condition: string;
   unlockedAt?: string;
   xp: number;
+  imgSrc?: string;
 }
 export interface Notification {
   id: string;
@@ -113,14 +113,22 @@ export interface Notification {
   read: boolean;
   actionUrl?: string;
 }
-export interface Achievement {
+export interface CafeteriaPrize {
   id: string;
-  title: string;
-  description: string;
+  name: string;
   emoji: string;
-  date: string;
-  xp: number;
+  color: string;
 }
+
+export const CAFETERIA_PRIZES: CafeteriaPrize[] = [
+  { id: 'prize-cafe', name: 'Café Gratis', emoji: '☕', color: '#8B5CF6' },
+  { id: 'prize-empanada', name: 'Empanada de Carne', emoji: '🥟', color: '#F59E0B' },
+  { id: 'prize-jugo', name: 'Jugo Natural', emoji: '🧃', color: '#10B981' },
+  { id: 'prize-almuerzo', name: 'Almuerzo Completo', emoji: '🍱', color: '#EC4899' },
+  { id: 'prize-brownie', name: 'Brownie con Helado', emoji: '🍦', color: '#6366F1' },
+  { id: 'prize-papas', name: 'Papas Fritas', emoji: '🍟', color: '#EAB308' },
+  { id: 'prize-croissant', name: 'Croissant Relleno', emoji: '🥐', color: '#D97706' }
+];
 export const GRADIENT = 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)';
 export const PINK = '#1D4ED8';
 export const ORANGE = '#06B6D4';
@@ -129,7 +137,7 @@ export const TEAL_GRADIENT = 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)'
 export const GOLD = '#D97706';
 export const GOLD_LIGHT = '#F59E0B';
 export const GOLD_GRADIENT = 'linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%)';
-export interface QREnvelope {
+export interface EventEnvelope {
   code: string;
   monaIds: string[];
   label: string;
@@ -139,7 +147,7 @@ export interface QREnvelope {
   emoji: string;
   description: string;
 }
-export const QR_ENVELOPES: QREnvelope[] = [
+export const EVENT_ENVELOPES: EventEnvelope[] = [
   {
     code: 'PATRICIA-TECH-001',
     monaIds: ['hackathon-hero', 'bug-hunter'],
@@ -790,41 +798,45 @@ export const vibraCategories = [
   { id: 'v6', name: 'Arte y Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
 ];
 export const monas: Mona[] = [
-  { id: 'tech-puppy', name: 'Tech Puppy', description: 'Para los que viven en el mundo digital', emoji: '🐾', category: 'tecnología', color: '#3B82F6', bgColor: '#EFF6FF', rarity: 'común', unlocked: true, condition: 'Únete a tu primer parche de tecnología', unlockedAt: 'Hace 3 semanas', xp: 50 },
-  { id: 'code-master', name: 'Code Master', description: 'Dominas el arte de programar', emoji: '💻', category: 'tecnología', color: '#1D4ED8', bgColor: '#DBEAFE', rarity: 'raro', unlocked: true, condition: 'Participa en 5 sesiones de coding', unlockedAt: 'Hace 1 semana', xp: 150 },
-  { id: 'bug-hunter', name: 'Bug Hunter', description: 'Ningún error se te escapa', emoji: '🐛', category: 'tecnología', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'común', unlocked: false, condition: 'Resuelve 10 retos de algoritmos en parches', xp: 75 },
-  { id: 'hackathon-hero', name: 'Hackathon Hero', description: '48 horas de pura innovación', emoji: '⚡', category: 'tecnología', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'épico', unlocked: false, condition: 'Participa en un hackathon universitario', xp: 300 },
-  { id: 'ai-whiz', name: 'AI Whiz', description: 'El futuro está en tus manos', emoji: '🤖', category: 'tecnología', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Crea y presenta un proyecto de IA en el campus', xp: 500 },
-  { id: 'social', name: 'Social Butterfly', description: 'El alma de cualquier parche', emoji: '🤝', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, condition: 'Invita a 5 amigos a un parche', unlockedAt: 'Hace 2 semanas', xp: 50 },
-  { id: 'pionera', name: 'Pionera', description: 'Siempre a la vanguardia', emoji: '🚀', category: 'social', color: '#1D4ED8', bgColor: '#EFF6FF', rarity: 'épico', unlocked: true, condition: 'Crea tu primer parche', unlockedAt: 'Hace 1 mes', xp: 250 },
-  { id: 'connector', name: 'Connector', description: 'Tu red social es tu superpoder', emoji: '🌐', category: 'social', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Conecta con 20 personas diferentes en el campus', xp: 120 },
-  { id: 'campus-star', name: 'Campus Star', description: 'Todos te conocen en el campus', emoji: '⭐', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: 'Sé el perfil más visitado de tu facultad', xp: 280 },
-  { id: 'lider-nato', name: 'Líder Nato', description: 'Naciste para guiar comunidades', emoji: '👑', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Administra 3 parches activos al mismo tiempo', xp: 600 },
-  { id: 'sport-buddy', name: 'Sport Buddy', description: 'Mente sana, cuerpo sano', emoji: '⚡', category: 'deporte', color: '#0EA5E9', bgColor: '#E0F2FE', rarity: 'común', unlocked: false, condition: 'Únete a 3 parches deportivos', xp: 70 },
-  { id: 'marathon-runner', name: 'Marathon', description: 'La distancia no te detiene', emoji: '🏃', category: 'deporte', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Completa 10 actividades físicas en parches', xp: 130 },
-  { id: 'mvp-campus', name: 'MVP Campus', description: 'El jugador más valioso del semestre', emoji: '🏆', category: 'deporte', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'épico', unlocked: false, condition: 'Gana un torneo inter-parches', xp: 300 },
-  { id: 'gym-addict', name: 'Gym Addict', description: 'El gimnasio es tu segundo hogar', emoji: '💪', category: 'deporte', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, condition: 'Asiste al gimnasio 20 veces con tu parche', xp: 70 },
-  { id: 'team-player', name: 'Team Player', description: 'Juntos siempre llegamos más lejos', emoji: '🤜', category: 'deporte', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'raro', unlocked: false, condition: 'Participa en 5 deportes diferentes', xp: 150 },
-  { id: 'bookworm', name: 'Bookworm', description: 'Los libros son tu mejor compañía', emoji: '📚', category: 'cultura', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'común', unlocked: true, condition: 'Únete a un club de lectura', unlockedAt: 'Hace 2 semanas', xp: 60 },
-  { id: 'melomano', name: 'Melómano', description: 'La música es tu idioma universal', emoji: '🎵', category: 'cultura', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: true, condition: 'Asiste a 5 eventos musicales en el campus', unlockedAt: 'Hace 3 días', xp: 260 },
-  { id: 'cinefilo', name: 'Cinéfilo', description: 'El cine lo es todo para ti', emoji: '🎬', category: 'cultura', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Organiza 3 noches de cine en parches', xp: 140 },
-  { id: 'culture-vulture', name: 'Culture Vulture', description: 'Devorador de experiencias culturales', emoji: '🦚', category: 'cultura', color: '#10B981', bgColor: '#ECFDF5', rarity: 'raro', unlocked: false, condition: 'Asiste a 5 eventos culturales universitarios', xp: 160 },
-  { id: 'creator', name: 'Creator', description: 'La creatividad no tiene límites', emoji: '🎨', category: 'cultura', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Organiza un evento comunitario con más de 20 asistentes', xp: 550 },
-  { id: 'happy-vibes', name: 'Happy Vibes', description: 'Tu energía positiva contagia a todos', emoji: '😊', category: 'bienestar', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: false, condition: 'Registra tu estado de ánimo 7 días seguidos', xp: 60 },
-  { id: 'sleep-champion', name: 'Sleep Champion', description: 'Descansar también es parte del éxito', emoji: '😴', category: 'bienestar', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'común', unlocked: false, condition: 'Completa 5 sesiones de descanso activo', xp: 50 },
-  { id: 'zen-master', name: 'Zen Master', description: 'Paz interior en el caos universitario', emoji: '🧘', category: 'bienestar', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Completa 3 talleres de mindfulness', xp: 130 },
-  { id: 'balance-pro', name: 'Balance Pro', description: 'Estudias, descansas y vives en equilibrio', emoji: '⚖️', category: 'bienestar', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: '30 días con hábitos saludables registrados', xp: 270 },
-  { id: 'healer', name: 'Healer', description: 'Apoyo incondicional para la comunidad', emoji: '💚', category: 'bienestar', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Completa el módulo de bienestar y apoya a 3 compañeros', xp: 500 },
-  { id: 'study-streak', name: 'Study Streak', description: 'La constancia es tu superpoder', emoji: '📖', category: 'academia', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'raro', unlocked: false, condition: 'Estudia en parches 14 días consecutivos', xp: 130 },
-  { id: 'honors', name: 'Honors', description: 'Reconocimiento al mérito académico', emoji: '🎓', category: 'academia', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'raro', unlocked: true, condition: 'Completa 10 sesiones de estudio en parches', unlockedAt: 'Hace 1 semana', xp: 150 },
-  { id: 'genio', name: 'Genio', description: 'Mente brillante del campus', emoji: '💡', category: 'academia', color: '#1D4ED8', bgColor: '#DBEAFE', rarity: 'épico', unlocked: true, condition: 'Alcanza nivel 10 en la plataforma', unlockedAt: 'Hace 2 semanas', xp: 280 },
-  { id: 'perfect-score', name: 'Perfect Score', description: 'La excelencia es tu estándar', emoji: '💯', category: 'academia', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: 'Obtén 5/5 en la evaluación de un parche de estudio', xp: 320 },
-  { id: 'cum-laude', name: 'Cum Laude', description: 'La máxima distinción académica', emoji: '📜', category: 'academia', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Mantén promedio ≥ 4.5 y lidera 5 parches de estudio', xp: 600 },
-  { id: 'first-day', name: 'First Day', description: 'El primer paso siempre es el más importante', emoji: '🌱', category: 'especial', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, condition: 'Completa tu registro en patrici.a', unlockedAt: 'Hace 1 mes', xp: 30 },
-  { id: 'night-owl', name: 'Night Owl', description: 'Las mejores ideas llegan en la madrugada', emoji: '🦉', category: 'especial', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'raro', unlocked: false, condition: 'Participa en parches nocturnos 5 veces', xp: 180 },
-  { id: 'explorer', name: 'Explorer', description: 'Siempre buscando nuevas aventuras', emoji: '🧭', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Únete a parches de 5 categorías diferentes', xp: 200 },
-  { id: 'social-100', name: 'Social 100', description: 'La élite social del campus', emoji: '🎊', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Conecta con 100 estudiantes en un semestre', xp: 700 },
-  { id: 'campus-legend', name: 'Campus Legend', description: '¡Eres parte de la historia de patrici.a!', emoji: '🌟', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Completa el álbum al 100%', xp: 800 },
+  // Patricias - Visita del Campus
+  { id: 'patricia-cafe', name: 'Explorador de Cafeterías', description: 'Café con clase: Visita las 4 cafeterías del campus (Central, Regio, Leyenda, Harvies).', emoji: '☕', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'poco común', unlocked: true, unlockedAt: 'Ayer', xp: 200 },
+  { id: 'patricia-tour', name: 'Tour por el Campus', description: 'Ingeniero en movimiento: Visita todos los edificios (A al I).', emoji: '🏢', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
+  { id: 'patricia-zen', name: 'Zen Máster', description: 'Paz entre circuitos: Visita el Lago y Centro de Reflexión.', emoji: '🧘', category: 'especial', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 semana', xp: 200 },
+  { id: 'patricia-atleta', name: 'Atleta de Patio', description: 'Dunk en el campus: Visita la cancha de baloncesto al aire libre.', emoji: '🏀', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'poco común', unlocked: false, xp: 150 },
+  { id: 'patricia-conquistador', name: 'Conquistador del Campus', description: 'Arquitecto de rutas: Visita todos los lugares y edificios del campus.', emoji: '🗺️', category: 'especial', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 1000 },
+  
+  // Patricias - Conexión y Acción
+  { id: 'patricia-primer-contacto', name: 'Primer Contacto', description: 'Realizar tu primera conexión con otro usuario.', emoji: '🤝', category: 'social', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 50 },
+  { id: 'patricia-networking-5', name: 'Networking 5', description: 'Acumular 5 conexiones activas.', emoji: '👥', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 150 },
+  { id: 'patricia-networking-10', name: 'Networking 10', description: 'Acumular 10 conexiones activas.', emoji: '🌐', category: 'social', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 350 },
+  { id: 'patricia-iniciador', name: 'Iniciador de Parche', description: 'Unirte o crear tu primer parche.', emoji: '⚡', category: 'social', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 3 semanas', xp: 75 },
+  { id: 'patricia-capitan', name: 'Capitán de Equipo', description: 'Crear 2 parches como capitán.', emoji: '🏅', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'poco común', unlocked: false, xp: 200 },
+  { id: 'patricia-planificador', name: 'Planificador Pro', description: 'Crear un parche con más de 3 días de anticipación.', emoji: '📅', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 75 },
+  { id: 'patricia-explorador-1', name: 'Explorador Nivel 1', description: 'Visitar 3 zonas distintas del campus.', emoji: '📍', category: 'especial', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75 },
+  { id: 'patricia-explorador-2', name: 'Explorador Nivel 2', description: 'Visitar 5 zonas distintas del campus.', emoji: '🗺️', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'poco común', unlocked: false, xp: 175 },
+  { id: 'patricia-asistente-vip', name: 'Asistente VIP', description: 'Asistir a un evento institucional guardado.', emoji: '🎟️', category: 'especial', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'raro', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 300 },
+  { id: 'patricia-primer-mensajero', name: 'Primer Mensajero', description: 'Enviar el primer mensaje en un parche recién creado.', emoji: '💬', category: 'social', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 semanas', xp: 100 },
+  { id: 'patricia-anfitrion', name: 'Anfitrión', description: 'Tener un usuario uniéndose a un parche que creaste.', emoji: '🏠', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-conector-veloz', name: 'Conector Veloz', description: 'Pasar de 0 a 10 conexiones en < 30 días.', emoji: '🚀', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 850 },
+  { id: 'patricia-leyenda', name: 'Leyenda del Campus', description: 'Desbloquear las 12 patricias anteriores.', emoji: '👑', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1500 },
+
+  // Monas de Eventos (Códigos)
+  { id: 'hackathon-hero', name: 'Hackathon Hero', description: '48 horas de pura innovación', emoji: '⚡', category: 'tecnología', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'épico', unlocked: false, xp: 300 },
+  { id: 'bug-hunter', name: 'Bug Hunter', description: 'Ningún error se te escapa', emoji: '🐛', category: 'tecnología', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'lider-nato', name: 'Líder Nato', description: 'Naciste para guiar comunidades', emoji: '👑', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 600 },
+  { id: 'campus-star', name: 'Campus Star', description: 'Todos te conocen en el campus', emoji: '⭐', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 280 },
+  { id: 'creator', name: 'Creator', description: 'La creatividad no tiene límites', emoji: '🎨', category: 'cultura', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 550 },
+  { id: 'culture-vulture', name: 'Culture Vulture', description: 'Devorador de experiencias culturales', emoji: '🦚', category: 'cultura', color: '#10B981', bgColor: '#ECFDF5', rarity: 'raro', unlocked: false, xp: 160 },
+  { id: 'cinefilo', name: 'Cinéfilo', description: 'El cine lo es todo para ti', emoji: '🎬', category: 'cultura', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 140 },
+  { id: 'healer', name: 'Healer', description: 'Apoyo incondicional para la comunidad', emoji: '💚', category: 'bienestar', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 500 },
+  { id: 'balance-pro', name: 'Balance Pro', description: 'Estudias, descansas y vives en equilibrio', emoji: '⚖️', category: 'bienestar', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 270 },
+  { id: 'zen-master', name: 'Zen Master', description: 'Paz interior en el caos universitario', emoji: '🧘', category: 'bienestar', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 130 },
+  { id: 'cum-laude', name: 'Cum Laude', description: 'La máxima distinción académica', emoji: '📜', category: 'academia', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 600 },
+  { id: 'perfect-score', name: 'Perfect Score', description: 'La excelencia es tu estándar', emoji: '💯', category: 'academia', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 320 },
+  { id: 'study-streak', name: 'Study Streak', description: 'La constancia es tu superpoder', emoji: '📖', category: 'academia', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'raro', unlocked: false, xp: 130 },
+  { id: 'campus-legend', name: 'Campus Legend', description: '¡Eres parte de la historia de patrici.a!', emoji: '🌟', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 800 },
+  { id: 'social-100', name: 'Social 100', description: 'La élite social del campus', emoji: '🎊', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 700 },
+  { id: 'ai-whiz', name: 'AI Whiz', description: 'El futuro está en tus manos', emoji: '🤖', category: 'tecnología', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 500 },
 ];
 export const directChats: DirectChat[] = [
   {
@@ -975,40 +987,6 @@ export const chatMessages: ChatMessage[] = [
     timestamp: '15:21',
     type: 'text',
     isMe: true,
-  },
-];
-export const achievements: Achievement[] = [
-  {
-    id: 'a1',
-    title: 'Completaste 5 parches',
-    description: 'Has demostrado ser una líder natural en la comunidad.',
-    emoji: '🏆',
-    date: 'Hace 2 días',
-    xp: 200,
-  },
-  {
-    id: 'a2',
-    title: 'Colaboración de Impacto',
-    description: 'Ayudaste en el proyecto de sostenibilidad urbana.',
-    emoji: '🌿',
-    date: 'Hace 1 semana',
-    xp: 350,
-  },
-  {
-    id: 'a3',
-    title: '7 días de racha',
-    description: 'Una semana seguida conectada con tu comunidad.',
-    emoji: '🔥',
-    date: 'Hace 2 semanas',
-    xp: 150,
-  },
-  {
-    id: 'a4',
-    title: 'Mentora del Campus',
-    description: 'Ayudaste a 3 compañeros de primer semestre.',
-    emoji: '⭐',
-    date: 'Hace 3 semanas',
-    xp: 300,
   },
 ];
 export const interestOptions = [
