@@ -7,7 +7,8 @@ import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 
 // Mascot Assets
-import mascotChateando from '../assets/mascota_chateando.png';
+import mascotaChateando from '../assets/mascota_chateando.png';
+import mascotaDurmiendo from '../assets/mascota_durmiendo.png';
 
 // Categories Types
 type CategoryType = 'all' | 'chat' | 'match' | 'event' | 'parches';
@@ -88,9 +89,17 @@ const SPEECH_BUBBLES = [
   "Chateando con el servidor... ¡Todo en orden por aquí!",
   "Parece que no tienes notificaciones en esta categoría.",
   "¡Pssst! Si pulsas la tecla 'X' de tu teclado te enviaré una sorpresa...",
-  "¡Escríbele a alguien! Estaré aquí cuidando tu buzón de entrada.",
+  "¡Escríbele a alguien! Estaeré aquí cuidando tu buzón de entrada.",
   "¡Me encantan las pantallas táctiles! Chatear con amigos del campus es lo mejor."
 ];
+
+const SLEEPY_SPEECH_BUBBLES: Record<CategoryType, string> = {
+  all: "Zzz... Qué paz... No tienes ninguna notificación. ¡Déjame dormir un ratito más! 😴",
+  chat: "Zzz... Por ahora no hay chismes ni mensajes. Qué silencio tan arrullador... 💤",
+  match: "Zzz... Cupido también está tomando una siesta... No hay nuevos matches por hoy. ♥",
+  event: "Zzz... Todo tranquilo en el campus... Ningún evento nuevo por agendar... 📅",
+  parches: "Zzz... Los parches están en pausa por hoy... Esperando invitaciones de tus amigos. 🍻"
+};
 
 // Generator template lists
 const DEMO_NOTIFICATIONS = [
@@ -138,8 +147,7 @@ const DEMO_NOTIFICATIONS = [
 
 export function NotificationsPage() {
   const navigate = useNavigate();
-  const { isDark } = useApp();
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const { isDark, notificationsList: notifications, setNotificationsList: setNotifications } = useApp();
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
   const [bubbleText, setBubbleText] = useState(SPEECH_BUBBLES[0]);
 
@@ -476,7 +484,7 @@ export function NotificationsPage() {
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2.5 custom-scrollbar min-h-0">
               <AnimatePresence mode="popLayout">
                 {filteredNotifications.length === 0 ? (
-                  /* GORGEOUS MINECRAFT-STYLE HIGH-FIDELITY MASCOT EMPTY STATE */
+                  /* GORGEOUS HIGH-FIDELITY MASCOT SLEEPING EMPTY STATE */
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -489,7 +497,7 @@ export function NotificationsPage() {
                       
                       {/* Premium Speech Bubble */}
                       <motion.div
-                        key={bubbleText} // trigger animations when speech text changes!
+                        key={activeCategory + (bubbleText.includes("¡Bip bip!") || bubbleText.includes("¡Alerta recibida!") ? "_feedback" : "_sleep")}
                         initial={{ opacity: 0, y: 12, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -12, scale: 0.9 }}
@@ -506,7 +514,12 @@ export function NotificationsPage() {
                           boxShadow: '0 8px 32px 0 rgba(10, 25, 47, 0.05)'
                         }}
                       >
-                        <span className="relative z-10">{bubbleText}</span>
+                        <span className="relative z-10">
+                          {bubbleText.includes("¡Bip bip!") || bubbleText.includes("¡Alerta recibida!")
+                            ? bubbleText
+                            : (SLEEPY_SPEECH_BUBBLES[activeCategory] || SLEEPY_SPEECH_BUBBLES.all)
+                          }
+                        </span>
                         {/* Triangle arrow */}
                         <div 
                           className="absolute left-1/2 -bottom-2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px]"
@@ -516,27 +529,27 @@ export function NotificationsPage() {
                         />
                       </motion.div>
 
-                      {/* Mascot Texting Animation */}
+                      {/* Mascot Sleeping Animation */}
                       <motion.div
                         animate={{ 
-                          y: [0, -10, 0],
+                          y: [0, -6, 0],
+                          scale: [1, 1.02, 1]
                         }}
                         transition={{ 
-                          duration: 4, 
+                          duration: 5, 
                           repeat: Infinity, 
                           ease: "easeInOut" 
                         }}
                         className="relative w-40 h-40 flex items-center justify-center select-none"
                       >
                         <img 
-                          src={mascotaChateando} 
-                          alt="Paty chateando" 
-                          className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(59,130,246,0.3)]" 
+                          src={mascotaDurmiendo} 
+                          alt="Paty durmiendo" 
+                          className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(30,58,95,0.25)]" 
                         />
                         
-                        {/* Glowing phone light effect */}
-                        <div className="absolute top-[52%] left-[62%] w-6 h-6 rounded-full bg-cyan-400/40 blur-md animate-pulse pointer-events-none" />
-                        <div className="absolute top-[53%] left-[63%] w-2 h-2 rounded-full bg-cyan-200/70 blur-xs animate-ping pointer-events-none" />
+                        {/* Soft night/sleeping glow effect */}
+                        <div className="absolute top-[48%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-indigo-500/10 dark:bg-purple-500/15 blur-xl pointer-events-none animate-pulse" />
                       </motion.div>
                     </div>
 
