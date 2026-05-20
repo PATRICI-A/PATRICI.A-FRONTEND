@@ -197,13 +197,22 @@ export function ForgotPasswordPage() {
                 >
                   {}
                   <div className="mb-8 mt-2">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-left">
+                    <div className="flex items-center gap-3 md:hidden">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-transparent flex items-center justify-center flex-shrink-0">
+                        <img src={patiContrasena} alt="Patricia" className="w-full h-full object-contain" />
+                      </div>
+                      <div className="flex-1 text-center">
                         <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
                           Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
                         </p>
-                        </div>
+                      </div>
+                    </div>
+                    <div className="hidden md:block text-center">
+                      <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                        Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
+                      </p>
                     </div>
                   </div>
                   {}
