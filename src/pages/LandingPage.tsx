@@ -6,6 +6,10 @@ import { useApp } from '../store/AppContext';
 import { GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import mascotImg from '../assets/mascota_cta_2.png';
+import mascotFeatureImg from '../assets/mascota_features.png';
+import mascotMatch from '../assets/mascota_bienestar_v2.png';
+import mascotParche from '../assets/mascota_parche_v2.png';
+import mascotBienestar from '../assets/mascota_match_v2.png';
 import slide1 from '../assets/imagen_1_u.jpg';
 import slide2 from '../assets/imagen_2_u.jpg';
 import slide3 from '../assets/imagen_3_u.jpg';
@@ -20,15 +24,15 @@ const slides = [
   { title: 'El mejor campus', highlight: 'a tu disposición', description: 'Disfruta de instalaciones modernas para estudiar y relajarte con la mejor compañía.', image: slide4, color: '#10B981', position: 'center' },
   { title: 'Momentos', highlight: 'inolvidables', description: 'Crea recuerdos que durarán toda la vida con tu grupo de amigos.', image: slideNuevo2, color: '#F43F5E', position: 'top' },
   { title: 'Descubre', highlight: 'parches increíbles', description: 'Desde sesiones de estudio hasta conciertos. Siempre hay algo para ti.', image: slide3, color: '#8B5CF6', position: 'center 20%' },
-  { title: 'Experiencias', highlight: 'que transforman', description: 'Aprovecha cada rincón de la universidad para crecer personal y académicamente.', image: slide6, color: '#EC4899', position: 'center' },
+  { title: 'Experiencias', highlight: 'que transforman', description: 'Aprovecha cada rincón de la universidad para crecer personal y académicamente.', image: slide6, color: '#D946EF', position: 'center' },
   { title: 'Comunidad', highlight: 'siempre activa', description: 'Nunca te perderás de lo que está pasando gracias a nuestra red integrada.', image: slide2, color: '#06B6D4', position: 'top' },
 ];
 
 const features = [
-  { icon: Zap, title: 'Match por Intereses', description: 'Conecta con personas que comparten tus pasiones y estilo de vida en el campus.', gradient: GRADIENT, glow: 'rgba(59, 130, 246, 0.5)' },
-  { icon: Users, title: 'Crea tu Parche', description: 'Arma planes públicos o privados, invita amigos y vive la universidad al máximo.', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)', glow: 'rgba(139, 92, 246, 0.5)' },
-  { icon: Calendar, title: 'Eventos del Campus', description: 'Descubre y participa en todos los eventos universitarios en un solo lugar.', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)', glow: 'rgba(16, 185, 129, 0.5)' },
-  { icon: Heart, title: 'Bienestar y Soporte', description: 'Tu salud mental importa. Accede a soporte emocional y recursos de bienestar 24/7.', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)', glow: 'rgba(2, 132, 199, 0.5)' },
+  { icon: Zap, title: 'Match por Intereses', description: 'Conecta con personas que comparten tus pasiones y estilo de vida en el campus.', gradient: GRADIENT, glow: 'rgba(59, 130, 246, 0.5)', image: mascotMatch, imageClassName: 'translate-x-4' },
+  { icon: Users, title: 'Crea tu Parche', description: 'Arma planes públicos o privados, invita amigos y vive la universidad al máximo.', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)', glow: 'rgba(139, 92, 246, 0.5)', image: mascotParche, imageClassName: '-translate-x-12' },
+  { icon: Heart, title: 'Bienestar Estudiantil', description: 'Acceso directo a apoyo psicológico, servicios de salud y tips para una vida equilibrada.', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)', glow: 'rgba(16, 185, 129, 0.5)', image: mascotBienestar, imageClassName: 'translate-x-16' },
+  { icon: Calendar, title: 'Eventos del Campus', description: 'Descubre y participa en todos los eventos universitarios en un solo lugar.', gradient: 'linear-gradient(135deg, #F59E0B 0%, #F43F5E 100%)', glow: 'rgba(245, 158, 11, 0.5)', image: mascotFeatureImg, imageClassName: 'translate-x-0' },
 ];
 
 const patriciaRarities = [
@@ -188,7 +192,7 @@ export function LandingPage() {
                       <h1 className="text-white mb-4 font-extrabold drop-shadow-2xl text-4xl sm:text-5xl lg:text-6xl leading-[1.1] max-w-4xl tracking-tight">
                         {slides[currentSlide].title}{' '}
                         <br className="hidden md:block" />
-                        <span style={{ background: GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', paddingBottom: '0.1em' }}>
+                        <span style={{ color: slides[currentSlide].color, paddingBottom: '0.1em', transition: 'color 1.5s ease-in-out' }}>
                           {slides[currentSlide].highlight}
                         </span>
                       </h1>
@@ -200,8 +204,8 @@ export function LandingPage() {
                       <div className="flex flex-col sm:flex-row gap-4 max-w-md">
                         <button
                           onClick={() => navigate('/register')}
-                          className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105 active:scale-95 flex-1 shadow-[0_10px_30px_rgba(59,130,246,0.3)] hover:shadow-[0_10px_40px_rgba(59,130,246,0.5)] border border-white/10"
-                          style={{ background: GRADIENT }}
+                          className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105 active:scale-95 flex-1 shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.4)] border border-white/10"
+                          style={{ backgroundColor: slides[currentSlide].color, transition: 'background-color 1.5s ease-in-out' }}
                         >
                           Empezar ahora
                         </button>
@@ -253,11 +257,13 @@ export function LandingPage() {
                 transition={{ duration: 0.4, ease: "circOut" }}
                 className="w-full"
               >
-                <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-2xl w-full rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-white/50 dark:border-white/10 flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden group">
+                <div className="w-full relative flex flex-col md:flex-row items-center gap-8 md:gap-12 group p-8 md:p-12 z-10 min-h-[250px]">
                   
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none" style={{ background: `radial-gradient(circle at center, ${features[currentFeatureIndex].glow}, transparent 70%)` }} />
+                  <div className="absolute inset-0 bg-white/80 dark:bg-[#112240]/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden pointer-events-none -z-10">
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none" style={{ background: `radial-gradient(circle at center, ${features[currentFeatureIndex].glow}, transparent 70%)` }} />
+                  </div>
 
-                  <div className="relative">
+                  <div className="relative z-10">
                     <div className="absolute inset-0 rounded-3xl blur-2xl opacity-50" style={{ background: features[currentFeatureIndex].gradient }} />
                     <motion.div 
                       animate={{ y: [0, -10, 0] }} 
@@ -272,9 +278,25 @@ export function LandingPage() {
                     </motion.div>
                   </div>
 
-                  <div className="flex-1 text-center md:text-left z-10">
+                  <div className="flex-1 text-center md:text-left z-10 pr-0 md:pr-48">
                     <h3 className="text-2xl md:text-3xl text-gray-900 dark:text-white mb-4 font-bold tracking-tight">{features[currentFeatureIndex].title}</h3>
-                    <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed">{features[currentFeatureIndex].description}</p>
+                    <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">{features[currentFeatureIndex].description}</p>
+                  </div>
+
+                  <div className="hidden md:block absolute -right-4 -bottom-10 h-[320px] w-[450px] z-20 pointer-events-auto flex items-end justify-end">
+                    <motion.img 
+                      key={`mascot-${currentFeatureIndex}`}
+                      src={features[currentFeatureIndex].image} 
+                      alt="Mascota interactiva" 
+                      className={`max-w-full max-h-full object-contain object-bottom drop-shadow-[0_20px_40px_rgba(0,0,0,0.3)] cursor-grab active:cursor-grabbing ${features[currentFeatureIndex].imageClassName}`}
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      whileHover={{ scale: 1.05, rotate: 2 }}
+                      whileTap={{ scale: 0.95, rotate: -3 }}
+                      drag
+                      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                      dragElastic={0.2}
+                    />
                   </div>
                 </div>
               </motion.div>
