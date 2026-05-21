@@ -1,3 +1,17 @@
+import imgTourCampus from '../../Imagenes_monas/Edificios/Tour por el campus.png';
+import imgConquistadorCampus from '../../Imagenes_monas/Legendarias/Conquistador del campus.png';
+import imgLeyendaCampus from '../../Imagenes_monas/Legendarias/Leyenda del Campus.png';
+import imgAnfitrion from '../../Imagenes_monas/Networking/Anfitrion.png';
+import imgCapitanEquipo from '../../Imagenes_monas/Networking/Capitan de Equipo.png';
+import imgConectorVeloz from '../../Imagenes_monas/Networking/Conector veloz.png';
+import imgIniciadorParche from '../../Imagenes_monas/Networking/Iniciador de parche.png';
+import imgNetworking25 from '../../Imagenes_monas/Networking/Networking 25.png';
+import imgNetworking5 from '../../Imagenes_monas/Networking/Networking 5.png';
+import imgOrganizadorElite from '../../Imagenes_monas/Networking/Organizador de elite.png';
+import imgPrimerContacto from '../../Imagenes_monas/Networking/Primer Contacto.png';
+import imgPrimerMensajero from '../../Imagenes_monas/Networking/Primer Mensajero.png';
+import imgMaratonUniversitaria from '../../Imagenes_monas/Zonas y actividad/Maraton Universitaria.png';
+
 export interface MatchUser {
   id: string;
   name: string;
@@ -95,10 +109,11 @@ export interface Mona {
   color: string;
   bgColor: string;
   rarity: 'común' | 'poco común' | 'raro' | 'épico' | 'legendario';
-  category: 'tecnología' | 'social' | 'deporte' | 'cultura' | 'bienestar' | 'academia' | 'especial';
+  category: 'networking' | 'cafeterias' | 'edificios' | 'actividad' | 'eventos' | 'legendarias';
   unlocked: boolean;
   unlockedAt?: string;
   xp: number;
+  image?: string;
   imgSrc?: string;
 }
 export interface Notification {
@@ -150,63 +165,63 @@ export interface EventEnvelope {
 export const EVENT_ENVELOPES: EventEnvelope[] = [
   {
     code: 'PATRICIA-TECH-001',
-    monaIds: ['hackathon-hero', 'bug-hunter'],
-    label: 'Sobre Tech Avanzado',
-    theme: 'tecnología',
+    monaIds: ['patricia-primer-contacto', 'patricia-conector-veloz'],
+    label: 'Sobre Red Rápida',
+    theme: 'networking',
     color: '#3B82F6',
     gradient: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
     emoji: '⚡',
-    description: 'Monas exclusivas del mundo tecnológico universitario',
+    description: 'Patricias exclusivas para conexiones y parches',
   },
   {
     code: 'PATRICIA-SOCIAL-002',
-    monaIds: ['lider-nato', 'campus-star'],
-    label: 'Sobre Líder Social',
-    theme: 'social',
+    monaIds: ['patricia-networking-5', 'patricia-networking-10'],
+    label: 'Sobre Conexiones Pro',
+    theme: 'networking',
     color: '#06B6D4',
     gradient: 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)',
-    emoji: '👑',
-    description: 'Para los líderes natos del campus universitario',
+    emoji: '👥',
+    description: 'Construye tu red social estudiantil',
   },
   {
     code: 'PATRICIA-CULTURA-003',
-    monaIds: ['creator', 'culture-vulture', 'cinefilo'],
-    label: 'Sobre Cultural Élite',
-    theme: 'cultura',
+    monaIds: ['patricia-iniciador', 'patricia-organizador-elite'],
+    label: 'Sobre Organizador',
+    theme: 'networking',
     color: '#8B5CF6',
     gradient: 'linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%)',
-    emoji: '🎨',
-    description: 'Arte, música y experiencias culturales únicas',
+    emoji: '🔥',
+    description: 'Para los creadores de parches y eventos',
   },
   {
     code: 'PATRICIA-WELLNESS-004',
-    monaIds: ['healer', 'balance-pro', 'zen-master'],
-    label: 'Sobre Bienestar Pleno',
-    theme: 'bienestar',
+    monaIds: ['patricia-zen-master', 'patricia-noctambulo-academico'],
+    label: 'Sobre Exploración',
+    theme: 'actividad',
     color: '#10B981',
     gradient: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-    emoji: '💚',
-    description: 'Equilibrio, salud mental y bienestar universitario',
+    emoji: '🧘',
+    description: 'Equilibrio, lugares icónicos y campus nocturno',
   },
   {
     code: 'PATRICIA-ACADEMIA-005',
-    monaIds: ['cum-laude', 'perfect-score', 'study-streak'],
-    label: 'Sobre Académico Elite',
-    theme: 'academia',
+    monaIds: ['patricia-primer-mensajero', 'patricia-amanecer-productivo'],
+    label: 'Sobre Esfuerzo',
+    theme: 'actividad',
     color: '#6366F1',
     gradient: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)',
-    emoji: '🎓',
-    description: 'El reconocimiento a la excelencia académica',
+    emoji: '🌅',
+    description: 'Reconocimiento a la actividad diaria del campus',
   },
   {
     code: 'PATRICIA-LEGEND-006',
-    monaIds: ['campus-legend', 'social-100', 'ai-whiz'],
+    monaIds: ['patricia-networking-50', 'patricia-embajador-campus', 'patricia-leyenda-campus'],
     label: '✨ Sobre Legendario',
-    theme: 'especial',
+    theme: 'legendarias',
     color: '#F59E0B',
     gradient: 'linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%)',
     emoji: '🌟',
-    description: '¡El sobre más exclusivo y raro de patrici.a!',
+    description: '¡El sobre con patricias más exclusivo de patrici.a!',
   },
 ];
 export const matchUsers: MatchUser[] = [
@@ -798,45 +813,52 @@ export const vibraCategories = [
   { id: 'v6', name: 'Arte y Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
 ];
 export const monas: Mona[] = [
-  // Patricias - Visita del Campus
-  { id: 'patricia-cafe', name: 'Explorador de Cafeterías', description: 'Café con clase: Visita las 4 cafeterías del campus (Central, Regio, Leyenda, Harvies).', emoji: '☕', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'poco común', unlocked: true, unlockedAt: 'Ayer', xp: 200 },
-  { id: 'patricia-tour', name: 'Tour por el Campus', description: 'Ingeniero en movimiento: Visita todos los edificios (A al I).', emoji: '🏢', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
-  { id: 'patricia-zen', name: 'Zen Máster', description: 'Paz entre circuitos: Visita el Lago y Centro de Reflexión.', emoji: '🧘', category: 'especial', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 semana', xp: 200 },
-  { id: 'patricia-atleta', name: 'Atleta de Patio', description: 'Dunk en el campus: Visita la cancha de baloncesto al aire libre.', emoji: '🏀', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'poco común', unlocked: false, xp: 150 },
-  { id: 'patricia-conquistador', name: 'Conquistador del Campus', description: 'Arquitecto de rutas: Visita todos los lugares y edificios del campus.', emoji: '🗺️', category: 'especial', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 1000 },
-  
-  // Patricias - Conexión y Acción
-  { id: 'patricia-primer-contacto', name: 'Primer Contacto', description: 'Realizar tu primera conexión con otro usuario.', emoji: '🤝', category: 'social', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 50 },
-  { id: 'patricia-networking-5', name: 'Networking 5', description: 'Acumular 5 conexiones activas.', emoji: '👥', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 150 },
-  { id: 'patricia-networking-10', name: 'Networking 10', description: 'Acumular 10 conexiones activas.', emoji: '🌐', category: 'social', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 350 },
-  { id: 'patricia-iniciador', name: 'Iniciador de Parche', description: 'Unirte o crear tu primer parche.', emoji: '⚡', category: 'social', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 3 semanas', xp: 75 },
-  { id: 'patricia-capitan', name: 'Capitán de Equipo', description: 'Crear 2 parches como capitán.', emoji: '🏅', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'poco común', unlocked: false, xp: 200 },
-  { id: 'patricia-planificador', name: 'Planificador Pro', description: 'Crear un parche con más de 3 días de anticipación.', emoji: '📅', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 75 },
-  { id: 'patricia-explorador-1', name: 'Explorador Nivel 1', description: 'Visitar 3 zonas distintas del campus.', emoji: '📍', category: 'especial', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75 },
-  { id: 'patricia-explorador-2', name: 'Explorador Nivel 2', description: 'Visitar 5 zonas distintas del campus.', emoji: '🗺️', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'poco común', unlocked: false, xp: 175 },
-  { id: 'patricia-asistente-vip', name: 'Asistente VIP', description: 'Asistir a un evento institucional guardado.', emoji: '🎟️', category: 'especial', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'raro', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 300 },
-  { id: 'patricia-primer-mensajero', name: 'Primer Mensajero', description: 'Enviar el primer mensaje en un parche recién creado.', emoji: '💬', category: 'social', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 semanas', xp: 100 },
-  { id: 'patricia-anfitrion', name: 'Anfitrión', description: 'Tener un usuario uniéndose a un parche que creaste.', emoji: '🏠', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: false, xp: 75 },
-  { id: 'patricia-conector-veloz', name: 'Conector Veloz', description: 'Pasar de 0 a 10 conexiones en < 30 días.', emoji: '🚀', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 850 },
-  { id: 'patricia-leyenda', name: 'Leyenda del Campus', description: 'Desbloquear las 12 patricias anteriores.', emoji: '👑', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1500 },
+  // 🤝 Networking (12 medallas)
+  { id: 'patricia-primer-contacto', name: 'Primer Contacto', description: 'Realizar tu primera conexión.', emoji: '🤝', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 50, image: imgPrimerContacto },
+  { id: 'patricia-networking-5', name: 'Networking 5', description: 'Tener 5 conexiones activas.', emoji: '👥', category: 'networking', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 150, image: imgNetworking5 },
+  { id: 'patricia-networking-10', name: 'Networking 10', description: 'Tener 10 conexiones activas.', emoji: '🌐', category: 'networking', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 350 },
+  { id: 'patricia-networking-25', name: 'Networking 25', description: 'Tener 25 conexiones activas.', emoji: '🗣️', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 700, image: imgNetworking25 },
+  { id: 'patricia-networking-50', name: 'Networking 50', description: 'Tener 50 conexiones activas.', emoji: '👑', category: 'networking', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1200 },
+  { id: 'patricia-iniciador', name: 'Iniciador de Parche', description: 'Crear o unirte a tu primer parche.', emoji: '⚡', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 3 semanas', xp: 75, image: imgIniciadorParche },
+  { id: 'patricia-capitan', name: 'Capitán de Equipo', description: 'Crear 2 parches.', emoji: '🏅', category: 'networking', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 200, image: imgCapitanEquipo },
+  { id: 'patricia-organizador-elite', name: 'Organizador Elite', description: 'Crear 10 parches exitosos.', emoji: '🔥', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 500, image: imgOrganizadorElite },
+  { id: 'patricia-primer-mensajero', name: 'Primer Mensajero', description: 'Enviar el primer mensaje de un parche.', emoji: '💬', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 semanas', xp: 100, image: imgPrimerMensajero },
+  { id: 'patricia-anfitrion', name: 'Anfitrión', description: 'Lograr que alguien se una a tu parche.', emoji: '🏠', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgAnfitrion },
+  { id: 'patricia-conector-veloz', name: 'Conector Veloz', description: 'Llegar a 10 conexiones en menos de 30 días.', emoji: '🚀', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 850, image: imgConectorVeloz },
+  { id: 'patricia-embajador-campus', name: 'Embajador del Campus', description: 'Ayudar a conectar estudiantes de múltiples carreras.', emoji: '🌍', category: 'networking', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1500 },
 
-  // Monas de Eventos (Códigos)
-  { id: 'hackathon-hero', name: 'Hackathon Hero', description: '48 horas de pura innovación', emoji: '⚡', category: 'tecnología', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'épico', unlocked: false, xp: 300 },
-  { id: 'bug-hunter', name: 'Bug Hunter', description: 'Ningún error se te escapa', emoji: '🐛', category: 'tecnología', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'común', unlocked: false, xp: 75 },
-  { id: 'lider-nato', name: 'Líder Nato', description: 'Naciste para guiar comunidades', emoji: '👑', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 600 },
-  { id: 'campus-star', name: 'Campus Star', description: 'Todos te conocen en el campus', emoji: '⭐', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 280 },
-  { id: 'creator', name: 'Creator', description: 'La creatividad no tiene límites', emoji: '🎨', category: 'cultura', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 550 },
-  { id: 'culture-vulture', name: 'Culture Vulture', description: 'Devorador de experiencias culturales', emoji: '🦚', category: 'cultura', color: '#10B981', bgColor: '#ECFDF5', rarity: 'raro', unlocked: false, xp: 160 },
-  { id: 'cinefilo', name: 'Cinéfilo', description: 'El cine lo es todo para ti', emoji: '🎬', category: 'cultura', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 140 },
-  { id: 'healer', name: 'Healer', description: 'Apoyo incondicional para la comunidad', emoji: '💚', category: 'bienestar', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 500 },
-  { id: 'balance-pro', name: 'Balance Pro', description: 'Estudias, descansas y vives en equilibrio', emoji: '⚖️', category: 'bienestar', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 270 },
-  { id: 'zen-master', name: 'Zen Master', description: 'Paz interior en el caos universitario', emoji: '🧘', category: 'bienestar', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 130 },
-  { id: 'cum-laude', name: 'Cum Laude', description: 'La máxima distinción académica', emoji: '📜', category: 'academia', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 600 },
-  { id: 'perfect-score', name: 'Perfect Score', description: 'La excelencia es tu estándar', emoji: '💯', category: 'academia', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 320 },
-  { id: 'study-streak', name: 'Study Streak', description: 'La constancia es tu superpoder', emoji: '📖', category: 'academia', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'raro', unlocked: false, xp: 130 },
-  { id: 'campus-legend', name: 'Campus Legend', description: '¡Eres parte de la historia de patrici.a!', emoji: '🌟', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 800 },
-  { id: 'social-100', name: 'Social 100', description: 'La élite social del campus', emoji: '🎊', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 700 },
-  { id: 'ai-whiz', name: 'AI Whiz', description: 'El futuro está en tus manos', emoji: '🤖', category: 'tecnología', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 500 },
+  // ☕ Cafeterías (4 medallas)
+  { id: 'patricia-explorador-cafeterias', name: 'Explorador de Cafeterías', description: '“Café con clase” — Visita Central, Regio, Leyenda y Harvies.', emoji: '☕', category: 'cafeterias', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Ayer', xp: 200 },
+  { id: 'patricia-fan-regio', name: 'Fan del Regio', description: '“Combo universitario” — Visita Regio 5 veces.', emoji: '🥤', category: 'cafeterias', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 100 },
+  { id: 'patricia-cliente-frecuente', name: 'Cliente Frecuente', description: '“Mesa reservada” — Visita cafeterías 15 veces.', emoji: '🍽️', category: 'cafeterias', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 250 },
+  { id: 'patricia-ruta-cafe', name: 'Ruta del Café', description: '“Barista académico” — Visita todas las cafeterías del campus.', emoji: '🍩', category: 'cafeterias', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 450 },
+
+  // 🏛️ Edificios (10 medallas)
+  { id: 'patricia-edificio-a', name: 'Edificio A', description: '“Inicio de misión” — Visita el edificio A.', emoji: '🅰️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75 },
+  { id: 'patricia-edificio-b', name: 'Edificio B', description: '“Ruta académica” — Visita el edificio B.', emoji: '🅱️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75 },
+  { id: 'patricia-edificio-c', name: 'Edificio C', description: '“Circuito completo” — Visita el edificio C.', emoji: '🅲', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-edificio-d', name: 'Edificio D', description: '“Modo ingeniero” — Visita el edificio D.', emoji: '🅳', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-edificio-e', name: 'Edificio E', description: '“En construcción” — Visita el edificio E.', emoji: '🅔', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-edificio-f', name: 'Edificio F', description: '“Punto de encuentro” — Visita el edificio F.', emoji: '🅵', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-edificio-g', name: 'Edificio G', description: '“Zona de proyectos” — Visita el edificio G.', emoji: '🅶', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-edificio-h', name: 'Edificio H', description: '“Nivel avanzado” — Visita el edificio H.', emoji: '🅗', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-edificio-i', name: 'Edificio I', description: '“Destino final” — Visita el edificio I.', emoji: 'ℹ️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75 },
+  { id: 'patricia-tour-campus', name: 'Tour por el Campus', description: '“Ingeniero en movimiento” — Visita todos los edificios A-I.', emoji: '🏢', category: 'edificios', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 500, image: imgTourCampus },
+
+  // 🌿 Lugares Emblemáticos y Actividad (5 medallas)
+  { id: 'patricia-zen-master', name: 'Zen Máster', description: '“Paz entre circuitos” — Visita el Lago y Centro de Reflexión.', emoji: '🧘', category: 'actividad', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 semana', xp: 200 },
+  { id: 'patricia-atleta-patio', name: 'Atleta de Patio', description: '“Dunk en el campus” — Visita la cancha de baloncesto.', emoji: '🏀', category: 'actividad', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 150 },
+  { id: 'patricia-maraton-universitaria', name: 'Maratón Universitaria', description: '“Sin perder el parcial” — Recorrer 5 zonas en un día.', emoji: '🏃', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 400, image: imgMaratonUniversitaria },
+  { id: 'patricia-noctambulo-academico', name: 'Noctámbulo Académico', description: '“Último en salir” — Permanecer en campus en horario nocturno.', emoji: '🦉', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
+  { id: 'patricia-amanecer-productivo', name: 'Amanecer Productivo', description: '“Primera clase survivor” — Ingresar antes de las 7 AM durante 5 días.', emoji: '🌅', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
+
+  // 🎉 Eventos y Participación (2 medallas)
+  { id: 'patricia-asistente-vip', name: 'Asistente VIP', description: '“Siempre presente” — Asistir a un evento institucional.', emoji: '🎟️', category: 'eventos', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
+  { id: 'patricia-invitado-especial', name: 'Invitado Especial', description: '“Figura pública” — Asistir a 5 eventos.', emoji: '👑', category: 'eventos', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 500 },
+
+  // 👑 Medallas Legendarias (2 medallas)
+  { id: 'patricia-conquistador-campus', name: 'Conquistador del Campus', description: 'Visitar todos los lugares importantes.', emoji: '🗺️', category: 'legendarias', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 1000, image: imgConquistadorCampus },
+  { id: 'patricia-leyenda-campus', name: 'Leyenda del Campus', description: 'Obtener 30 patricias.', emoji: '🌟', category: 'legendarias', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1500, image: imgLeyendaCampus },
 ];
 export const directChats: DirectChat[] = [
   {

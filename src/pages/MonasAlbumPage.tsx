@@ -87,20 +87,20 @@ const REWARDS = [
 ];
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '✨', color: '#3B82F6' },
-  { id: 'live-music', label: 'Live Music', emoji: '🎵', color: '#8B5CF6' },
-  { id: 'outdoor', label: 'Outdoor', emoji: '🌲', color: '#10B981' },
-  { id: 'study', label: 'Study', emoji: '📚', color: '#3B82F6' },
-  { id: 'foodie', label: 'Foodie', emoji: '🍕', color: '#F59E0B' },
-  { id: 'gaming', label: 'Gaming', emoji: '🎮', color: '#6366F1' },
-  { id: 'arte', label: 'Arte', emoji: '🎨', color: '#EC4899' },
+  { id: 'networking', label: 'Networking', emoji: '🤝', color: '#3B82F6' },
+  { id: 'cafeterias', label: 'Cafeterías', emoji: '☕', color: '#F59E0B' },
+  { id: 'edificios', label: 'Edificios', emoji: '🏛️', color: '#6366F1' },
+  { id: 'actividad', label: 'Zonas y Actividad', emoji: '🌿', color: '#10B981' },
+  { id: 'eventos', label: 'Eventos', emoji: '🎉', color: '#EC4899' },
+  { id: 'legendarias', label: 'Legendarias', emoji: '👑', color: '#F59E0B' },
 ];
 // Removed BADGES array as per refactoring
 const DEMO_CODES = [
-  { code: 'PATRICIA-TECH-001', label: 'Tech', color: '#3B82F6', emoji: '⚡' },
-  { code: 'PATRICIA-SOCIAL-002', label: 'Social', color: '#06B6D4', emoji: '👑' },
-  { code: 'PATRICIA-CULTURA-003', label: 'Cultura', color: '#8B5CF6', emoji: '🎨' },
-  { code: 'PATRICIA-WELLNESS-004', label: 'Bienestar', color: '#10B981', emoji: '💚' },
-  { code: 'PATRICIA-ACADEMIA-005', label: 'Academia', color: '#6366F1', emoji: '🎓' },
+  { code: 'PATRICIA-TECH-001', label: 'Red Rápida', color: '#3B82F6', emoji: '⚡' },
+  { code: 'PATRICIA-SOCIAL-002', label: 'Conexiones Pro', color: '#06B6D4', emoji: '👥' },
+  { code: 'PATRICIA-CULTURA-003', label: 'Organizador', color: '#8B5CF6', emoji: '🔥' },
+  { code: 'PATRICIA-WELLNESS-004', label: 'Exploración', color: '#10B981', emoji: '🧘' },
+  { code: 'PATRICIA-ACADEMIA-005', label: 'Esfuerzo', color: '#6366F1', emoji: '🌅' },
   { code: 'PATRICIA-LEGEND-006', label: '★ Legendario', color: '#F59E0B', emoji: '🌟' },
 ];
 // Removed BadgeCard component
@@ -177,8 +177,8 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
             <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: CHROME.legendario }} />
           )}
           {}
-          <div className="absolute top-0.5 left-0.5 right-0.5 flex justify-between items-center z-10">
-            <span className="text-[6px] font-black px-1 py-0.5 rounded-full" style={{ background: cfg.tagBg, color: cfg.textColor }}>
+          <div className="absolute top-1 left-1 right-1 flex justify-between items-center z-10">
+            <span className="text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm" style={{ background: cfg.tagBg, color: cfg.textColor }}>
               {cfg.label.toUpperCase()}
             </span>
             <RarityStars count={cfg.stars} color={cfg.textColor} />
@@ -186,16 +186,22 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
           {}
           <div
             className="flex-1 flex items-center justify-center relative z-10"
-            style={{ marginTop: '14px', marginBottom: '2px' }}
+            style={{ marginTop: '12px', marginBottom: '2px' }}
           >
-            <EmojiIcon emoji={mona.emoji} size={24} color="white" strokeWidth={1.8} />
+            {mona.image ? (
+              <div className="w-[85%] h-[85%] flex items-center justify-center relative">
+                <img src={mona.image} alt={mona.name} className="w-full h-full object-contain drop-shadow-lg" />
+              </div>
+            ) : (
+              <EmojiIcon emoji={mona.emoji} size={32} color="white" strokeWidth={1.8} />
+            )}
           </div>
           {}
-          <div className="w-full px-1 pb-1 pt-0.5 text-center z-10" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <p className="text-[7px] font-black leading-tight truncate" style={{ color: cfg.textColor }}>
+          <div className="w-full px-2 pb-2 pt-1.5 text-center z-10" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <p className="text-[10px] sm:text-[11px] font-black leading-tight line-clamp-2 drop-shadow-md" style={{ color: cfg.textColor, minHeight: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
               {mona.name}
             </p>
-            <p className="text-[6px] mt-0.5" style={{ color: `${cfg.textColor}99` }}>+{mona.xp} XP</p>
+            <p className="text-[9px] sm:text-[10px] font-bold mt-0.5 drop-shadow-sm" style={{ color: `${cfg.textColor}99` }}>+{mona.xp} XP</p>
           </div>
         </div>
       </div>
@@ -300,6 +306,7 @@ function EventCodeModal({
   onSuccess: (envelope: EventEnvelope, monas: Mona[]) => void;
   usedCodes: string[];
 }) {
+  const { isDark } = useApp();
   const [step, setStep] = useState<'enter' | 'validating' | 'success' | 'error'>('enter');
   const [codeInput, setCodeInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -343,46 +350,62 @@ function EventCodeModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 pointer-events-none"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-[24px] pointer-events-auto transition-colors duration-300 ${
+        isDark ? 'bg-black/75' : 'bg-black/40'
+      }`}
     >
       <div 
-        className="w-full h-full flex flex-col items-center justify-center overflow-y-auto pointer-events-auto p-6 backdrop-blur-3xl" 
-        style={{ background: 'rgba(2,8,20,0.98)' }}
+        className="relative w-full max-w-[420px] h-[50vh] max-h-[50vh] flex flex-col items-center p-6 rounded-[32px] shadow-2xl transition-all duration-300 overflow-y-auto custom-scrollbar"
+        style={{ 
+          background: isDark ? 'linear-gradient(160deg, #0A1628, #112240)' : 'linear-gradient(160deg, #FDFCF8, #EDE9E0)', 
+          border: isDark ? '2px solid rgba(59,130,246,0.4)' : '2px solid rgba(59,130,246,0.25)',
+          boxShadow: isDark ? '0 12px 48px rgba(59,130,246,0.2)' : '0 12px 48px rgba(59,130,246,0.12)'
+        }}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 active:scale-95 transition-all z-50"
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+          className={`absolute top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            isDark 
+              ? 'bg-white/10 hover:bg-white/20 text-white' 
+              : 'bg-black/5 hover:bg-black/10 text-gray-800'
+          }`}
         >
-          <X size={24} className="text-white" />
+          <X size={20} />
         </button>
 
-        <div className="w-full max-w-[520px] flex flex-col items-center justify-center text-center px-4">
+        <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 mt-2">
           {/* Patricia branding */}
-          <div className="mb-6">
-            <p className="text-[11px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
-            <h2 className="text-white font-black text-3xl md:text-5xl tracking-tight">Ingresar Código</h2>
+          <div className="mb-2 text-center flex-shrink-0">
+            <h2 className={`font-black text-2xl tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Ingresar Código</h2>
           </div>
 
           {/* Mascot Image (MASCOTA-QR.png) */}
-          <div className="w-[280px] md:w-[450px] aspect-[2/3] relative mb-8 flex items-center justify-center">
+          <div className="relative w-[180px] md:w-[220px] flex-1 min-h-0 flex items-center justify-center mb-4">
             <img 
               src={imgMascotaQr} 
               alt="Mascota QR" 
-              className="w-full h-full object-contain drop-shadow-[0_20px_60px_rgba(59,130,246,0.3)]"
+              className={`w-full h-full object-contain transition-all ${
+                isDark 
+                  ? 'drop-shadow-[0_15px_40px_rgba(59,130,246,0.25)]' 
+                  : 'drop-shadow-[0_15px_30px_rgba(59,130,246,0.12)]'
+              }`}
             />
             {/* Overlay indicators (validating, success, error) */}
             {step === 'validating' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="p-6 rounded-[32px] bg-slate-950/85 border border-white/10 backdrop-blur-md flex flex-col items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+                <div className={`p-4 rounded-[24px] border flex flex-col items-center gap-3 shadow-xl backdrop-blur-md ${
+                  isDark 
+                    ? 'bg-slate-950/90 border-white/10 text-white' 
+                    : 'bg-white/95 border-gray-200 text-gray-800'
+                }`}>
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-12 h-12 rounded-full border-4 border-t-transparent"
+                    className="w-8 h-8 rounded-full border-4 border-t-transparent"
                     style={{ borderColor: `${GOLD_LIGHT} transparent transparent transparent` }}
                   />
-                  <p className="text-white/95 text-xs font-black tracking-widest uppercase">Validando...</p>
+                  <p className="text-[10px] font-black tracking-widest uppercase">Validando...</p>
                 </div>
               </div>
             )}
@@ -391,12 +414,20 @@ function EventCodeModal({
                 <motion.div
                   initial={{ scale: 0.6, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="p-6 rounded-[32px] bg-green-950/95 border border-green-500/30 backdrop-blur-md flex flex-col items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+                  className={`p-4 rounded-[24px] border backdrop-blur-md flex flex-col items-center gap-2 shadow-xl ${
+                    isDark 
+                      ? 'bg-green-950/95 border-green-500/30 text-green-400' 
+                      : 'bg-green-50/95 border-green-200 text-green-700'
+                  }`}
                 >
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-green-500/20 border-2 border-green-400">
-                    <CheckCircle size={32} className="text-green-400" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                    isDark 
+                      ? 'bg-green-500/20 border-green-400 text-green-400' 
+                      : 'bg-green-100 border-green-500 text-green-600'
+                  }`}>
+                    <CheckCircle size={24} />
                   </div>
-                  <p className="text-green-400 text-sm font-black uppercase tracking-widest">¡Código Válido!</p>
+                  <p className="text-xs font-black uppercase tracking-widest">¡Código Válido!</p>
                 </motion.div>
               </div>
             )}
@@ -405,19 +436,27 @@ function EventCodeModal({
                 <motion.div
                   initial={{ scale: 0.6, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="p-6 rounded-[32px] bg-red-950/95 border border-red-500/30 backdrop-blur-md flex flex-col items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+                  className={`p-4 rounded-[24px] border backdrop-blur-md flex flex-col items-center gap-2 shadow-xl ${
+                    isDark 
+                      ? 'bg-red-950/95 border-red-500/30 text-red-400' 
+                      : 'bg-red-50/95 border-red-200 text-red-700'
+                  }`}
                 >
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-red-500/20 border-2 border-red-400">
-                    <AlertCircle size={32} className="text-red-400" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                    isDark 
+                      ? 'bg-red-500/20 border-red-400 text-red-400' 
+                      : 'bg-red-100 border-red-500 text-red-600'
+                  }`}>
+                    <AlertCircle size={24} />
                   </div>
-                  <p className="text-red-400 text-sm font-black uppercase tracking-widest">Código Inválido</p>
+                  <p className="text-xs font-black uppercase tracking-widest">Código Inválido</p>
                 </motion.div>
               </div>
             )}
           </div>
 
           {/* Validation input & button */}
-          <div className="w-full">
+          <div className="w-full flex-shrink-0">
             <div className="flex gap-3">
               <input
                 ref={inputRef}
@@ -425,17 +464,24 @@ function EventCodeModal({
                 onChange={e => setCodeInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleValidate(codeInput)}
                 placeholder="Ej: PATRICIA-XXXX-000"
-                className="flex-1 px-5 py-4 rounded-2xl text-base text-white placeholder-white/20 focus:outline-none"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '2.5px solid rgba(255,255,255,0.08)' }}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
+                  isDark 
+                    ? 'text-white placeholder-white/20' 
+                    : 'text-gray-900 placeholder-gray-400'
+                }`}
+                style={{ 
+                  background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', 
+                  border: isDark ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.08)' 
+                }}
               />
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={() => handleValidate(codeInput)}
                 disabled={!codeInput.trim() || step === 'validating'}
-                className="px-8 py-4 rounded-2xl text-white font-black text-xs uppercase tracking-widest disabled:opacity-40 flex items-center gap-2 shadow-2xl transition-all"
+                className="px-6 py-3 rounded-xl text-white font-black text-[11px] uppercase tracking-widest disabled:opacity-40 flex items-center gap-1.5 shadow-xl transition-all"
                 style={{ background: GOLD_GRADIENT }}
               >
-                <Scan size={16} />
+                <Scan size={14} />
                 Validar
               </motion.button>
             </div>
@@ -445,12 +491,16 @@ function EventCodeModal({
               <motion.div
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 text-center"
+                className="mt-4 text-center pb-2"
               >
-                <p className="text-red-400 text-sm px-2 leading-relaxed">{errorMsg}</p>
+                <p className={`text-xs px-2 leading-relaxed ${isDark ? 'text-red-400' : 'text-red-600'}`}>{errorMsg}</p>
                 <button
                   onClick={() => { setStep('enter'); setCodeInput(''); setErrorMsg(''); }}
-                  className="mt-4 text-xs text-white/50 uppercase tracking-widest font-bold border border-white/10 hover:bg-white/5 px-6 py-2.5 rounded-xl transition-all"
+                  className={`mt-3 text-[10px] uppercase tracking-widest font-bold border px-6 py-2 rounded-xl transition-all ${
+                    isDark 
+                      ? 'text-white/50 border-white/10 hover:bg-white/5' 
+                      : 'text-gray-500 border-gray-200 hover:bg-gray-50'
+                  }`}
                 >
                   Intentar de nuevo
                 </button>
@@ -640,7 +690,13 @@ function EnvelopeModal({
                         <RarityStars count={cfg.stars} color={cfg.textColor} />
                       </div>
                       <div className="flex-1 flex items-center justify-center mt-3">
-                        <EmojiIcon emoji={card.emoji} size={32} color="white" strokeWidth={1.8} />
+                        {card.image ? (
+                          <div className="w-24 h-24 flex items-center justify-center relative">
+                            <img src={card.image} alt={card.name} className="w-full h-full object-contain drop-shadow-xl" />
+                          </div>
+                        ) : (
+                          <EmojiIcon emoji={card.emoji} size={32} color="white" strokeWidth={1.8} />
+                        )}
                       </div>
                       <div className="w-full text-center mt-1 px-1">
                         <p className="text-sm font-black leading-tight line-clamp-2" style={{ color: cfg.textColor }}>{card.name}</p>
@@ -717,7 +773,7 @@ function RouletteModal({ onClose, prizes, onFinish }: { onClose: () => void, pri
            }}>
              {prizes.map((p, i) => (
                 <div key={i} className="absolute inset-0 flex justify-center" style={{ transform: `rotate(${i * (360/prizes.length) + (360/prizes.length)/2}deg)` }}>
-                   <div className="pt-8 text-white font-black text-xs md:text-xl drop-shadow-md" style={{ writingMode: 'vertical-rl' }}>{p.name.toUpperCase()}</div>
+                   <div className="pt-8 text-white font-black text-xs md:text-xl drop-shadow-md" style={{ writingMode: 'vertical-rl' }}>{(p?.name || '').toUpperCase()}</div>
                 </div>
              ))}
            </div>
@@ -808,20 +864,9 @@ export function MonasAlbumPage() {
     duration: ((i * 11 + 3) % 3) + 2,
     delay: ((i * 7 + 2) % 20) * 0.1,
   })), []);
-  const categoryMap: Record<string, string[]> = {
-    'live-music': ['cultura'],
-    'outdoor': ['deporte'],
-    'study': ['academia'],
-    'foodie': ['social', 'especial'],
-    'gaming': ['tecnología'],
-    'arte': ['cultura'],
-  };
   const filteredMonas = activeCategory === 'todas'
     ? collection
-    : collection.filter(m => {
-        const mappedCategories = categoryMap[activeCategory];
-        return mappedCategories ? mappedCategories.includes(m.category) : false;
-      });
+    : collection.filter(m => m.category === activeCategory);
   const totalAlbumPages = Math.ceil(filteredMonas.length / monasPerPage);
   const pageMonas = filteredMonas.slice(albumPage * monasPerPage, (albumPage + 1) * monasPerPage);
   const goToPage = (dir: 1 | -1) => {
@@ -1189,11 +1234,11 @@ export function MonasAlbumPage() {
                 {/* === DESKTOP SPREAD (2 columns wrapper) === */}
                 {/* Left Page */}
                 <div className="hidden md:grid w-1/2 pr-12 grid-cols-3 gap-6 auto-rows-max">
-                  {pageMonas.slice(0, 6).map((mona, i) => (
+                  {pageMonas.slice(0, 9).map((mona, i) => (
                     <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
                   ))}
-                  {pageMonas.length < 6 && albumPage === totalAlbumPages - 1 &&
-                    Array.from({ length: 6 - pageMonas.length }).map((_, i) => (
+                  {pageMonas.length < 9 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 9 - pageMonas.length }).map((_, i) => (
                       <EmptySlotRender key={`el-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
                     ))
                   }
@@ -1201,17 +1246,17 @@ export function MonasAlbumPage() {
 
                 {/* Right Page */}
                 <div className="hidden md:grid w-1/2 pl-12 grid-cols-3 gap-6 auto-rows-max">
-                  {pageMonas.slice(6, 12).map((mona, i) => (
-                    <MonaSlotRender key={mona.id} mona={mona} i={i + 6} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                  {pageMonas.slice(9, 18).map((mona, i) => (
+                    <MonaSlotRender key={mona.id} mona={mona} i={i + 9} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
                   ))}
-                  {pageMonas.length >= 6 && pageMonas.length < 12 && albumPage === totalAlbumPages - 1 &&
-                    Array.from({ length: 12 - pageMonas.length }).map((_, i) => (
+                  {pageMonas.length >= 9 && pageMonas.length < 18 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 18 - pageMonas.length }).map((_, i) => (
                       <EmptySlotRender key={`er-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
                     ))
                   }
-                  {pageMonas.length < 6 && albumPage === totalAlbumPages - 1 &&
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <EmptySlotRender key={`er-all-${i}`} index={6 + i + (albumPage * monasPerPage)} />
+                  {pageMonas.length < 9 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 9 }).map((_, i) => (
+                      <EmptySlotRender key={`er-all-${i}`} index={9 + i + (albumPage * monasPerPage)} />
                     ))
                   }
                 </div>
@@ -1363,9 +1408,15 @@ export function MonasAlbumPage() {
                         <RarityStars count={R[selectedMona.rarity].stars} color={R[selectedMona.rarity].textColor} />
                       </div>
                       <div className="flex-1 flex items-center justify-center z-10 w-full">
-                        <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${R[selectedMona.rarity].glow}40` }}>
-                          <EmojiIcon emoji={selectedMona.emoji} size={80} color="white" strokeWidth={1.2} />
-                        </div>
+                        {selectedMona.image ? (
+                          <div className="w-48 h-48 flex items-center justify-center relative drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)]">
+                            <img src={selectedMona.image} alt={selectedMona.name} className="w-full h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${R[selectedMona.rarity].glow}40` }}>
+                            <EmojiIcon emoji={selectedMona.emoji} size={80} color="white" strokeWidth={1.2} />
+                          </div>
+                        )}
                       </div>
                       <div className="w-full text-center z-10 bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
                         <p className="text-xl font-black mb-1" style={{ color: R[selectedMona.rarity].textColor }}>{selectedMona.name}</p>
@@ -1562,70 +1613,78 @@ export function MonasAlbumPage() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/85 backdrop-blur-md z-40"
+              className={`fixed inset-0 backdrop-blur-[24px] z-40 transition-colors duration-300 ${
+                isDark ? 'bg-black/75' : 'bg-black/40'
+              }`}
             />
             {/* Botón X fuera de la carta */}
             <button
               onClick={handleCloseWelcome}
-              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
+              className={`fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md border ${
+                isDark 
+                  ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white' 
+                  : 'bg-black/5 hover:bg-black/10 border-black/10 text-gray-800'
+              }`}
             >
-              <X size={20} className="text-white" />
+              <X size={20} />
             </button>
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-5">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-              className="relative w-full max-w-[400px] rounded-3xl p-6 max-h-[85vh] overflow-y-auto pointer-events-auto custom-scrollbar"
-              style={{ 
-                background: 'linear-gradient(160deg, #0A1628, #112240)', 
-                border: '2px solid rgba(59,130,246,0.4)',
-                boxShadow: '0 12px 48px rgba(59,130,246,0.2)'
-              }}
-            >
-              <div className="text-center mb-5">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: GOLD_GRADIENT }}>
-                  <Library size={32} className="text-white" />
-                </div>
-                <h2 className="text-white font-black text-2xl">¡Bienvenido al Álbum!</h2>
-                <p className="text-blue-400 text-sm mt-1">Colecciona Patricias y gana recompensas</p>
-              </div>
-              <div className="space-y-4 mb-6">
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59,130,246,0.15)' }}>
-                    <Library size={20} className="text-blue-400" />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                className="relative w-full max-w-[420px] rounded-[32px] p-6 h-[62.5vh] max-h-[62.5vh] flex flex-col justify-between pointer-events-auto custom-scrollbar transition-all duration-300 overflow-y-auto"
+                style={{ 
+                  background: isDark ? 'linear-gradient(160deg, #0A1628, #112240)' : 'linear-gradient(160deg, #FDFCF8, #EDE9E0)', 
+                  border: isDark ? '2px solid rgba(59,130,246,0.4)' : '2px solid rgba(59,130,246,0.25)',
+                  boxShadow: isDark ? '0 12px 48px rgba(59,130,246,0.2)' : '0 12px 48px rgba(59,130,246,0.12)'
+                }}
+              >
+                <div>
+                  <div className="text-center mb-5">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 animate-bounce" style={{ background: GOLD_GRADIENT, animationDuration: '3s' }}>
+                      <Library size={28} className="text-white" />
+                    </div>
+                    <h2 className={`font-black text-2xl tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>¡Bienvenido al Álbum!</h2>
+                    <p className={`text-sm mt-1 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Colecciona Patricias y gana recompensas</p>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">Patricias (Láminas)</h3>
-                    <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Son coleccionables que obtienes al asistir a parches o escaneando códigos QR ocultos en el campus.
-                    </p>
+                  <div className="space-y-4 mb-6">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)' }}>
+                        <Library size={20} className={isDark ? "text-blue-400" : "text-blue-600"} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-bold text-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Patricias (Láminas)</h3>
+                        <p className={`text-xs mt-1 leading-relaxed transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                          Son coleccionables que obtienes al asistir a parches o escaneando códigos QR ocultos en el campus.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)' }}>
+                        <Trophy size={20} className={isDark ? "text-amber-400" : "text-amber-600"} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-bold text-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>El Gran Objetivo</h3>
+                        <p className={`text-xs mt-1 leading-relaxed transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                          Coleccionar patricias suma <strong className={isDark ? "text-white font-black" : "text-gray-900 font-black"}>XP</strong>. Por cada 500 XP, subirás de nivel y obtendrás giros en la ruleta para ganar premios reales en las cafeterías.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)' }}>
-                    <Trophy size={20} className="text-amber-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">El Gran Objetivo</h3>
-                    <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Coleccionar patricias suma <strong className="text-white font-black">XP</strong>. Por cada 500 XP, subirás de nivel y obtendrás giros en la ruleta para ganar premios reales en las cafeterías.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {}
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={handleCloseWelcome}
-                className="w-full py-3.5 rounded-2xl text-white font-black text-sm"
-                style={{ background: GRADIENT }}
-              >
-                ¡Entendido!
-              </motion.button>
-            </motion.div>
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleCloseWelcome}
+                  className="w-full py-3 rounded-xl text-white font-black text-xs uppercase tracking-widest shadow-lg"
+                  style={{ background: GRADIENT }}
+                >
+                  ¡Entendido!
+                </motion.button>
+              </motion.div>
             </div>
           </>
         )}

@@ -20,7 +20,7 @@ type RankTab = 'xp' | 'monas' | 'parches';
 type Period  = 'semana' | 'mes' | 'semestre';
 const TABS: { key: RankTab; label: string; Icon: typeof Zap; color: string }[] = [
   { key: 'xp',      label: 'XP',     Icon: Zap,     color: GOLD_LIGHT },
-  { key: 'monas',   label: 'Monas',  Icon: BookOpen, color: '#06B6D4'  },
+  { key: 'monas',   label: 'Patricias',  Icon: BookOpen, color: '#06B6D4'  },
   { key: 'parches', label: 'Parches',Icon: Users,    color: '#3B82F6'  },
 ];
 const PERIODS: { key: Period; label: string }[] = [
@@ -30,7 +30,7 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 function getValue(user: RankingUser, tab: RankTab): string {
   if (tab === 'xp')      return `${user.xp.toLocaleString('es-CO')} XP`;
-  if (tab === 'monas')   return `${user.monasCount} monas`;
+  if (tab === 'monas')   return `${user.monasCount} patricias`;
   return `${user.parchesCount} parches`;
 }
 function getRaw(user: RankingUser, tab: RankTab): number {
