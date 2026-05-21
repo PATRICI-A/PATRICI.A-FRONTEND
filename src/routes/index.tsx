@@ -52,14 +52,14 @@ export const router = createBrowserRouter([
   { path: '/wellness/stats', Component: WellnessStatsPage },
   { path: '/chat/:id', Component: ChatPage },
   { path: '/direct-chat/:id', Component: DirectChatPage },
-  { path: '/parches/create', Component: CreateParchePage },
-  { path: '/parches/:id', Component: ParchemDetailPage },
   {
     path: '/',
     Component: Layout,
     children: [
       { path: 'home', Component: HomePage },
       { path: 'parches', Component: ParchesPage },
+      { path: 'parches/create', Component: CreateParchePage },
+      { path: 'parches/:id', Component: ParchemDetailPage },
       { path: 'chat', Component: ChatListPage },
       { path: 'events', Component: EventsPage },
       { path: 'profile', Component: ProfilePage },
