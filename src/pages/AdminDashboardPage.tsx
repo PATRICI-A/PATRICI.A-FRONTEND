@@ -9,7 +9,8 @@ import {
   BarChart3, MapPin, MessageCircle, AlertTriangle, LogOut,
   Menu, X, ChevronRight, Activity, Zap, Eye, Ban, CheckCircle,
   XCircle, Edit3, Trash2, Flag, Settings, Sun, Moon, UserCheck,
-  Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell
+  Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell,
+  Clock, ChevronDown
 } from 'lucide-react';
 import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
@@ -101,6 +102,37 @@ export function AdminDashboardPage() {
   const [statsStartDate, setStatsStartDate] = useState('2025-01-01');
   const [statsEndDate, setStatsEndDate] = useState('2025-05-31');
   const [statsType, setStatsType] = useState<'all' | 'events' | 'participation' | 'social'>('all');
+
+  // Nuevo estado para Creación de Eventos
+  const [newEvent, setNewEvent] = useState({
+    title: '', date: '', time: '', location: '', description: '', coverImage: ''
+  });
+  const [includePatricia, setIncludePatricia] = useState(false);
+  const [newPatricia, setNewPatricia] = useState({
+    image: '', description: '', xpValue: 50, rarity: 'comun'
+  });
+
+  const handleCreateEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEvent.title || !newEvent.date || !newEvent.location) {
+      showError('Por favor completa los campos obligatorios (Título, Fecha, Ubicación).');
+      return;
+    }
+    const createdEvent: Event = {
+      id: `e${Date.now()}`,
+      title: newEvent.title,
+      organizer: 'Administrador',
+      date: newEvent.date,
+      attendees: 0,
+      status: 'approved',
+      category: 'Evento Oficial'
+    };
+    setEvents(prev => [createdEvent, ...prev]);
+    showSuccess(`Evento "${newEvent.title}" publicado exitosamente${includePatricia ? ' con Patricia asociada' : ''}.`);
+    setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' });
+    setIncludePatricia(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminSession');
     navigate('/admin/login');
@@ -475,7 +507,7 @@ export function AdminDashboardPage() {
           {activeSection === 'analytics' && (
             <>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm mb-6">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
@@ -548,7 +580,7 @@ export function AdminDashboardPage() {
                     scale: isHighlighted ? 1 : 0.97
                   }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+                  className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
                   style={{
                     filter: isHighlighted ? 'none' : 'grayscale(0.3)',
                     pointerEvents: isHighlighted ? 'auto' : 'none'
@@ -582,7 +614,7 @@ export function AdminDashboardPage() {
                 opacity: metricType === 'zones' ? 0.4 : 1,
                 scale: metricType === 'zones' ? 0.97 : 1
               }}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+              className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
               style={{
                 filter: metricType === 'zones' ? 'grayscale(0.3)' : 'none',
                 pointerEvents: metricType === 'zones' ? 'none' : 'auto'
@@ -634,7 +666,7 @@ export function AdminDashboardPage() {
                 opacity: metricType === 'all' || metricType === 'zones' ? 1 : 0.4,
                 scale: metricType === 'all' || metricType === 'zones' ? 1 : 0.97
               }}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+              className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
               style={{
                 filter: metricType === 'all' || metricType === 'zones' ? 'none' : 'grayscale(0.3)',
                 pointerEvents: metricType === 'all' || metricType === 'zones' ? 'auto' : 'none'
@@ -728,7 +760,7 @@ export function AdminDashboardPage() {
           {activeSection === 'reports' && (
             <div className="space-y-6">
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Generar Reporte Personalizado
                 </h3>
@@ -838,7 +870,7 @@ export function AdminDashboardPage() {
                 )}
               </AnimatePresence>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Programar Reporte Automático
                 </h3>
@@ -888,7 +920,7 @@ export function AdminDashboardPage() {
                 </div>
               </div>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Historial de Reportes
                 </h3>
@@ -938,7 +970,7 @@ export function AdminDashboardPage() {
           {activeSection === 'institutional-stats' && (
             <div className="space-y-6">
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Filtros de Estadísticas
                 </h3>
@@ -989,7 +1021,7 @@ export function AdminDashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {}
                 {(statsType === 'all' || statsType === 'events') && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Eventos Creados</h4>
                       <Calendar size={20} style={{ color: '#10B981' }} />
@@ -1013,7 +1045,7 @@ export function AdminDashboardPage() {
                 )}
                 {}
                 {(statsType === 'all' || statsType === 'participation') && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Participación Estudiantil</h4>
                       <Users size={20} style={{ color: '#3B82F6' }} />
@@ -1038,7 +1070,7 @@ export function AdminDashboardPage() {
                 )}
                 {}
                 {(statsType === 'all' || statsType === 'social') && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Índice de Actividad Social</h4>
                       <TrendingUp size={20} style={{ color: PINK }} />
@@ -1072,7 +1104,7 @@ export function AdminDashboardPage() {
                 )}
                 {}
                 {statsType === 'all' && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Tendencia Semanal</h4>
                       <Activity size={20} style={{ color: ORANGE }} />
@@ -1098,7 +1130,7 @@ export function AdminDashboardPage() {
               </div>
               {}
               {(statsType === 'all' || statsType === 'social') && (
-                <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h4 className="font-bold text-gray-900 dark:text-white">Participación por Facultad</h4>
@@ -1306,58 +1338,175 @@ export function AdminDashboardPage() {
           )}
           {}
           {activeSection === 'events' && (
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Gestión de Eventos</h3>
-                <div className="space-y-3">
-                  {events.map((event) => (
-                    <div key={event.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-[#1E3A5F]">
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{event.title}</h4>
-                          {event.status === 'pending' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
-                              Pendiente
-                            </span>
-                          )}
-                          {event.status === 'approved' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                              Aprobado
-                            </span>
-                          )}
-                          {event.status === 'rejected' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                              Rechazado
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {event.organizer} • {event.category}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {event.date} • {event.attendees} asistentes
-                        </p>
-                      </div>
-                      {event.status === 'pending' && (
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleApproveEvent(event.id)}
-                            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-semibold text-sm"
-                          >
-                            Aprobar
-                          </motion.button>
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleRejectEvent(event.id)}
-                            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold text-sm"
-                          >
-                            Rechazar
-                          </motion.button>
-                        </div>
-                      )}
+            <div className="space-y-6">
+              {/* Formulario de Creación de Eventos */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <h3 className="font-bold text-gray-900 dark:text-white mb-6 text-xl flex items-center gap-3">
+                  <Calendar size={26} className="text-blue-500" />
+                  Crear Nuevo Evento
+                </h3>
+                
+                <form onSubmit={handleCreateEvent} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Nombre del Evento *</label>
+                      <input value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="Ej. Torneo de Ping Pong" />
                     </div>
-                  ))}
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Ubicación *</label>
+                      <input value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="Ej. Plazoleta Principal" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Fecha *</label>
+                      <input value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} type="date" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Hora *</label>
+                      <input value={newEvent.time} onChange={e => setNewEvent({...newEvent, time: e.target.value})} type="time" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Descripción del Evento</label>
+                    <textarea value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} rows={3} className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none font-medium" placeholder="Escribe los detalles del evento..." />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Foto del Evento (Opcional)</label>
+                    <div className="w-full px-4 py-8 rounded-2xl border-2 border-dashed border-gray-300 dark:border-[#384c6e] bg-gray-50/50 dark:bg-[#1A2F4A]/30 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2F4A]/80 transition-colors cursor-pointer group">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Download size={24} className="text-blue-500" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Arrastra una imagen o haz clic para subir</span>
+                      <span className="text-xs mt-1 opacity-70">JPG, PNG o WEBP (Max 5MB)</span>
+                    </div>
+                  </div>
+
+                  {/* Toggle Patricia */}
+                  <div className="pt-6 border-t border-gray-200/50 dark:border-[#1E3A5F]/50">
+                    <label className="flex items-center gap-4 cursor-pointer p-4 rounded-2xl bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-900/10 border border-purple-100/50 dark:border-purple-800/30">
+                      <div className="relative">
+                        <input type="checkbox" className="sr-only" checked={includePatricia} onChange={e => setIncludePatricia(e.target.checked)} />
+                        <div className={`block w-14 h-8 rounded-full transition-colors ${includePatricia ? 'bg-purple-500 shadow-inner' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                        <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform shadow-md ${includePatricia ? 'transform translate-x-6' : ''}`}></div>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-base">
+                          <Zap size={18} className="text-purple-500" /> Asociar Patricia (Mona) Exclusiva
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Los asistentes podrán reclamar esta Mona escaneando un código QR.</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Patricia Fields */}
+                  <AnimatePresence>
+                    {includePatricia && (
+                      <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0, y: -10 }} className="overflow-hidden">
+                        <div className="bg-purple-50/60 dark:bg-purple-900/10 p-6 rounded-3xl border border-purple-200/50 dark:border-purple-800/50 space-y-5 mt-2 shadow-inner">
+                          <h4 className="font-bold text-purple-900 dark:text-purple-300 flex items-center gap-2 mb-2">
+                            ✨ Detalles de la Patricia
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                              <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Rareza</label>
+                              <div className="relative">
+                                <select value={newPatricia.rarity} onChange={e => setNewPatricia({...newPatricia, rarity: e.target.value})} className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none font-bold">
+                                  <option value="comun">⚪ Común</option>
+                                  <option value="rara">🔵 Rara</option>
+                                  <option value="epica">🟣 Épica</option>
+                                  <option value="legendaria">🟡 Legendaria</option>
+                                </select>
+                                <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-500 pointer-events-none" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider flex justify-between">
+                                Puntos XP <span className="text-purple-600 bg-purple-100 dark:bg-purple-900/50 px-2 rounded">{newPatricia.xpValue} XP</span>
+                              </label>
+                              <input type="range" min="10" max="500" step="10" value={newPatricia.xpValue} onChange={e => setNewPatricia({...newPatricia, xpValue: parseInt(e.target.value)})} className="w-full mt-3 accent-purple-500" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Descripción de la Patricia</label>
+                            <input value={newPatricia.description} onChange={e => setNewPatricia({...newPatricia, description: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium" placeholder="Ej. Medalla otorgada por asistir al taller de liderazgo..." />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Arte de la Patricia</label>
+                            <div className="w-full px-4 py-6 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700/50 bg-white/50 dark:bg-[#112240]/50 flex flex-col items-center justify-center text-purple-500 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group">
+                              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Zap size={20} className="text-purple-600 dark:text-purple-400" />
+                              </div>
+                              <span className="text-sm font-bold text-purple-700 dark:text-purple-400">Subir imagen exclusiva de la Patricia</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="pt-6 flex justify-end border-t border-gray-200/50 dark:border-[#1E3A5F]/50">
+                    <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full sm:w-auto px-8 py-4 rounded-2xl text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all" style={{ background: GRADIENT }}>
+                      <CheckCircle size={22} /> Publicar Evento Oficial
+                    </motion.button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Lista de Eventos */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-3">
+                    <Activity size={24} className="text-green-500" />
+                    Eventos Publicados
+                  </h3>
+                  <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">
+                    {events.length} Activos
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <AnimatePresence>
+                    {events.map((event, index) => (
+                      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: index * 0.05 }} key={event.id} className="flex flex-col p-5 rounded-3xl border border-gray-200/80 dark:border-[#1E3A5F] bg-gray-50/50 dark:bg-[#1A2F4A]/30 hover:bg-white dark:hover:bg-[#112240] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-transparent transition-all duration-500 pointer-events-none" />
+                        
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 border border-white dark:border-white/5">
+                            <Calendar size={22} className="text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                            Activo
+                          </span>
+                        </div>
+                        
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-1 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{event.title}</h4>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 flex-1">
+                          {event.category} • {event.organizer}
+                        </p>
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200/60 dark:border-[#1E3A5F]/60">
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <Clock size={14} className="text-gray-500" /> {event.date}
+                          </span>
+                          
+                          <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDeleteParche(event.id) /* Usando logica similar para demo */} className="w-9 h-9 rounded-xl bg-red-50/0 group-hover:bg-red-50 dark:group-hover:bg-red-900/20 text-gray-300 dark:text-gray-600 group-hover:text-red-500 flex items-center justify-center transition-all duration-300">
+                            <Trash2 size={16} />
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  
+                  {events.length === 0 && (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50/50 dark:bg-[#1A2F4A]/30 rounded-3xl border border-dashed border-gray-300 dark:border-[#384c6e]">
+                      <Calendar size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400 font-medium">No hay eventos activos.</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Usa el formulario de arriba para publicar uno nuevo.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1486,7 +1635,7 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'config' && (
             <div className="space-y-4">
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">Configuración del Sistema</h3>
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
