@@ -109,8 +109,9 @@ export function AdminDashboardPage() {
   });
   const [includePatricia, setIncludePatricia] = useState(false);
   const [newPatricia, setNewPatricia] = useState({
-    image: '', description: '', xpValue: 50, rarity: 'comun'
+    image: '', description: '', xpValue: 50, rarity: 'comun', code: ''
   });
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const handleCreateEvent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,19 +119,42 @@ export function AdminDashboardPage() {
       showError('Por favor completa los campos obligatorios (Título, Fecha, Ubicación).');
       return;
     }
-    const createdEvent: Event = {
-      id: `e${Date.now()}`,
-      title: newEvent.title,
-      organizer: 'Administrador',
-      date: newEvent.date,
-      attendees: 0,
-      status: 'approved',
-      category: 'Evento Oficial'
-    };
-    setEvents(prev => [createdEvent, ...prev]);
-    showSuccess(`Evento "${newEvent.title}" publicado exitosamente${includePatricia ? ' con Patricia asociada' : ''}.`);
+    
+    if (editingEventId) {
+      setEvents(prev => prev.map(ev => ev.id === editingEventId ? { ...ev, title: newEvent.title, date: newEvent.date, category: newEvent.description || ev.category } : ev));
+      showSuccess(`Evento "${newEvent.title}" actualizado exitosamente.`);
+    } else {
+      const createdEvent: Event = {
+        id: `e${Date.now()}`,
+        title: newEvent.title,
+        organizer: 'Administrador',
+        date: newEvent.date,
+        attendees: 0,
+        status: 'approved',
+        category: 'Evento Oficial'
+      };
+      setEvents(prev => [createdEvent, ...prev]);
+      showSuccess(`Evento "${newEvent.title}" publicado exitosamente${includePatricia ? ' con Patricia asociada' : ''}.`);
+    }
+    
     setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' });
     setIncludePatricia(false);
+    setNewPatricia({ image: '', description: '', xpValue: 50, rarity: 'comun', code: '' });
+    setEditingEventId(null);
+  };
+
+  const handleEditEvent = (eventToEdit: Event) => {
+    setEditingEventId(eventToEdit.id);
+    setNewEvent({
+      title: eventToEdit.title,
+      date: eventToEdit.date,
+      time: '',
+      location: '',
+      description: eventToEdit.category,
+      coverImage: ''
+    });
+    setIncludePatricia(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLogout = () => {
@@ -1191,94 +1215,92 @@ export function AdminDashboardPage() {
           )}
           {}
           {activeSection === 'users' && (
-            <div className="space-y-4">
-              {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
+            <div className="space-y-8">
+              {/* Buscador de usuarios premium */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <h3 className="font-bold text-gray-900 dark:text-white mb-6 text-xl flex items-center gap-3">
+                  <Users size={26} className="text-blue-500" />
+                  Directorio de Usuarios
+                </h3>
                 <div className="relative">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-blue-500" />
                   <input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar usuarios por nombre o email..."
-                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
+                    className="w-full pl-14 pr-6 py-4 rounded-2xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border-2 border-gray-200/50 dark:border-[#233554]/50 text-gray-900 dark:text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#112240] transition-all shadow-inner"
                   />
                 </div>
               </div>
-              {}
-              <div className="space-y-3">
-                {filteredUsers.map((user) => (
+
+              {/* Grid de Usuarios Premium */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredUsers.map((user, index) => (
                   <motion.div
                     key={user.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm"
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/80 dark:border-[#1E3A5F] rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-blue-500/15 hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col"
                   >
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
-                      <img src={user.avatar} alt={user.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{user.name}</h4>
-                          {user.verified && <CheckCircle size={16} className="text-green-500 flex-shrink-0" />}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-all duration-500 group-hover:bg-blue-500/20" />
+                    
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="relative">
+                        <img src={user.avatar} alt={user.name} className="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white dark:border-[#1A2F4A] group-hover:scale-105 transition-transform" />
+                        {user.verified && <div className="absolute -bottom-2 -right-2 bg-white dark:bg-[#112240] rounded-full p-0.5 shadow-sm"><CheckCircle size={18} className="text-green-500" /></div>}
+                      </div>
+                      <div className="flex-1 min-w-0 pt-1">
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{user.name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium mt-1">{user.email}</p>
+                        
+                        <div className="flex items-center gap-2 mt-2">
                           {user.status === 'suspended' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-                              Suspendido
-                            </span>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">Suspendido</span>
                           )}
                           {user.status === 'banned' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                              Baneado
-                            </span>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Baneado</span>
                           )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
-                        <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                          <span>{user.faculty}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span>Nivel {user.level}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span>{user.xp} XP</span>
-                          {user.reports > 0 && (
-                            <>
-                              <span className="hidden sm:inline">•</span>
-                              <span className="text-red-500 font-bold">{user.reports} reportes</span>
-                            </>
+                          {user.status === 'active' && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">Activo</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedUser(user)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-gray-100 dark:bg-[#1A2F4A] flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#233554]"
-                          title="Ver detalles"
-                        >
-                          <Eye size={16} />
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleVerifyUser(user.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                          title={user.verified ? 'Desverificar' : 'Verificar'}
-                        >
-                          <UserCheck size={16} />
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSuspendUser(user.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50"
-                          title={user.status === 'suspended' ? 'Reactivar' : 'Suspender'}
-                        >
-                          {user.status === 'suspended' ? <Unlock size={16} /> : <Lock size={16} />}
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleBanUser(user.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
-                          title="Banear usuario"
-                        >
-                          <Ban size={16} />
-                        </motion.button>
+                    </div>
+                    
+                    <div className="bg-gray-50/50 dark:bg-[#1A2F4A]/30 rounded-2xl p-4 mb-5 flex-1 border border-gray-100 dark:border-[#233554]/50">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Facultad</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">{user.faculty}</span>
                       </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nivel / XP</span>
+                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                          <Zap size={12} /> {user.level} • {user.xp} XP
+                        </span>
+                      </div>
+                      {user.reports > 0 && (
+                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 dark:border-[#233554]">
+                          <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Reportes</span>
+                          <span className="text-xs font-bold text-red-600 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-md">{user.reports} recibidos</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-2 mt-auto">
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => setSelectedUser(user)} className="h-10 rounded-xl bg-gray-100 dark:bg-[#1A2F4A] flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#233554] transition-colors" title="Ver detalles">
+                        <Eye size={18} />
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleVerifyUser(user.id)} className={`h-10 rounded-xl flex items-center justify-center transition-colors ${user.verified ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200'}`} title={user.verified ? 'Desverificar' : 'Verificar'}>
+                        <UserCheck size={18} />
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleSuspendUser(user.id)} className="h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors" title={user.status === 'suspended' ? 'Reactivar' : 'Suspender'}>
+                        {user.status === 'suspended' ? <Unlock size={18} /> : <Lock size={18} />}
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleBanUser(user.id)} className="h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" title="Banear usuario">
+                        <Ban size={18} />
+                      </motion.button>
                     </div>
                   </motion.div>
                 ))}
@@ -1287,52 +1309,81 @@ export function AdminDashboardPage() {
           )}
           {}
           {activeSection === 'parches' && (
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Parches Activos y Reportados</h3>
-                <div className="space-y-3">
-                  {parches.filter(p => p.status !== 'deleted').map((parche) => (
-                    <div key={parche.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-[#1E3A5F]">
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{parche.name}</h4>
-                          {parche.status === 'flagged' && (
-                            <Flag size={14} className="text-red-500 flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {parche.creator} • {parche.members} miembros
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {parche.location}
-                        </p>
-                        {parche.reports > 0 && (
-                          <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-bold">
-                            {parche.reports} reportes recibidos
-                          </p>
+            <div className="space-y-6">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                  <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-3">
+                    <MapPin size={26} className="text-red-500" />
+                    Parches Activos y Reportados
+                  </h3>
+                  <span className="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-sm font-black tracking-widest uppercase text-red-600 dark:text-red-400">
+                    {parches.length} Parches
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {parches.filter(p => p.status !== 'deleted').map((parche, index) => (
+                    <motion.div
+                      key={parche.id}
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white/80 dark:bg-[#1A2F4A]/60 backdrop-blur-xl border border-gray-200/80 dark:border-[#1E3A5F] rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-red-500/10 hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-all duration-500 group-hover:bg-red-500/20" />
+                      
+                      <div className="flex items-start justify-between mb-4 relative z-10">
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg leading-tight group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors pr-4">{parche.name}</h4>
+                        {parche.status === 'flagged' && (
+                          <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 animate-pulse">
+                            <Flag size={14} className="text-red-500" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedParche(parche)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400"
-                          title="Ver detalles"
-                        >
-                          <Eye size={16} />
+                      
+                      <div className="bg-gray-50/50 dark:bg-[#112240]/50 rounded-2xl p-4 mb-5 flex-1 border border-gray-100 dark:border-[#233554]/50 space-y-3 relative z-10">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <User size={16} className="text-gray-400" />
+                          <span className="truncate">{parche.creator}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <Users size={16} className="text-blue-500" />
+                          <span>{parche.members} Miembros</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <MapPin size={16} className="text-green-500" />
+                          <span className="truncate">{parche.location}</span>
+                        </div>
+                        
+                        {parche.reports > 0 && (
+                          <div className="pt-3 mt-3 border-t border-gray-200 dark:border-[#233554] flex items-center gap-2">
+                            <AlertTriangle size={16} className="text-red-500" />
+                            <span className="text-xs font-bold text-red-600 dark:text-red-400">
+                              {parche.reports} Reportes recibidos
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 mt-auto relative z-10">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => setSelectedParche(parche)} className="py-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
+                          <Eye size={18} /> Ver Detalles
                         </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDeleteParche(parche.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400"
-                          title="Eliminar parche"
-                        >
-                          <Trash2 size={16} />
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleDeleteParche(parche.id)} className="py-3 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center gap-2 text-red-600 dark:text-red-400 font-bold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
+                          <Trash2 size={18} /> Eliminar
                         </motion.button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
+                {parches.filter(p => p.status !== 'deleted').length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-gray-200 dark:border-[#233554] rounded-3xl mt-6 bg-gray-50/50 dark:bg-[#1A2F4A]/30">
+                    <CheckCircle size={48} className="text-green-500 mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400 font-bold text-lg">No hay parches activos</p>
+                    <p className="text-sm text-gray-400 mt-1">Todo está en orden en la comunidad.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1344,7 +1395,7 @@ export function AdminDashboardPage() {
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
                 <h3 className="font-bold text-gray-900 dark:text-white mb-6 text-xl flex items-center gap-3">
                   <Calendar size={26} className="text-blue-500" />
-                  Crear Nuevo Evento
+                  {editingEventId ? 'Editar Evento' : 'Crear Nuevo Evento'}
                 </h3>
                 
                 <form onSubmit={handleCreateEvent} className="space-y-6">
@@ -1395,7 +1446,7 @@ export function AdminDashboardPage() {
                         <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-base">
                           <Zap size={18} className="text-purple-500" /> Asociar Patricia (Mona) Exclusiva
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Los asistentes podrán reclamar esta Mona escaneando un código QR.</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Los asistentes podrán reclamar esta Mona introduciendo un código alfanumérico único.</span>
                       </div>
                     </label>
                   </div>
@@ -1429,6 +1480,10 @@ export function AdminDashboardPage() {
                             </div>
                           </div>
                           <div>
+                            <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Código de Reclamo (Alfanumérico)</label>
+                            <input value={newPatricia.code} onChange={e => setNewPatricia({...newPatricia, code: e.target.value.toUpperCase()})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold tracking-widest uppercase" placeholder="Ej. EVENTO2025" />
+                          </div>
+                          <div>
                             <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Descripción de la Patricia</label>
                             <input value={newPatricia.description} onChange={e => setNewPatricia({...newPatricia, description: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium" placeholder="Ej. Medalla otorgada por asistir al taller de liderazgo..." />
                           </div>
@@ -1448,8 +1503,13 @@ export function AdminDashboardPage() {
 
                   <div className="pt-6 flex justify-end border-t border-gray-200/50 dark:border-[#1E3A5F]/50">
                     <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full sm:w-auto px-8 py-4 rounded-2xl text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all" style={{ background: GRADIENT }}>
-                      <CheckCircle size={22} /> Publicar Evento Oficial
+                      <CheckCircle size={22} /> {editingEventId ? 'Guardar Cambios' : 'Publicar Evento Oficial'}
                     </motion.button>
+                    {editingEventId && (
+                      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' }); }} className="w-full sm:w-auto px-6 py-4 rounded-2xl text-gray-700 dark:text-gray-300 font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1A2F4A] hover:bg-gray-200 dark:hover:bg-[#233554] transition-all ml-0 sm:ml-4 mt-4 sm:mt-0">
+                        Cancelar
+                      </motion.button>
+                    )}
                   </div>
                 </form>
               </div>
@@ -1492,9 +1552,14 @@ export function AdminDashboardPage() {
                             <Clock size={14} className="text-gray-500" /> {event.date}
                           </span>
                           
-                          <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDeleteParche(event.id) /* Usando logica similar para demo */} className="w-9 h-9 rounded-xl bg-red-50/0 group-hover:bg-red-50 dark:group-hover:bg-red-900/20 text-gray-300 dark:text-gray-600 group-hover:text-red-500 flex items-center justify-center transition-all duration-300">
-                            <Trash2 size={16} />
-                          </motion.button>
+                          <div className="flex gap-2">
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleEditEvent(event)} className="w-9 h-9 rounded-xl bg-blue-50/0 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 flex items-center justify-center transition-all duration-300">
+                              <Edit3 size={16} />
+                            </motion.button>
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDeleteParche(event.id) /* Usando logica similar para demo */} className="w-9 h-9 rounded-xl bg-red-50/0 group-hover:bg-red-50 dark:group-hover:bg-red-900/20 text-gray-300 dark:text-gray-600 group-hover:text-red-500 flex items-center justify-center transition-all duration-300">
+                              <Trash2 size={16} />
+                            </motion.button>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -1638,7 +1703,7 @@ export function AdminDashboardPage() {
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">Configuración del Sistema</h3>
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
+                  <div className="p-4 rounded-xl bg-blue-50/80 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:-translate-y-1 hover:shadow-md transition-all">
                     <div className="flex items-start gap-3">
                       <Sliders size={20} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
@@ -1663,7 +1728,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800">
+                  <div className="p-4 rounded-xl bg-purple-50/80 dark:bg-purple-900/10 border border-purple-200/50 dark:border-purple-800/50 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:-translate-y-1 hover:shadow-md transition-all">
                     <div className="flex items-start gap-3">
                       <Zap size={20} className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
@@ -1685,7 +1750,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800">
+                  <div className="p-4 rounded-xl bg-green-50/80 dark:bg-green-900/10 border border-green-200/50 dark:border-green-800/50 hover:bg-green-50 dark:hover:bg-green-900/20 hover:-translate-y-1 hover:shadow-md transition-all">
                     <div className="flex items-start gap-3">
                       <ShieldCheck size={20} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
