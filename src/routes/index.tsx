@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from '../components/layout/Layout';
 import { LandingPage } from '../pages/LandingPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -61,6 +61,8 @@ export const router = createBrowserRouter([
       { path: 'parches/create', Component: CreateParchePage },
       { path: 'parches/:id', Component: ParchemDetailPage },
       { path: 'chat', Component: ChatListPage },
+      { path: 'chat/:id', Component: ChatPage },
+      { path: 'direct-chat/:id', Component: DirectChatPage },
       { path: 'events', Component: EventsPage },
       { path: 'profile', Component: ProfilePage },
       { path: 'monas', Component: MonasAlbumPage },
