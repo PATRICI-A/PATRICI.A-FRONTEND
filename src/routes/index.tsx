@@ -50,8 +50,6 @@ export const router = createBrowserRouter([
   { path: '/student/activity', Component: StudentActivityPage },
   { path: '/student/interaction', Component: StudentInteractionPage },
   { path: '/wellness/stats', Component: WellnessStatsPage },
-  { path: '/chat/:id', Component: ChatPage },
-  { path: '/direct-chat/:id', Component: DirectChatPage },
   {
     path: '/',
     Component: Layout,
