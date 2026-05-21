@@ -31,9 +31,19 @@ export function ParchesPage() {
   const isParcheJoined = (parcheId: string) => {
     return joinedParches[parcheId] !== undefined ? joinedParches[parcheId] : parches.find(p => p.id === parcheId)?.joined || false;
   };
-  const myParches = parches.filter(p => isParcheJoined(p.id));
+  const myParches = parches.filter(p => {
+    if (!isParcheJoined(p.id)) return false;
+    if (!searchQuery) return true;
+    return p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase());
+  });
   const exploreParches = parches.filter(p => !isParcheJoined(p.id) && !invitedParches.includes(p.id));
-  const invitationParches = parches.filter(p => invitedParches.includes(p.id));
+  const invitationParches = parches.filter(p => {
+    if (!invitedParches.includes(p.id)) return false;
+    if (!searchQuery) return true;
+    return p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase());
+  });
   const handleAcceptInvitation = (parcheId: string) => {
     setJoinedParches(prev => ({ ...prev, [parcheId]: true }));
     setInvitedParches(prev => prev.filter(id => id !== parcheId));
@@ -481,13 +491,6 @@ export function ParchesPage() {
         )}
       </AnimatePresence>
       {}
-      <button
-        onClick={() => navigate('/parches/create')}
-        className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"
-        style={{ background: GRADIENT }}
-      >
-        <Plus size={24} />
-      </button>
     </div>
   );
 }

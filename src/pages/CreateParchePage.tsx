@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles } from 'lucide-react';
+import { Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles } from 'lucide-react';
+import { usePageHeader } from '../store/PageHeaderContext';
 import { GRADIENT, PINK, ORANGE } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 const categories = [
@@ -22,6 +23,11 @@ const friends = [
 ];
 export function CreateParchePage() {
   const navigate = useNavigate();
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader({ title: 'Crear Parche', subtitle: 'Arma tu plan perfecto', showBack: true });
+    return () => setHeader(null);
+  }, []);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -70,20 +76,7 @@ export function CreateParchePage() {
   }
   return (
     <div className="min-h-screen pb-8">
-      {}
-      <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 md:top-0 z-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#172A45] text-gray-500 dark:text-gray-400"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 className="text-gray-900 dark:text-white text-base">Crear Parche</h1>
-          <p className="text-xs text-gray-400">Arma tu plan perfecto</p>
-        </div>
-      </div>
-      <div className="px-5 pt-6 max-w-lg mx-auto">
+      <div className="px-5 pt-6 w-full md:w-4/6 md:mx-auto">
         {}
         {(name || selectedCategory) && (
           <motion.div

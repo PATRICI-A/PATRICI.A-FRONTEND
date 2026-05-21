@@ -1,15 +1,87 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { parches, matchUsers, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+import patySelfie from '../assets/PatySelfie.png';
+import patyAlbum from '../assets/Album.png';
+import vibraMusica from '../assets/Musica-removebg-preview.png';
+import vibraAireLibre from '../assets/AireLibre-removebg-preview.png';
+import vibraEstudio from '../assets/Estudio-removebg-preview.png';
+import vibraGastronomia from '../assets/Gastronomia-removebg-preview.png';
+import vibraVideojuegos from '../assets/Videojuegos-removebg-preview.png';
+import vibraPintura from '../assets/Pintura-removebg-preview.png';
 export function HomePage() {
   const navigate = useNavigate();
   const { currentUser, isDark, geo } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
+  useEffect(() => {
+    const invitedParche = parches[2];
+    const dismissedKey = `invite-dismissed-${invitedParche.id}`;
+    if (localStorage.getItem(dismissedKey)) return;
+    const timer = setTimeout(() => {
+      let toastId: string | number;
+      toastId = toast.custom(() => (
+        <div
+          className="flex flex-col gap-2.5 px-4 py-3 rounded-2xl shadow-xl"
+          style={{
+            background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)',
+            border: '1px solid rgba(6,182,212,0.3)',
+            minWidth: '320px',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
+              style={{ background: invitedParche.coverColor }}
+            >
+              {invitedParche.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-semibold opacity-70 mb-0.5">🎉 Fuiste invitado a un parche</p>
+              <p className="text-white font-bold text-sm truncate">{invitedParche.name}</p>
+              <p className="text-white/60 text-xs truncate">{invitedParche.description.slice(0, 40)}...</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { localStorage.setItem(dismissedKey, '1'); toast.dismiss(toastId); }}
+              className="flex-1 py-2 rounded-xl text-white text-xs font-semibold transition-colors"
+              style={{ background: 'linear-gradient(135deg, #DC2626, #EF4444)' }}
+            >
+              Rechazar
+            </button>
+            <button
+              onClick={() => { toast.dismiss(toastId); navigate(`/parches/${invitedParche.id}`); }}
+              className="flex-1 py-2 rounded-xl text-white text-xs font-bold transition-colors"
+              style={{ background: 'linear-gradient(135deg, #16A34A, #22C55E)' }}
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      ), { duration: 8000 });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselAtEnd, setCarouselAtEnd] = useState(false);
+  const [carouselAtStart, setCarouselAtStart] = useState(true);
+  const scrollCarousel = (dir: 'left' | 'right') => {
+    if (!carouselRef.current) return;
+    carouselRef.current.scrollBy({ left: dir === 'right' ? 420 : -420, behavior: 'smooth' });
+  };
+  const handleCarouselScroll = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    setCarouselAtStart(scrollLeft <= 10);
+    setCarouselAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
+  };
   const handleQuickConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
     const status = connectionStates[userId] || currentStatus || 'none';
     if (status === 'none') {
@@ -28,28 +100,14 @@ export function HomePage() {
   const recentMonas = unlockedMonas.slice(-4);
   const nextMona = monas.find(m => !m.unlocked);
   return (
-    <div className="flex flex-col min-h-screen pb-4">
+    <div className="w-full md:w-4/6 md:mx-auto flex flex-col min-h-screen pb-4">
       {}
       <div className="px-5 pt-5 pb-4">
         <div className="mb-4">
-          <p className="text-base text-gray-400 dark:text-gray-500 mb-0.5">
+          <p className="text-lg text-gray-400 dark:text-gray-500 mb-0.5">
             {new Date().getHours() < 12 ? 'Buenos días' : new Date().getHours() < 18 ? 'Buenas tardes' : 'Buenas noches'} 👋
           </p>
-          <h1 className="text-gray-900 dark:text-white">¿Qué vibra hoy?</h1>
-        </div>
-        <div className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="¿Qué parche buscas hoy?"
-            className="w-full pl-10 pr-4 py-3 rounded-2xl text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none transition-all text-sm"
-            style={{
-              background: isDark ? 'rgba(17,34,64,0.9)' : 'rgba(253,252,248,0.9)',
-              boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 2px rgba(0,0,0,0.2)' : '0 2px 12px rgba(10,25,47,0.08)',
-              border: isDark ? '1px solid rgba(30,58,95,0.5)' : '1px solid rgba(10,25,47,0.07)',
-            }}
-          />
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">¿Qué vibra hoy?</h1>
         </div>
       </div>
       {}
@@ -78,98 +136,99 @@ export function HomePage() {
                 : 'repeating-linear-gradient(60deg, transparent, transparent 24px, rgba(212,137,10,0.05) 24px, rgba(212,137,10,0.05) 26px)',
             }}
           />
-          <div className="relative p-4">
+          <div
+            className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full z-10"
+            style={{ background: `${GOLD_LIGHT}22`, border: `1px solid ${GOLD_LIGHT}44` }}
+          >
+            <span className="text-xs font-black" style={{ color: GOLD_LIGHT }}>{unlockedMonas.length}/{totalMonas}</span>
+            <ChevronRight size={14} style={{ color: GOLD_LIGHT }} />
+          </div>
+          <div className="relative p-5 flex gap-4">
             {}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                  style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 12px rgba(217,119,6,0.5)' }}
-                >
-                  <Sparkles size={18} className="text-white" />
-                </div>
-                <div>
-                  <p className="font-black text-sm leading-tight" style={{ color: isDark ? '#FFFFFF' : '#0A192F' }}>⭐ Álbum de Patricias</p>
-                  <p className="text-[10px]" style={{ color: GOLD_LIGHT }}>patrici.a · Colección exclusiva</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="text-[10px] font-black px-2 py-1 rounded-full"
-                  style={{ background: `${GOLD_LIGHT}22`, color: GOLD_LIGHT, border: `1px solid ${GOLD_LIGHT}44` }}
-                >
-                  {unlockedMonas.length}/{totalMonas}
-                </span>
-                <ChevronRight size={16} style={{ color: GOLD_LIGHT }} />
-              </div>
-            </div>
-            {}
-            <div className="flex items-center gap-1.5 mb-4">
-              {recentMonas.map((mona, i) => (
-                <motion.div
-                  key={mona.id}
-                  initial={{ scale: 0, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: i * 0.06, type: 'spring', stiffness: 300 }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center relative flex-shrink-0"
-                  style={{
-                    background: mona.color,
-                    boxShadow: `0 3px 10px ${mona.color}55`,
-                  }}
-                >
-                  <EmojiIcon emoji={mona.emoji} size={16} color="white" strokeWidth={2} />
-                  {}
+            <div className="flex flex-col justify-between min-w-0" style={{ flex: '0 0 66.666%', maxWidth: '66.666%' }}>
+              <div className="flex items-center mb-5">
+                <div className="flex items-center gap-2.5">
                   <div
-                    className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#0A192F]"
-                    style={{
-                      background: mona.rarity === 'legendario' ? GOLD_LIGHT :
-                                  mona.rarity === 'épico' ? '#8B5CF6' :
-                                  mona.rarity === 'raro' ? '#06B6D4' : '#6B7280',
-                    }}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                    style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 12px rgba(217,119,6,0.5)' }}
+                  >
+                    <Sparkles size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-black text-base leading-tight" style={{ color: isDark ? '#FFFFFF' : '#0A192F' }}>⭐ Álbum de Patricias</p>
+                    <p className="text-xs" style={{ color: GOLD_LIGHT }}>patrici.a · Colección exclusiva</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-6">
+                {recentMonas.map((mona, i) => (
+                  <motion.div
+                    key={mona.id}
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: i * 0.06, type: 'spring', stiffness: 300 }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center relative flex-shrink-0"
+                    style={{ background: mona.color, boxShadow: `0 3px 10px ${mona.color}55` }}
+                  >
+                    <EmojiIcon emoji={mona.emoji} size={20} color="white" strokeWidth={2} />
+                    <div
+                      className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border border-[#0A192F]"
+                      style={{
+                        background: mona.rarity === 'legendario' ? GOLD_LIGHT :
+                                    mona.rarity === 'épico' ? '#8B5CF6' :
+                                    mona.rarity === 'raro' ? '#06B6D4' : '#6B7280',
+                      }}
+                    />
+                  </motion.div>
+                ))}
+                {nextMona && (
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px dashed rgba(245,158,11,0.3)' }}
+                  >
+                    <Lock size={20} style={{ color: GOLD_LIGHT, opacity: 0.5 }} />
+                  </div>
+                )}
+                {totalMonas - recentMonas.length - 1 > 0 && (
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(245,158,11,0.1)', border: '1.5px solid rgba(245,158,11,0.3)' }}
+                  >
+                    <span className="text-xs font-black" style={{ color: GOLD_LIGHT }}>
+                      +{totalMonas - recentMonas.length - 1}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="mt-auto">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold" style={{ color: isDark ? '#9CA3AF' : 'rgba(10,25,47,0.5)' }}>Progreso del álbum</span>
+                  <span className="text-sm font-black" style={{ color: GOLD_LIGHT }}>{albumPercent}%</span>
+                </div>
+                <div className="h-2.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,25,47,0.1)' }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${albumPercent}%` }}
+                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ background: GOLD_GRADIENT }}
                   />
-                </motion.div>
-              ))}
-              {}
-              {nextMona && (
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px dashed rgba(245,158,11,0.3)' }}
-                >
-                  <Lock size={14} style={{ color: GOLD_LIGHT, opacity: 0.5 }} />
                 </div>
-              )}
-              {}
-              {totalMonas - recentMonas.length - 1 > 0 && (
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(245,158,11,0.1)', border: '1.5px solid rgba(245,158,11,0.3)' }}
-                >
-                  <span className="text-[9px] font-black" style={{ color: GOLD_LIGHT }}>
-                    +{totalMonas - recentMonas.length - 1}
-                  </span>
-                </div>
-              )}
+                {nextMona && (
+                  <p className="text-xs mt-2" style={{ color: isDark ? '#6B7280' : 'rgba(10,25,47,0.45)' }}>
+                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.condition}
+                  </p>
+                )}
+              </div>
             </div>
             {}
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-[10px]" style={{ color: isDark ? '#9CA3AF' : 'rgba(10,25,47,0.5)' }}>Progreso del álbum</span>
-                <span className="text-[10px] font-black" style={{ color: GOLD_LIGHT }}>{albumPercent}%</span>
-              </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(10,25,47,0.1)' }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${albumPercent}%` }}
-                  transition={{ duration: 1.2, ease: 'easeOut' }}
-                  className="h-full rounded-full"
-                  style={{ background: GOLD_GRADIENT }}
-                />
-              </div>
-              {nextMona && (
-                <p className="text-[9px] mt-1.5" style={{ color: isDark ? '#6B7280' : 'rgba(10,25,47,0.45)' }}>
-                  Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.condition}
-                </p>
-              )}
+            <div className="hidden sm:flex flex-col items-center justify-center" style={{ flex: '0 0 33.333%' }}>
+              <img
+                src={patyAlbum}
+                alt=""
+                className="w-full h-full object-contain pointer-events-none"
+                style={{ opacity: 0.65, maxHeight: '270px' }}
+              />
             </div>
           </div>
           {}
@@ -181,12 +240,12 @@ export function HomePage() {
             }}
           >
             <div className="flex items-center gap-2">
-              <BookOpen size={13} style={{ color: GOLD_LIGHT }} />
+              <BookOpen size={16} style={{ color: GOLD_LIGHT }} />
               <span className="text-[11px] font-bold" style={{ color: isDark ? GOLD_LIGHT : '#92600A' }}>
                 Escanea sobres QR para desbloquear patricias
               </span>
             </div>
-            <Sparkles size={14} style={{ color: GOLD_LIGHT }} />
+            <Sparkles size={18} style={{ color: GOLD_LIGHT }} />
           </div>
         </motion.button>
       </section>
@@ -204,22 +263,22 @@ export function HomePage() {
               boxShadow: '0 4px 16px rgba(6,182,212,0.15)',
             }}
           >
-            <div className="p-4 flex items-center gap-4">
+            <div className="p-5 flex items-center gap-4">
               <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{ background: TEAL_GRADIENT, boxShadow: '0 4px 12px rgba(6,182,212,0.4)' }}
               >
-                <MapPin size={24} className="text-white" />
+                <MapPin size={32} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-sm" style={{ color: TEAL }}>
+                <p className="font-black text-base" style={{ color: TEAL }}>
                   Descubre lo que tu campus tiene en tiempo real para ti
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                   Toca aquí para explorar el mapa del campus
                 </p>
               </div>
-              <ChevronRight size={16} style={{ color: TEAL }} className="flex-shrink-0" />
+              <ChevronRight size={24} style={{ color: TEAL }} className="flex-shrink-0" />
             </div>
           </motion.button>
         ) : geo.onCampus ? (
@@ -231,12 +290,12 @@ export function HomePage() {
                     className="w-6 h-6 rounded-lg flex items-center justify-center"
                     style={{ background: 'rgba(16,185,129,0.15)' }}
                   >
-                    <Navigation size={12} color="#10B981" />
+                    <Navigation size={16} color="#10B981" />
                   </div>
-                  <h2 className="text-gray-800 dark:text-white font-semibold">Cerca de ti ahora</h2>
+                  <h2 className="text-gray-800 dark:text-white font-bold text-xl">Cerca de ti ahora</h2>
                 </div>
-                <p className="text-xs text-gray-400 flex items-center gap-1">
-                  <LocateFixed size={10} className="text-green-500" />
+                <p className="text-base text-gray-400 flex items-center gap-1">
+                  <LocateFixed size={13} className="text-green-500" />
                   {geo.detectedZone ?? 'Campus ECI'} · {topParches.length} parches activos
                 </p>
               </div>
@@ -245,7 +304,7 @@ export function HomePage() {
                 className="text-xs font-semibold flex items-center gap-1"
                 style={{ color: TEAL }}
               >
-                Ver mapa <ChevronRight size={12} />
+                Ver mapa <ChevronRight size={16} />
               </button>
             </div>
             <div className="space-y-2">
@@ -274,17 +333,17 @@ export function HomePage() {
                       <h3 className="font-semibold text-gray-800 dark:text-white text-xs truncate">{parche.name}</h3>
                       {parche.trending && (
                         <span className="flex items-center gap-0.5 text-[9px] font-bold" style={{ color: ORANGE }}>
-                          <Flame size={9} />
+                          <Flame size={12} />
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-gray-400">
                       <span className="flex items-center gap-1">
-                        <MapPin size={9} className="text-green-500" /> {parche.location}
+                        <MapPin size={12} className="text-green-500" /> {parche.location}
                       </span>
                       <span>·</span>
                       <span className="flex items-center gap-1">
-                        <Users size={9} /> {parche.members}/{parche.maxMembers}
+                        <Users size={12} /> {parche.members}/{parche.maxMembers}
                       </span>
                     </div>
                   </div>
@@ -292,7 +351,7 @@ export function HomePage() {
                     className="px-2 py-1 rounded-lg text-[9px] font-bold flex items-center gap-1"
                     style={{ background: 'rgba(16,185,129,0.15)', color: '#10B981' }}
                   >
-                    <LocateFixed size={8} />
+                    <LocateFixed size={11} />
                     <span>Cerca</span>
                   </div>
                 </motion.div>
@@ -313,7 +372,7 @@ export function HomePage() {
               className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-2"
               style={{ background: 'rgba(245,158,11,0.15)' }}
             >
-              <MapPin size={20} className="text-orange-500" />
+              <MapPin size={24} className="text-orange-500" />
             </div>
             <p className="text-xs font-bold text-gray-800 dark:text-white mb-1">
               Estás fuera del campus
@@ -327,17 +386,25 @@ export function HomePage() {
       {}
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-gray-800 dark:text-white font-semibold">🌈 Explora por Vibras</h2>
+          <h2 className="text-gray-800 dark:text-white font-bold text-xl">🌈 Explora por Vibras</h2>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {vibraCategories.map(vibra => {
+            const vibraImageMap: Record<string, string> = {
+              'v1': vibraMusica,
+              'v2': vibraAireLibre,
+              'v3': vibraEstudio,
+              'v4': vibraGastronomia,
+              'v5': vibraVideojuegos,
+              'v6': vibraPintura,
+            };
             const categoryMap: Record<string, string> = {
-              'Live Music': 'Música',
-              'Outdoor': 'Deporte',
-              'Study': 'Estudio',
-              'Foodie': 'Social',
-              'Gaming': 'Tecnología',
-              'Arte': 'Arte',
+              'Música en Vivo': 'Música',
+              'Al Aire Libre': 'Deporte',
+              'Estudio': 'Estudio',
+              'Gastronomía': 'Social',
+              'Videojuegos': 'Tecnología',
+              'Arte y Cultura': 'Arte',
             };
             return (
               <button
@@ -347,18 +414,17 @@ export function HomePage() {
                   navigate(`/parches?tab=explorar&category=${encodeURIComponent(category)}`);
                 }}
                 className="flex-shrink-0 relative overflow-hidden rounded-2xl transition-all active:scale-95"
-                style={{ width: '100px', height: '80px' }}
+                style={{ width: '185px', height: '155px' }}
               >
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: vibra.gradient,
-                    opacity: 0.85,
-                  }}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                  <span style={{ fontSize: '22px', lineHeight: 1 }}>{vibra.emoji}</span>
-                  <span className="text-white text-[11px] font-semibold">{vibra.name}</span>
+                <div className="absolute inset-0" style={{ background: vibra.gradient, opacity: 0.9 }} />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <img
+                    src={vibraImageMap[vibra.id]}
+                    alt={vibra.name}
+                    className="w-24 h-24 object-contain drop-shadow-lg"
+                    style={{ opacity: 0.75 }}
+                  />
+                  <span className="text-white text-[13px] font-bold leading-tight drop-shadow text-center">{vibra.name}</span>
                 </div>
               </button>
             );
@@ -369,17 +435,17 @@ export function HomePage() {
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-gray-800 dark:text-white font-semibold">🎯 Perfect Match</h2>
-            <p className="text-xs text-gray-400">Personas con tu misma sintonía</p>
+            <h2 className="text-gray-800 dark:text-white font-bold text-xl">🎯 Perfect Match</h2>
+            <p className="text-base text-gray-400">Personas con tu misma sintonía</p>
           </div>
           <button
             onClick={() => navigate('/matches')}
             className="text-xs font-semibold flex items-center gap-1 text-[#E91E63] dark:text-cyan-400 transition-colors"
           >
-            Ver todos <ChevronRight size={12} />
+            Ver todos <ChevronRight size={16} />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {topMatches.slice(0, 4).map((user, i) => (
             <motion.div
               key={user.id}
@@ -387,81 +453,72 @@ export function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               onClick={() => navigate(`/user/${user.id}`)}
-              className="rounded-2xl p-3 flex flex-col items-center cursor-pointer active:scale-[0.98] transition-all"
+              onClick={() => navigate(`/user/${user.id}`)}
+              className="rounded-2xl overflow-hidden flex flex-row cursor-pointer active:scale-[0.98] transition-all"
               style={{
                 background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
                 boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
                 border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
+                height: '140px',
               }}
             >
-              <div className="relative mb-2">
-                <div
-                  className="w-20 h-20 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)' }}
-                >
-                  <span className="text-white font-bold text-2xl select-none">
-                    {user.name.charAt(0)}
-                  </span>
+              {/* Mitad izquierda: imagen */}
+              <div className="relative flex-shrink-0" style={{ width: '50%' }}>
+                <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)' }}>
+                  <span className="text-white font-bold text-4xl select-none">{user.name.charAt(0)}</span>
                   <img
                     src={user.avatar}
                     alt={user.name}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover object-center"
                     onError={e => { e.currentTarget.style.display = 'none'; }}
                   />
                 </div>
-                <div
-                  className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white shadow"
-                  style={{ background: TEAL_GRADIENT }}
-                >
+                {/* Fade derecho */}
+                <div className="absolute inset-y-0 right-0 w-8 pointer-events-none" style={{ background: isDark ? 'linear-gradient(to right, transparent, #112240)' : 'linear-gradient(to right, transparent, rgba(253,252,248,0.95))' }} />
+                <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold text-white shadow" style={{ background: TEAL_GRADIENT }}>
                   {user.matchPercent}%
                 </div>
                 {user.online && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#112240]" style={{ background: TEAL }} />
+                  <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full border-2 border-white" style={{ background: TEAL }} />
                 )}
               </div>
-              <div className="w-full text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <h3 className="text-gray-800 dark:text-white font-semibold text-sm truncate">{user.name.split(' ')[0]}</h3>
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: TEAL }} />
+              {/* Mitad derecha: info + botón */}
+              <div className="flex flex-col justify-between p-4" style={{ width: '50%' }}>
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <h3 className="text-gray-800 dark:text-white font-bold text-base truncate">{user.name.split(' ')[0]}</h3>
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: TEAL }} />
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap mb-2">
+                    {user.interests.slice(0, 2).map(interest => (
+                      <span key={interest} className="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style={{ background: isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.1)', color: TEAL }}>
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-1"><MapPin size={11} /> {user.commonPlace}</p>
                 </div>
-                <div className="flex gap-1 justify-center flex-wrap mb-2">
-                  {user.interests.slice(0, 2).map(interest => (
-                    <span key={interest} className="px-2 py-0.5 rounded-full text-[9px] bg-gray-100 dark:bg-[#172A45] text-gray-600 dark:text-gray-400">
-                      {interest}
-                    </span>
-                  ))}
+                <div className="mt-4">
+                <button
+                  className="w-full py-2 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95 text-white text-xs font-bold shadow-md"
+                  style={{
+                    background: getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? '#10B981' :
+                                getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? '#F59E0B' :
+                                GRADIENT,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  }}
+                  onClick={e => { e.stopPropagation(); handleQuickConnect(user.id, user.connectionStatus); }}
+                >
+                  {getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? (
+                    <><Heart size={13} fill="white" /><span>Conectado</span></>
+                  ) : getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? (
+                    <><Clock size={13} /><span>Pendiente</span></>
+                  ) : (
+                    <><Heart size={13} /><span>Conectar</span></>
+                  )}
+                </button>
                 </div>
-                <p className="text-[10px] text-gray-400 truncate flex items-center justify-center gap-1"><MapPin size={9} /> {user.commonPlace}</p>
               </div>
-              <button
-                className="w-full mt-2 py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all active:scale-95 text-white text-xs font-semibold"
-                style={{
-                  background: getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? '#10B981' :
-                              getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? '#F59E0B' :
-                              GRADIENT
-                }}
-                onClick={e => {
-                  e.stopPropagation();
-                  handleQuickConnect(user.id, user.connectionStatus);
-                }}
-              >
-                {getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? (
-                  <>
-                    <Heart size={14} className="text-white" fill="white" />
-                    <span>Conectado</span>
-                  </>
-                ) : getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? (
-                  <>
-                    <Clock size={14} className="text-white" />
-                    <span>Pendiente</span>
-                  </>
-                ) : (
-                  <>
-                    <Heart size={14} className="text-white" />
-                    <span>Conectar</span>
-                  </>
-                )}
-              </button>
             </motion.div>
           ))}
         </div>
@@ -470,11 +527,11 @@ export function HomePage() {
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-gray-800 dark:text-white font-semibold">📅 Eventos</h2>
-            <p className="text-xs text-gray-400">Lo que está pasando en el campus</p>
+            <h2 className="text-gray-800 dark:text-white font-bold text-xl">📅 Eventos</h2>
+            <p className="text-base text-gray-400">Lo que está pasando en el campus</p>
           </div>
           <button onClick={() => navigate('/events')} className="text-xs font-semibold flex items-center gap-1" style={{ color: PINK }}>
-            Ver más <ChevronRight size={12} />
+            Ver más <ChevronRight size={16} />
           </button>
         </div>
         {}
@@ -501,8 +558,8 @@ export function HomePage() {
             <p className="text-white/70 text-xs mb-2 line-clamp-1">{featuredEvent.description}</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-white/70 text-xs">
-                <span className="flex items-center gap-1"><Clock size={10} />{featuredEvent.time}</span>
-                <span className="flex items-center gap-1"><Users size={10} /> {featuredEvent.attendees}+ van</span>
+                <span className="flex items-center gap-1"><Clock size={13} />{featuredEvent.time}</span>
+                <span className="flex items-center gap-1"><Users size={13} /> {featuredEvent.attendees}+ van</span>
               </div>
               <button
                 className="px-3 py-1.5 rounded-full text-white text-xs font-semibold"
@@ -515,7 +572,13 @@ export function HomePage() {
           </div>
         </motion.div>
         {}
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
+        <div className="relative">
+        <div
+          ref={carouselRef}
+          onScroll={handleCarouselScroll}
+          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5"
+          style={{ WebkitMaskImage: 'linear-gradient(to right, black 92%, transparent 100%)', maskImage: 'linear-gradient(to right, black 92%, transparent 100%)' }}
+        >
           {}
           {events.slice(1).map(event => (
             <motion.button
@@ -525,37 +588,37 @@ export function HomePage() {
               onClick={() => navigate('/events')}
               className="flex-shrink-0 rounded-2xl overflow-hidden text-left flex flex-col"
               style={{
-                width: 155,
-                height: 180,
+                width: 200,
+                height: 230,
                 background: isDark ? '#112240' : 'white',
                 border: `1.5px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             >
               {}
-              <div className="h-16 flex items-center justify-center relative" style={{ background: event.coverGradient }}>
-                <EmojiIcon emoji={event.emoji} size={26} color="white" strokeWidth={2} />
+              <div className="h-24 flex items-center justify-center relative" style={{ background: event.coverGradient }}>
+                <EmojiIcon emoji={event.emoji} size={34} color="white" strokeWidth={2} />
                 {event.official && (
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
                     OFICIAL
                   </div>
                 )}
-                <div className="absolute top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
-                  <Users size={7} /> {event.attendees}
+                <div className="absolute top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                  <Users size={10} /> {event.attendees}
                 </div>
               </div>
               {}
-              <div className="p-2.5">
-                <p className="text-[11px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{event.title}</p>
-                <p className="text-[9px] text-gray-400 flex items-center gap-1 mb-1.5">
-                  <Clock size={8} /> {event.date} · {event.time}
+              <div className="p-3">
+                <p className="text-[13px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{event.title}</p>
+                <p className="text-[11px] text-gray-400 flex items-center gap-1 mb-1.5">
+                  <Clock size={11} /> {event.date} · {event.time}
                 </p>
-                <p className="text-[9px] text-gray-400 flex items-center gap-1 line-clamp-1">
-                  <MapPin size={8} /> {event.location}
+                <p className="text-[11px] text-gray-400 flex items-center gap-1 line-clamp-1">
+                  <MapPin size={11} /> {event.location}
                 </p>
                 <div className="mt-2">
                   <span
-                    className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white"
+                    className="text-[11px] font-bold px-3 py-1 rounded-full text-white"
                     style={{ background: GRADIENT }}
                   >
                     Inscribirme
@@ -573,36 +636,36 @@ export function HomePage() {
               onClick={() => navigate(`/parches/${parche.id}`)}
               className="flex-shrink-0 rounded-2xl overflow-hidden text-left flex flex-col"
               style={{
-                width: 155,
-                height: 180,
+                width: 200,
+                height: 230,
                 background: isDark ? '#112240' : 'white',
                 border: `1.5px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             >
               {}
-              <div className="h-16 flex items-center justify-center relative" style={{ background: parche.coverColor }}>
-                <EmojiIcon emoji={parche.emoji} size={26} color="white" strokeWidth={2} />
+              <div className="h-24 flex items-center justify-center relative" style={{ background: parche.coverColor }}>
+                <EmojiIcon emoji={parche.emoji} size={34} color="white" strokeWidth={2} />
                 {parche.trending && (
-                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
-                    <TrendingUp size={7} /> HOT
+                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
+                    <TrendingUp size={10} /> HOT
                   </div>
                 )}
-                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[8px] font-bold" style={{ background: 'rgba(0,0,0,0.35)', color: 'white' }}>
+                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'rgba(0,0,0,0.35)', color: 'white' }}>
                   {parche.type === 'public' ? '🌐' : '🔒'}
                 </div>
               </div>
               {}
-              <div className="p-2.5">
-                <p className="text-[11px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{parche.name}</p>
-                <p className="text-[9px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-tight mb-1.5">{parche.description.slice(0, 52)}...</p>
+              <div className="p-3">
+                <p className="text-[13px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{parche.name}</p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-tight mb-1.5">{parche.description.slice(0, 52)}...</p>
                 <div className="flex items-center justify-between">
                   <div className="flex -space-x-1.5">
                     {parche.memberAvatars.slice(0, 3).map((av, i) => (
-                      <img key={i} src={av} alt="" className="w-5 h-5 rounded-full object-cover border border-white dark:border-[#112240]" />
+                      <img key={i} src={av} alt="" className="w-6 h-6 rounded-full object-cover border border-white dark:border-[#112240]" />
                     ))}
                   </div>
-                  <span className="text-[9px] text-gray-400">{parche.members}/{parche.maxMembers}</span>
+                  <span className="text-[11px] text-gray-400">{parche.members}/{parche.maxMembers}</span>
                 </div>
               </div>
             </motion.button>
@@ -623,21 +686,44 @@ export function HomePage() {
               className="w-10 h-10 rounded-full flex items-center justify-center"
               style={{ background: GRADIENT }}
             >
-              <ChevronRight size={18} color="white" />
+              <ChevronRight size={22} color="white" />
             </div>
             <span className="text-[10px] font-bold text-center px-2" style={{ color: PINK }}>Ver todos los eventos</span>
           </motion.button>
+        </div>
+        {!carouselAtStart && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => scrollCarousel('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg z-10"
+            style={{ background: GRADIENT }}
+          >
+            <ChevronRight size={20} color="white" className="rotate-180" />
+          </motion.button>
+        )}
+        {!carouselAtEnd && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => scrollCarousel('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg z-10"
+            style={{ background: GRADIENT }}
+          >
+            <ChevronRight size={20} color="white" />
+          </motion.button>
+        )}
         </div>
       </section>
       {}
       <section className="px-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-gray-800 dark:text-white font-semibold">🤝 Parches Sugeridos</h2>
-            <p className="text-xs text-gray-400">Basados en tus intereses</p>
+            <h2 className="text-gray-800 dark:text-white font-bold text-xl">🤝 Parches Sugeridos</h2>
+            <p className="text-base text-gray-400">Basados en tus intereses</p>
           </div>
           <button onClick={() => navigate('/parches')} className="text-xs font-semibold flex items-center gap-1" style={{ color: PINK }}>
-            Ver todos <ChevronRight size={12} />
+            Ver todos <ChevronRight size={16} />
           </button>
         </div>
         {}
@@ -646,39 +732,45 @@ export function HomePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => navigate(`/parches/${topParches[0].id}`)}
-            className="rounded-2xl p-4 mb-3 cursor-pointer active:scale-[0.98] transition-all"
+            className="rounded-2xl p-6 pb-10 mb-4 cursor-pointer active:scale-[0.98] transition-all overflow-hidden relative"
             style={{ background: topParches[0].coverColor }}
           >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
+            <img
+              src={patySelfie}
+              alt=""
+              className="absolute -bottom-4 right-3 h-44 sm:-bottom-20 sm:right-6 sm:h-60 object-contain object-top pointer-events-none"
+              style={{ opacity: 0.4 }}
+            />
+            <div className="flex items-start justify-between mb-3 relative z-10">
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)' }}
                 >
-                  <EmojiIcon emoji={topParches[0].emoji} size={20} color="white" strokeWidth={2} />
+                  <EmojiIcon emoji={topParches[0].emoji} size={28} color="white" strokeWidth={2} />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold">{topParches[0].name}</h3>
-                  <p className="text-white/70 text-xs">{topParches[0].description}</p>
+                  <h3 className="text-white font-bold text-lg">{topParches[0].name}</h3>
+                  <p className="text-white/70 text-sm">{topParches[0].description}</p>
                 </div>
               </div>
               {topParches[0].trending && (
-                <span className="flex-shrink-0 px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold flex items-center gap-1">
-                  <Flame size={9} /> TRENDING
+                <span className="flex-shrink-0 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold flex items-center gap-1">
+                  <Flame size={13} /> TRENDING
                 </span>
               )}
             </div>
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center justify-between mt-4 relative z-10">
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {topParches[0].memberAvatars.slice(0, 3).map((av, i) => (
-                    <img key={i} src={av} alt="" className="w-6 h-6 rounded-full object-cover border-2 border-white/50" />
+                    <img key={i} src={av} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/50" />
                   ))}
                 </div>
-                <span className="text-white/80 text-xs">+{topParches[0].members - 3} más</span>
+                <span className="text-white/80 text-sm">+{topParches[0].members - 3} más</span>
               </div>
               <button
-                className="px-4 py-1.5 rounded-full bg-white text-xs font-bold"
+                className="px-5 py-2 rounded-full bg-white text-sm font-bold"
                 style={{ color: PINK }}
                 onClick={e => { e.stopPropagation(); navigate(`/parches/${topParches[0].id}`); }}
               >
@@ -688,12 +780,12 @@ export function HomePage() {
           </motion.div>
         )}
         {}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {topParches.slice(1, 3).map(parche => (
             <button
               key={parche.id}
               onClick={() => navigate(`/parches/${parche.id}`)}
-              className="rounded-2xl p-4 text-left active:scale-[0.98] transition-all"
+              className="rounded-2xl p-5 text-left active:scale-[0.98] transition-all"
               style={{
                 background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
                 boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
@@ -701,16 +793,16 @@ export function HomePage() {
               }}
             >
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-2"
+                className="w-14 h-14 rounded-xl flex items-center justify-center mb-3"
                 style={{ background: parche.coverColor }}
               >
-                <EmojiIcon emoji={parche.emoji} size={18} color="white" strokeWidth={2} />
+                <EmojiIcon emoji={parche.emoji} size={26} color="white" strokeWidth={2} />
               </div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-white mb-0.5">{parche.name}</p>
-              <p className="text-[11px] text-gray-400">{parche.description.slice(0, 40)}...</p>
-              <div className="flex items-center gap-1 mt-2">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: TEAL }} />
-                <span className="text-[10px] text-gray-400">{parche.members} miembros</span>
+              <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">{parche.name}</p>
+              <p className="text-xs text-gray-400">{parche.description.slice(0, 50)}...</p>
+              <div className="flex items-center gap-1 mt-3">
+                <div className="w-2 h-2 rounded-full" style={{ background: TEAL }} />
+                <span className="text-xs text-gray-400">{parche.members} miembros</span>
               </div>
             </button>
           ))}
@@ -722,7 +814,7 @@ export function HomePage() {
           <button
             key={parche.id}
             onClick={() => navigate(`/parches/${parche.id}`)}
-            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-all"
+            className="w-full rounded-2xl p-5 flex items-center gap-4 active:scale-[0.98] transition-all"
             style={{
               background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
               boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
@@ -733,17 +825,17 @@ export function HomePage() {
               <img
                 src="https://images.unsplash.com/photo-1763890965393-1cea435581ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100"
                 alt={parche.name}
-                className="w-16 h-16 rounded-xl object-cover"
+                className="w-20 h-20 rounded-xl object-cover"
               />
               <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: GRADIENT }}>
                 NUEVO
               </span>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><MapPin size={10} /> A 500m en el campus</p>
-              <h3 className="font-semibold text-gray-800 dark:text-white text-sm">{parche.name}</h3>
-              <p className="text-xs text-gray-400 mt-0.5">{parche.description.slice(0, 50)}...</p>
-              <p className="text-xs font-medium mt-1" style={{ color: PINK }}>{parche.members} miembros activos</p>
+              <p className="text-sm text-gray-400 mb-1 flex items-center gap-1"><MapPin size={13} /> A 500m en el campus</p>
+              <h3 className="font-semibold text-gray-800 dark:text-white text-base">{parche.name}</h3>
+              <p className="text-sm text-gray-400 mt-0.5">{parche.description.slice(0, 60)}...</p>
+              <p className="text-sm font-medium mt-1" style={{ color: PINK }}>{parche.members} miembros activos</p>
             </div>
           </button>
         ))}
@@ -754,7 +846,7 @@ export function HomePage() {
         className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"
         style={{ background: GRADIENT }}
       >
-        <Plus size={24} />
+        <Plus size={28} />
       </button>
     </div>
   );
