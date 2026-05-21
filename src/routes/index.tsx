@@ -50,14 +50,16 @@ export const router = createBrowserRouter([
   { path: '/student/activity', Component: StudentActivityPage },
   { path: '/student/interaction', Component: StudentInteractionPage },
   { path: '/wellness/stats', Component: WellnessStatsPage },
-  { path: '/parches/create', Component: CreateParchePage },
-  { path: '/parches/:id', Component: ParchemDetailPage },
+  { path: '/chat/:id', Component: ChatPage },
+  { path: '/direct-chat/:id', Component: DirectChatPage },
   {
     path: '/',
     Component: Layout,
     children: [
       { path: 'home', Component: HomePage },
       { path: 'parches', Component: ParchesPage },
+      { path: 'parches/create', Component: CreateParchePage },
+      { path: 'parches/:id', Component: ParchemDetailPage },
       { path: 'chat', Component: ChatListPage },
       { path: 'chat/:id', Component: ChatPage },
       { path: 'direct-chat/:id', Component: DirectChatPage },
