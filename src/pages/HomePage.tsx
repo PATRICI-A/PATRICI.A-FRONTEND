@@ -82,6 +82,20 @@ export function HomePage() {
     setCarouselAtStart(scrollLeft <= 10);
     setCarouselAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
   };
+
+  const vibraRef = useRef<HTMLDivElement>(null);
+  const [vibraAtEnd, setVibraAtEnd] = useState(false);
+  const [vibraAtStart, setVibraAtStart] = useState(true);
+  const scrollVibra = (dir: 'left' | 'right') => {
+    if (!vibraRef.current) return;
+    vibraRef.current.scrollBy({ left: dir === 'right' ? 380 : -380, behavior: 'smooth' });
+  };
+  const handleVibraScroll = () => {
+    if (!vibraRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = vibraRef.current;
+    setVibraAtStart(scrollLeft <= 10);
+    setVibraAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
+  };
   const handleQuickConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
     const status = connectionStates[userId] || currentStatus || 'none';
     if (status === 'none') {
@@ -388,47 +402,81 @@ export function HomePage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-gray-800 dark:text-white font-bold text-xl">🌈 Explora por Vibras</h2>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-          {vibraCategories.map(vibra => {
-            const vibraImageMap: Record<string, string> = {
-              'v1': vibraMusica,
-              'v2': vibraAireLibre,
-              'v3': vibraEstudio,
-              'v4': vibraGastronomia,
-              'v5': vibraVideojuegos,
-              'v6': vibraPintura,
-            };
-            const categoryMap: Record<string, string> = {
-              'Música en Vivo': 'Música',
-              'Al Aire Libre': 'Deporte',
-              'Estudio': 'Estudio',
-              'Gastronomía': 'Social',
-              'Videojuegos': 'Tecnología',
-              'Arte y Cultura': 'Arte',
-            };
-            return (
-              <button
-                key={vibra.id}
-                onClick={() => {
-                  const category = categoryMap[vibra.name] || vibra.name;
-                  navigate(`/parches?tab=explorar&category=${encodeURIComponent(category)}`);
-                }}
-                className="flex-shrink-0 relative overflow-hidden rounded-2xl transition-all active:scale-95"
-                style={{ width: '185px', height: '155px' }}
-              >
-                <div className="absolute inset-0" style={{ background: vibra.gradient, opacity: 0.9 }} />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <img
-                    src={vibraImageMap[vibra.id]}
-                    alt={vibra.name}
-                    className="w-24 h-24 object-contain drop-shadow-lg"
-                    style={{ opacity: 0.75 }}
-                  />
-                  <span className="text-white text-[13px] font-bold leading-tight drop-shadow text-center">{vibra.name}</span>
-                </div>
-              </button>
-            );
-          })}
+        <div className="relative">
+          <div
+            ref={vibraRef}
+            onScroll={handleVibraScroll}
+            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to right, black 92%, transparent 100%)',
+              maskImage: 'linear-gradient(to right, black 92%, transparent 100%)',
+            }}
+          >
+            {vibraCategories.map(vibra => {
+              const vibraImageMap: Record<string, string> = {
+                'v1': vibraMusica,
+                'v2': vibraAireLibre,
+                'v3': vibraEstudio,
+                'v4': vibraGastronomia,
+                'v5': vibraVideojuegos,
+                'v6': vibraPintura,
+              };
+              const categoryMap: Record<string, string> = {
+                'Música en Vivo': 'Música',
+                'Al Aire Libre': 'Deporte',
+                'Estudio': 'Estudio',
+                'Gastronomía': 'Social',
+                'Videojuegos': 'Tecnología',
+                'Arte y Cultura': 'Arte',
+              };
+              return (
+                <motion.button
+                  key={vibra.id}
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    const category = categoryMap[vibra.name] || vibra.name;
+                    navigate(`/parches?tab=explorar&category=${encodeURIComponent(category)}`);
+                  }}
+                  className="flex-shrink-0 relative overflow-hidden rounded-2xl transition-all"
+                  style={{ width: '175px', height: '150px' }}
+                >
+                  <div className="absolute inset-0" style={{ background: vibra.gradient, opacity: 0.9 }} />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <img
+                      src={vibraImageMap[vibra.id]}
+                      alt={vibra.name}
+                      className="w-20 h-20 object-contain drop-shadow-lg"
+                      style={{ opacity: 0.75 }}
+                    />
+                    <span className="text-white text-[13px] font-bold leading-tight drop-shadow text-center px-2">{vibra.name}</span>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+          {!vibraAtStart && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => scrollVibra('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg z-10"
+              style={{ background: GRADIENT }}
+            >
+              <ChevronRight size={20} color="white" className="rotate-180" />
+            </motion.button>
+          )}
+          {!vibraAtEnd && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => scrollVibra('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg z-10"
+              style={{ background: GRADIENT }}
+            >
+              <ChevronRight size={20} color="white" />
+            </motion.button>
+          )}
         </div>
       </section>
       {}

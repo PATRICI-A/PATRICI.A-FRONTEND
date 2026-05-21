@@ -1,6 +1,6 @@
 import { useState, useId, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router';
-import { Sun, Moon, Menu } from 'lucide-react';
+import { Sun, Moon, Menu, ArrowLeft } from 'lucide-react';
 import { useApp } from '../../store/AppContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { LuxuryDrawer } from './LuxuryDrawer';
@@ -8,6 +8,7 @@ import { usePageHeader } from '../../store/PageHeaderContext';
 import { GRADIENT, GOLD_GRADIENT } from '../../types/mockData';
 import { DoodleBackground } from '../ui/DoodleBackground';
 import { MascotNotificationBubble } from '../ui/MascotNotificationBubble';
+import { Toaster } from '../ui/sonner';
 import logoImg from '../../assets/logo_nuevo_patricia.png';
 
 const DEMO_NOTIFICATIONS = [
@@ -19,7 +20,8 @@ const DEMO_NOTIFICATIONS = [
 ];
 
 export function Layout() {
-  const { isDark, toggleTheme, currentUser, notifications } = useApp();
+  const { isDark, toggleTheme, currentUser } = useApp();
+  const { header } = usePageHeader();
   const { push: pushNotification } = useNotifications();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
