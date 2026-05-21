@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Search, Filter, MapPin, Clock, Users, Lock, Globe, ChevronRight, Flame, Navigation, Mail, CheckCircle2, X, ChevronLeft } from 'lucide-react';
+import { Plus, Search, Filter, MapPin, Clock, Users, Lock, Globe, ChevronRight, Flame, Navigation, Mail, CheckCircle2, X, ChevronLeft, Crown } from 'lucide-react';
 import { parches, GRADIENT, PINK, ORANGE, GOLD_GRADIENT, GOLD_LIGHT, TEAL_GRADIENT } from '../types/mockData';
+import { useApp } from '../store/AppContext';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 const uniqueCategories = ['Todos', ...Array.from(new Set(parches.map(p => p.category)))];
 export function ParchesPage() {
   const navigate = useNavigate();
+  const { currentUser } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'mis-parches' | 'explorar' | 'invitaciones'>('mis-parches');
   const [activeCategory, setActiveCategory] = useState('Todos');
@@ -203,7 +205,10 @@ export function ParchesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-none">{parche.name}</h3>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-none flex items-center gap-2">
+                            {parche.name}
+                            {parche.adminId === currentUser?.id && <Crown size={18} className="text-yellow-400 fill-yellow-400 drop-shadow-md" />}
+                          </h3>
                           {parche.type === 'private' ? (
                             <Lock size={14} className="text-gray-400" />
                           ) : (
@@ -314,7 +319,10 @@ export function ParchesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-none">{parche.name}</h3>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-none flex items-center gap-2">
+                            {parche.name}
+                            {parche.adminId === currentUser?.id && <Crown size={18} className="text-yellow-400 fill-yellow-400 drop-shadow-md" />}
+                          </h3>
                           {parche.type === 'private' ? (
                             <Lock size={14} className="text-gray-400" />
                           ) : (
@@ -436,7 +444,10 @@ export function ParchesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-none">{parche.name}</h3>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white leading-none flex items-center gap-2">
+                            {parche.name}
+                            {parche.adminId === currentUser?.id && <Crown size={18} className="text-yellow-400 fill-yellow-400 drop-shadow-md" />}
+                          </h3>
                           {parche.type === 'private' && <Lock size={14} className="text-gray-400" />}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug">{parche.description}</p>

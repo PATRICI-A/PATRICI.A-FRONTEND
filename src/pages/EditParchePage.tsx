@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { motion } from 'motion/react';
-import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, events } from '../types/mockData';
+import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Image as ImageIcon, Ticket, Save, CheckCircle } from 'lucide-react';
+import { GRADIENT, PINK, ORANGE, events, parches } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+
 const categories = [
   { id: 'musica', label: 'Música', emoji: '🎵', gradient: GRADIENT },
   { id: 'deporte', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
@@ -14,30 +15,36 @@ const categories = [
   { id: 'gastronomia', label: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)' },
   { id: 'bienestar', label: 'Bienestar', emoji: '🧘', gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' },
 ];
-const friends = [
-  { id: 'u2', name: 'Valentina R.', avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-  { id: 'u3', name: 'Mateo S.', avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-  { id: 'u4', name: 'Sofía M.', avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-  { id: 'u5', name: 'Daniel C.', avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-];
-export function CreateParchePage() {
+
+export function EditParchePage() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [isPublic, setIsPublic] = useState(true);
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [maxMembers, setMaxMembers] = useState('10');
-  const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
-  const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [eventId, setEventId] = useState<string>('');
+  const { id } = useParams();
+  
+  const parche = parches.find(p => p.id === id);
+
+  const [description, setDescription] = useState(parche?.description || '');
+  const [category, setCategory] = useState(parche?.category || '');
+  const [isPublic, setIsPublic] = useState(parche?.type === 'public');
+  const [location, setLocation] = useState(parche?.location || '');
+  const [date, setDate] = useState(parche?.date || '');
+  const [time, setTime] = useState(parche?.time || '');
+  const [maxMembers, setMaxMembers] = useState(String(parche?.maxMembers || 10));
+  const [coverImage, setCoverImage] = useState<string | null>(parche?.coverImage || null);
+  const [eventId, setEventId] = useState<string>(parche?.eventId || '');
+  
   const [isLoading, setIsLoading] = useState(false);
-  const [created, setCreated] = useState(false);
-  const toggleFriend = (id: string) => {
-    setInvitedFriends(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
-  };
+  const [saved, setSaved] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Fallback if parche is not found
+  useEffect(() => {
+    if (!parche) {
+      navigate('/parches');
+    }
+  }, [parche, navigate]);
+
+  if (!parche) return null;
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -48,16 +55,30 @@ export function CreateParchePage() {
       reader.readAsDataURL(file);
     }
   };
-  const handleCreate = async () => {
-    if (!name || !category || !coverImage) return;
+
+  const handleSave = async () => {
+    if (!category) return;
+    
+    // Business rule: max members cannot be less than current members
+    const newMax = parseInt(maxMembers);
+    if (newMax < parche.members) {
+      setErrorMsg(`El cupo máximo no puede ser menor a los miembros actuales (${parche.members})`);
+      return;
+    }
+    setErrorMsg('');
     setIsLoading(true);
+    
+    // Simulate save
     await new Promise(r => setTimeout(r, 1500));
-    setCreated(true);
+    setSaved(true);
     setIsLoading(false);
-    setTimeout(() => navigate('/parches'), 2000);
+    
+    setTimeout(() => navigate(`/parches/${parche.id}`), 1500);
   };
+
   const selectedCategory = categories.find(c => c.id === category);
-  if (created) {
+
+  if (saved) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <motion.div
@@ -66,23 +87,21 @@ export function CreateParchePage() {
           className="text-center"
         >
           <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
-            style={{ background: GRADIENT }}
+            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl bg-green-500"
           >
-            <Sparkles size={40} color="white" />
+            <CheckCircle size={40} color="white" />
           </div>
-          <h2 className="text-gray-900 dark:text-white mb-2">¡Parche creado!</h2>
+          <h2 className="text-gray-900 dark:text-white mb-2">¡Cambios guardados!</h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Tu parche <strong style={{ color: PINK }}>{name}</strong> ya está activo
+            El parche ha sido actualizado con éxito.
           </p>
-          <p className="text-xs text-gray-400 mt-2">Redirigiendo...</p>
         </motion.div>
       </div>
     );
   }
+
   return (
     <div className="min-h-screen pb-8">
-      {}
       <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 md:top-0 z-10">
         <button
           onClick={() => navigate(-1)}
@@ -91,40 +110,16 @@ export function CreateParchePage() {
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="text-gray-900 dark:text-white text-base">Crear Parche</h1>
-          <p className="text-xs text-gray-400">Arma tu plan perfecto</p>
+          <h1 className="text-gray-900 dark:text-white text-base">Editar Parche</h1>
+          <p className="text-xs text-gray-400">Actualiza los detalles</p>
         </div>
       </div>
+
       <div className="px-5 pt-6 max-w-lg mx-auto">
-        {}
-        {(name || selectedCategory) && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 rounded-2xl p-5 text-white shadow-lg"
-            style={{ background: selectedCategory?.gradient || GRADIENT }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(4px)' }}
-              >
-                <EmojiIcon emoji={selectedCategory?.emoji || '✨'} size={22} color="white" strokeWidth={2} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">{name || 'Nombre del parche'}</h3>
-                <p className="text-white/70 text-xs mt-0.5 flex items-center gap-1">
-                  {isPublic ? <><Globe size={10} /> Público</> : <><Lock size={10} /> Privado</>}
-                  {' · '}{selectedCategory?.label || 'Categoría'}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
         <div className="space-y-5">
           {/* Imagen de Portada */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen de Portada *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen de Portada</label>
             <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1A2C4E]"
                    style={{ borderColor: coverImage ? PINK : '#E5E7EB', overflow: 'hidden' }}>
               {coverImage ? (
@@ -132,24 +127,24 @@ export function CreateParchePage() {
               ) : (
                 <div className="flex flex-col items-center justify-center text-gray-400">
                   <ImageIcon size={28} className="mb-2" />
-                  <span className="text-sm font-medium">Toca para subir imagen</span>
+                  <span className="text-sm font-medium">Toca para cambiar imagen</span>
                 </div>
               )}
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
             </label>
           </div>
-          {/* Nombre */}
+
+          {/* Nombre Fijo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre del parche *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre del parche (Fijo)</label>
             <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Ej: Melómanos del Campus"
-              maxLength={50}
-              className="w-full px-4 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#1D4ED8] transition-all"
+              value={parche.name}
+              disabled
+              className="w-full px-4 py-3.5 rounded-xl bg-gray-100 dark:bg-[#172A45] border border-gray-200 dark:border-[#233554] text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-80"
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{name.length}/50</p>
           </div>
+
+          {/* Descripción */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
             <textarea
@@ -162,6 +157,8 @@ export function CreateParchePage() {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/200</p>
           </div>
+
+          {/* Categoría */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categoría *</label>
             <div className="grid grid-cols-4 gap-2">
@@ -190,6 +187,8 @@ export function CreateParchePage() {
               ))}
             </div>
           </div>
+
+          {/* Tipo de parche */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de parche</label>
             <div className="grid grid-cols-2 gap-3">
@@ -219,6 +218,7 @@ export function CreateParchePage() {
               ))}
             </div>
           </div>
+
           {/* Evento */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Evento asociado (Opcional)</label>
@@ -236,6 +236,7 @@ export function CreateParchePage() {
               </select>
             </div>
           </div>
+
           {/* Ubicacion y hora */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -263,6 +264,7 @@ export function CreateParchePage() {
               </div>
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha</label>
@@ -284,60 +286,33 @@ export function CreateParchePage() {
                   type="number"
                   value={maxMembers}
                   onChange={e => setMaxMembers(e.target.value)}
-                  min="2"
+                  min={parche.members} // No less than current members
                   max="100"
                   className="w-full pl-8 pr-3 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all"
                 />
               </div>
             </div>
           </div>
-          {}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Invitar amigos ({invitedFriends.length} seleccionados)
-            </label>
-            <div className="space-y-2">
-              {friends.map(friend => {
-                const isInvited = invitedFriends.includes(friend.id);
-                return (
-                  <button
-                    key={friend.id}
-                    type="button"
-                    onClick={() => toggleFriend(friend.id)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border transition-all"
-                    style={
-                      isInvited
-                        ? { borderColor: PINK, background: 'rgba(232,36,90,0.05)' }
-                        : { borderColor: '#E5E7EB', background: 'white' }
-                    }
-                  >
-                    <img src={friend.avatar} alt={friend.name} className="w-9 h-9 rounded-full object-cover" />
-                    <span className="flex-1 text-sm font-medium text-gray-800 text-left">{friend.name}</span>
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={isInvited ? { background: GRADIENT } : { background: '#E5E7EB' }}
-                    >
-                      {isInvited ? <Check size={12} color="white" /> : <Plus size={12} color="#9CA3AF" />}
-                    </div>
-                  </button>
-                );
-              })}
+
+          {errorMsg && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium">
+              {errorMsg}
             </div>
-          </div>
-          {}
+          )}
+
           <button
-            onClick={handleCreate}
-            disabled={!name || !category || !coverImage || isLoading}
+            onClick={handleSave}
+            disabled={!category || isLoading}
             className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
             style={{ background: GRADIENT }}
           >
             {isLoading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Creando parche...
+                Guardando...
               </>
             ) : (
-              <><Rocket size={18} /> Crear Parche</>
+              <><Save size={18} /> Guardar Cambios</>
             )}
           </button>
         </div>

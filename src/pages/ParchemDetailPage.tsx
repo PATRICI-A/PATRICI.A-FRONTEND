@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle, Edit, Trash2, X, Plus, Check, Crown } from 'lucide-react';
 import { parches, matchUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
@@ -45,6 +45,13 @@ export function ParchemDetailPage() {
   const [reportDescription, setReportDescription] = useState('');
   const [reportDescriptionError, setReportDescriptionError] = useState('');
   const [reportCaseNumber, setReportCaseNumber] = useState('');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const isOwner = currentUser?.id === parche.adminId || currentUser?.name === parche.admin;
+
   const reportReasons = ['Contenido inapropiado', 'Acoso', 'Spam', 'Información falsa', 'Otro'];
   const handleNextStep = () => {
     if (!reportCategory) return;
@@ -64,6 +71,17 @@ export function ParchemDetailPage() {
     setReportDescriptionError('');
     setReportCaseNumber('');
   };
+  
+  const handleLeave = () => {
+    if (isOwner && parche.members > 1) {
+      setShowTransferModal(true);
+    } else if (isOwner && parche.members <= 1) {
+      setShowDeleteConfirm(true);
+    } else {
+      setJoined(false);
+    }
+  };
+
   const members = matchUsers.slice(0, Math.min(4, parche?.members ?? 0));
   const isFull = (parche?.members ?? 0) >= (parche?.maxMembers ?? 1);
   if (!id || !parche) return <ParcheDetailSkeleton />;
@@ -137,8 +155,10 @@ export function ParchemDetailPage() {
           </div>
         </div>
       </header>
-      {}
-      <div className="relative h-56 mt-[57px]" style={{ background: parche.coverColor }}>
+      {/* Background Cover */}
+      <div className="relative h-56 mt-[57px]" style={{ background: parche.coverImage ? `url(${parche.coverImage}) center/cover no-repeat` : parche.coverColor }}>
+        {/* Overlay gradient so text is readable over image */}
+        {parche.coverImage && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />}
         <button
           onClick={() => navigate(-1)}
           className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white z-10"
@@ -193,6 +213,25 @@ export function ParchemDetailPage() {
                     <Flag size={15} />
                     Reportar parche
                   </button>
+                  {isOwner && (
+                    <>
+                      <div className="h-px bg-gray-100 dark:bg-white/5 my-1" />
+                      <button
+                        onClick={() => { setShowReportMenu(false); navigate(`/parches/${parche.id}/edit`); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+                      >
+                        <Edit size={15} />
+                        Editar parche
+                      </button>
+                      <button
+                        onClick={() => { setShowReportMenu(false); setShowDeleteConfirm(true); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                      >
+                        <Trash2 size={15} />
+                        Eliminar parche
+                      </button>
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -228,7 +267,10 @@ export function ParchemDetailPage() {
                   </span>
                 )}
               </div>
-              <h1 className="text-white text-xl font-bold">{parche.name}</h1>
+              <h1 className="text-white text-xl font-bold flex items-center gap-2">
+                {parche.name}
+                {isOwner && <Crown size={20} className="text-yellow-400 drop-shadow-md fill-yellow-400" />}
+              </h1>
             </div>
             <div className="flex -space-x-2">
               {parche.memberAvatars.slice(0, 3).map((av, i) => (
@@ -301,9 +343,11 @@ export function ParchemDetailPage() {
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-black text-gray-900 dark:text-white">Miembros ({parche.members})</h3>
             </div>
-            <button className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20" style={{ color: PINK }}>
-              <UserPlus size={14} /> Invitar
-            </button>
+            {joined && (
+              <button onClick={() => setShowInviteModal(true)} className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20" style={{ color: PINK }}>
+                <UserPlus size={14} /> Invitar
+              </button>
+            )}
           </div>
           <div className="flex flex-col gap-2">
             {members.map(member => (
@@ -375,7 +419,7 @@ export function ParchemDetailPage() {
                 Ir al Chat
               </motion.button>
               <button
-                onClick={() => setJoined(false)}
+                onClick={handleLeave}
                 className="w-16 h-16 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors active:scale-95"
               >
                 <LogOut size={22} />
@@ -552,6 +596,89 @@ export function ParchemDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Modals for Invite, Transfer, Delete */}
+      <AnimatePresence>
+        {/* Invite Modal */}
+        {showInviteModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-[#0D1B2E] rounded-3xl p-6 shadow-2xl" style={{ border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}` }}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">Invitar amigos</h3>
+                <button onClick={() => setShowInviteModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
+              </div>
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-2 mb-4">
+                {matchUsers.slice(0, 5).map(friend => {
+                  const isInvited = invitedFriends.includes(friend.id);
+                  return (
+                    <button key={friend.id} onClick={() => setInvitedFriends(prev => isInvited ? prev.filter(id => id !== friend.id) : [...prev, friend.id])} className="w-full flex items-center gap-3 p-2 rounded-xl transition-all" style={{ background: isInvited ? 'rgba(29,78,216,0.1)' : 'transparent' }}>
+                      <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-full object-cover" />
+                      <span className="flex-1 text-sm font-medium text-left text-gray-800 dark:text-gray-200">{friend.name}</span>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: isInvited ? GRADIENT : (isDark ? '#1E293B' : '#E5E7EB') }}>
+                        {isInvited ? <Check size={12} color="white" /> : <Plus size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button onClick={() => { setShowInviteModal(false); setInvitedFriends([]); }} className="w-full py-3 rounded-2xl text-white font-bold" style={{ background: GRADIENT }}>
+                Enviar Invitaciones ({invitedFriends.length})
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Transfer Ownership Modal */}
+        {showTransferModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-[#0D1B2E] rounded-3xl p-6 shadow-2xl" style={{ border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}` }}>
+              <div className="mb-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-3">
+                  <Users size={28} className="text-blue-500" />
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">Transferir Liderazgo</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Antes de salir, debes transferir el liderazgo del parche a otro miembro.</p>
+              </div>
+              <div className="space-y-2 mb-5 max-h-48 overflow-y-auto">
+                {matchUsers.slice(0, Math.min(4, parche.members)).filter(m => m.id !== currentUser?.id).map(member => (
+                  <button key={member.id} onClick={() => { setJoined(false); setShowTransferModal(false); navigate('/parches'); }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-left transition-colors">
+                    <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{member.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Hacer capitán</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setShowTransferModal(false)} className="w-full py-3 rounded-2xl font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800">
+                Cancelar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Delete Confirm Modal */}
+        {showDeleteConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-sm bg-white dark:bg-[#0D1B2E] rounded-3xl p-6 shadow-2xl text-center" style={{ border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}` }}>
+              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={28} className="text-red-500" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">¿Eliminar parche?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer. Todos los miembros serán notificados.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800">
+                  Cancelar
+                </button>
+                <button onClick={() => navigate('/parches')} className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 hover:bg-red-600">
+                  Eliminar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

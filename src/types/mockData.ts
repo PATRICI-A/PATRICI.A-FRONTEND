@@ -32,6 +32,8 @@ export interface Parche {
   tags: string[];
   admin: string;
   adminId: string;
+  coverImage?: string;
+  eventId?: string;
 }
 export interface Event {
   id: string;
@@ -519,6 +521,29 @@ export const matchUsers: MatchUser[] = [
   },
 ];
 export const parches: Parche[] = [
+  {
+    id: 'p-user',
+    name: 'El parche de Patri',
+    description: 'Mi propio parche para organizar las mejores reuniones del semestre. ¡Todos están invitados!',
+    category: 'Social',
+    emoji: '🥳',
+    coverColor: '#0EA5E9',
+    type: 'public',
+    members: 2,
+    maxMembers: 10,
+    memberAvatars: [
+      'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    ],
+    location: 'Cafetería Central',
+    time: '12:00 - 14:00',
+    date: 'Jueves',
+    joined: true,
+    trending: false,
+    tags: ['Amigos', 'Almuerzo'],
+    admin: 'Patricia S.',
+    adminId: 'u1',
+  },
   {
     id: 'p1',
     name: 'Melómanos del Campus',

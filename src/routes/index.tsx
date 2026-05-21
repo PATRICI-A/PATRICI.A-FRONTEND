@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from '../components/layout/Layout';
 import { LandingPage } from '../pages/LandingPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -7,6 +7,7 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { HomePage } from '../pages/HomePage';
 import { ParchesPage } from '../pages/ParchesPage';
 import { CreateParchePage } from '../pages/CreateParchePage';
+import { EditParchePage } from '../pages/EditParchePage';
 import { ParchemDetailPage } from '../pages/ParchemDetailPage';
 import { ChatListPage } from '../pages/ChatListPage';
 import { ChatPage } from '../pages/ChatPage';
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
   { path: '/chat/:id', Component: ChatPage },
   { path: '/direct-chat/:id', Component: DirectChatPage },
   { path: '/parches/create', Component: CreateParchePage },
+  { path: '/parches/:id/edit', Component: EditParchePage },
   { path: '/parches/:id', Component: ParchemDetailPage },
   {
     path: '/',
