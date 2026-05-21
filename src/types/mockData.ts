@@ -37,19 +37,20 @@ export interface Event {
   id: string;
   title: string;
   description: string;
-  category: string;
+  category: 'ACADEMIC' | 'CULTURAL' | 'SPORTS' | 'WELLNESS';
   emoji: string;
   date: string;
   time: string;
+  duration: number;
   location: string;
   organizer: string;
+  type: 'OPEN' | 'WITH_CAPACITY';
   attendees: number;
   maxAttendees?: number;
+  availableCapacity?: number | null;
   coverImage?: string;
   coverGradient: string;
-  official: boolean;
   registered: boolean;
-  reminder: boolean;
   tags: string[];
   isPast?: boolean;
 }
@@ -57,12 +58,13 @@ export interface WellnessResource {
   id: string;
   name: string;
   description: string;
-  category: 'SALUD' | 'DEPORTE' | 'CULTURA' | 'MENTAL_HEALTH';
+  category: 'HEALTH' | 'SPORTS' | 'CULTURE' | 'EMOTIONAL_SUPPORT';
   schedule: string;
   contact: string;
   active: boolean;
   location?: string;
   phone?: string;
+  recommendationReason?: string;
 }
 export interface ChatMessage {
   id: string;
@@ -661,36 +663,38 @@ export const events: Event[] = [
     id: 'e1',
     title: 'Inter-U Music Fest 2024',
     description: 'La batalla de bandas más grande del año. Registro abierto hasta el viernes. Premios para las 3 mejores bandas universitarias.',
-    category: 'Música',
+    category: 'CULTURAL',
     emoji: '🎸',
-    date: '15 Mayo 2025',
-    time: '15:00 - 22:00',
+    date: '2025-05-15',
+    time: '15:00',
+    duration: 420,
     location: 'Auditorio Principal',
     organizer: 'Dirección de Cultura',
+    type: 'OPEN',
     attendees: 450,
+    availableCapacity: null,
     coverImage: 'https://images.unsplash.com/photo-1772653519333-c1927e38f791?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=800',
     coverGradient: GRADIENT,
-    official: true,
     registered: true,
-    reminder: true,
     tags: ['Música', 'Bandas', 'Concurso'],
   },
   {
     id: 'e2',
     title: 'After-Study: Rooftop',
     description: 'Tarde de networking y relajación en el rooftop del edificio internacional. DJ, snacks y buenas vibras.',
-    category: 'Social',
+    category: 'WELLNESS',
     emoji: '🌅',
-    date: '22 Abril 2025',
-    time: '18:00 - 22:00',
+    date: '2025-04-22',
+    time: '18:00',
+    duration: 240,
     location: 'Edificio Internacional, Piso 12',
     organizer: 'Bienestar Universitario',
+    type: 'WITH_CAPACITY',
     attendees: 89,
     maxAttendees: 150,
+    availableCapacity: 61,
     coverGradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)',
-    official: false,
     registered: false,
-    reminder: false,
     tags: ['Social', 'Networking', 'Rooftop'],
     isPast: true,
   },
@@ -698,88 +702,92 @@ export const events: Event[] = [
     id: 'e3',
     title: 'Taller: Bienestar Mental',
     description: 'Aprende técnicas de mindfulness, manejo del estrés académico y cómo construir hábitos saludables.',
-    category: 'Bienestar',
+    category: 'WELLNESS',
     emoji: '🧠',
-    date: '25 Abril 2025',
-    time: '10:00 - 12:00',
+    date: '2025-04-25',
+    time: '10:00',
+    duration: 120,
     location: 'Sala de Bienestar, Bloque A',
     organizer: 'Psicología Universitaria',
+    type: 'WITH_CAPACITY',
     attendees: 34,
     maxAttendees: 50,
+    availableCapacity: 16,
     coverGradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
-    official: true,
     registered: false,
-    reminder: true,
     tags: ['Bienestar', 'Salud Mental', 'Mindfulness'],
   },
   {
     id: 'e4',
     title: 'Hackathon ECI 2025',
     description: '48 horas de programación, diseño e innovación. Forma tu equipo y resuelve retos reales de la ciudad.',
-    category: 'Tecnología',
+    category: 'ACADEMIC',
     emoji: '🚀',
-    date: '2 Mayo 2025',
-    time: '08:00 - 08:00 (48h)',
+    date: '2025-05-02',
+    time: '08:00',
+    duration: 2880,
     location: 'Laboratorio de Innovación',
     organizer: 'Facultad de Ingeniería',
+    type: 'WITH_CAPACITY',
     attendees: 120,
     maxAttendees: 200,
+    availableCapacity: 80,
     coverGradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-    official: true,
     registered: false,
-    reminder: false,
     tags: ['Hackathon', 'Programación', 'Innovación'],
   },
   {
     id: 'e5',
     title: 'Feria de Emprendimiento',
     description: 'Presenta tu startup, conecta con inversores y descubre proyectos increíbles de estudiantes.',
-    category: 'Emprendimiento',
+    category: 'ACADEMIC',
     emoji: '💡',
-    date: '10 Mayo 2025',
-    time: '09:00 - 18:00',
+    date: '2025-05-10',
+    time: '09:00',
+    duration: 540,
     location: 'Plaza Central',
     organizer: 'Centro de Emprendimiento',
+    type: 'OPEN',
     attendees: 280,
+    availableCapacity: null,
     coverGradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
-    official: true,
     registered: false,
-    reminder: false,
     tags: ['Emprendimiento', 'Startup', 'Negocios'],
   },
   {
     id: 'e6',
     title: 'Taller: Muralismo',
     description: 'Aprende técnicas de muralismo urbano con artistas invitados. Transforma un muro del campus.',
-    category: 'Arte',
+    category: 'CULTURAL',
     emoji: '🎨',
-    date: '28 Abril 2025',
-    time: '14:00 - 18:00',
+    date: '2025-04-28',
+    time: '14:00',
+    duration: 240,
     location: 'Facultad de Artes',
     organizer: 'Departamento de Arte',
+    type: 'WITH_CAPACITY',
     attendees: 25,
     maxAttendees: 30,
+    availableCapacity: 5,
     coverGradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
-    official: false,
     registered: false,
-    reminder: false,
     tags: ['Arte', 'Muralismo', 'Urbano'],
     isPast: true,
   },
 ];
 export const wellnessResources: WellnessResource[] = [
-  { id: 'w1', name: 'Medicina General ECI', description: 'Consultas médicas generales, control de enfermedades y seguimiento de salud estudiantil.', category: 'SALUD', schedule: 'Lun–Vie 8:00 AM – 5:00 PM', contact: 'medicinageneral@escuelaing.edu.co', location: 'Bloque A, Piso 1', active: true },
-  { id: 'w2', name: 'Enfermería y Primeros Auxilios', description: 'Atención de urgencias menores, primeros auxilios y acompañamiento en emergencias.', category: 'SALUD', schedule: 'Lun–Vie 7:00 AM – 7:00 PM', contact: 'enfermeria@escuelaing.edu.co', location: 'Entrada Principal', active: true },
-  { id: 'w3', name: 'Nutrición y Alimentación Saludable', description: 'Asesoría nutricional personalizada para mejorar hábitos alimenticios y rendimiento académico.', category: 'SALUD', schedule: 'Mar y Jue 10:00 AM – 3:00 PM', contact: 'nutricion@escuelaing.edu.co', location: 'Bienestar, Bloque A', active: false },
-  { id: 'w4', name: 'Liga de Fútbol Interfacultades', description: 'Torneos y entrenamientos de fútbol sala entre facultades, abiertos a todos los niveles.', category: 'DEPORTE', schedule: 'Lun, Mié y Vie 4:00 PM – 6:00 PM', contact: 'deportes@escuelaing.edu.co', location: 'Canchas Los Pinos', active: true },
-  { id: 'w5', name: 'Yoga y Pilates', description: 'Clases de yoga y pilates para reducir el estrés y mejorar la flexibilidad y concentración.', category: 'DEPORTE', schedule: 'Mar y Jue 12:00 PM – 1:00 PM', contact: 'bienestar@escuelaing.edu.co', location: 'Sala Polideportiva', active: true },
-  { id: 'w6', name: 'Natación Recreativa', description: 'Acceso a piscina y clases grupales de natación para estudiantes con carné ECI.', category: 'DEPORTE', schedule: 'Lun–Sáb 6:00 AM – 8:00 PM', contact: 'natacion@escuelaing.edu.co', location: 'Piscina ECI', active: false },
-  { id: 'w7', name: 'Grupo de Teatro', description: 'Taller de actuación y expresión corporal. Presentaciones semestrales abiertas a la comunidad.', category: 'CULTURA', schedule: 'Viernes 3:00 PM – 6:00 PM', contact: 'teatro@escuelaing.edu.co', location: 'Auditorio B', active: true },
-  { id: 'w8', name: 'Taller de Fotografía', description: 'Aprende fotografía análoga y digital, composición y edición con instructores profesionales.', category: 'CULTURA', schedule: 'Miércoles 2:00 PM – 5:00 PM', contact: 'fotografia@escuelaing.edu.co', location: 'Sala Multimedia', active: true },
-  { id: 'w9', name: 'Cine Club ECI', description: 'Proyección y análisis de cine latinoamericano e independiente. Entrada libre para estudiantes.', category: 'CULTURA', schedule: 'Jueves 5:00 PM – 8:00 PM', contact: 'cineclub@escuelaing.edu.co', location: 'Auditorio Principal', active: false },
-  { id: 'w10', name: 'Psicología Estudiantil', description: 'Atención psicológica individual y grupal. Apoyo en crisis, duelo, ansiedad y salud emocional.', category: 'MENTAL_HEALTH', schedule: 'Lun–Vie 8:00 AM – 5:00 PM', contact: 'psicologia@escuelaing.edu.co', location: 'Bloque A, Piso 2', active: true, phone: '601 745 6390 ext. 101' },
-  { id: 'w11', name: 'Grupo de Apoyo: Estrés Académico', description: 'Sesiones grupales para manejar el estrés, la procrastinación y la presión del rendimiento académico.', category: 'MENTAL_HEALTH', schedule: 'Martes 4:00 PM – 6:00 PM', contact: 'bienestar@escuelaing.edu.co', location: 'Sala Bienestar', active: true },
-  { id: 'w12', name: 'Orientación Vocacional y Proyecto de Vida', description: 'Acompañamiento en decisiones de carrera, exploración vocacional y construcción del proyecto de vida.', category: 'MENTAL_HEALTH', schedule: 'Lun–Vie 9:00 AM – 4:00 PM', contact: 'orientacion@escuelaing.edu.co', location: 'Bloque A, Piso 2', active: true },
+  { id: 'w1', name: 'Medicina General ECI', description: 'Consultas médicas generales, control de enfermedades y seguimiento de salud estudiantil.', category: 'HEALTH', schedule: 'Lun–Vie 8:00 AM – 5:00 PM', contact: 'medicinageneral@escuelaing.edu.co', location: 'Bloque A, Piso 1', active: true },
+  { id: 'w2', name: 'Enfermería y Primeros Auxilios', description: 'Atención de urgencias menores, primeros auxilios y acompañamiento en emergencias.', category: 'HEALTH', schedule: 'Lun–Vie 7:00 AM – 7:00 PM', contact: 'enfermeria@escuelaing.edu.co', location: 'Entrada Principal', active: true },
+  { id: 'w3', name: 'Nutrición y Alimentación Saludable', description: 'Asesoría nutricional personalizada para mejorar hábitos alimenticios y rendimiento académico.', category: 'HEALTH', schedule: 'Mar y Jue 10:00 AM – 3:00 PM', contact: 'nutricion@escuelaing.edu.co', location: 'Bienestar, Bloque A', active: false },
+  { id: 'w4', name: 'Liga de Fútbol Interfacultades', description: 'Torneos y entrenamientos de fútbol sala entre facultades, abiertos a todos los niveles.', category: 'SPORTS', schedule: 'Lun, Mié y Vie 4:00 PM – 6:00 PM', contact: 'deportes@escuelaing.edu.co', location: 'Canchas Los Pinos', active: true },
+  { id: 'w5', name: 'Yoga y Pilates', description: 'Clases de yoga y pilates para reducir el estrés y mejorar la flexibilidad y concentración.', category: 'SPORTS', schedule: 'Mar y Jue 12:00 PM – 1:00 PM', contact: 'bienestar@escuelaing.edu.co', location: 'Sala Polideportiva', active: true, recommendationReason: 'Excelente para aliviar niveles altos de estrés' },
+  { id: 'w6', name: 'Natación Recreativa', description: 'Acceso a piscina y clases grupales de natación para estudiantes con carné ECI.', category: 'SPORTS', schedule: 'Lun–Sáb 6:00 AM – 8:00 PM', contact: 'natacion@escuelaing.edu.co', location: 'Piscina ECI', active: false },
+  { id: 'w7', name: 'Grupo de Teatro', description: 'Taller de actuación y expresión corporal. Presentaciones semestrales abiertas a la comunidad.', category: 'CULTURE', schedule: 'Viernes 3:00 PM – 6:00 PM', contact: 'teatro@escuelaing.edu.co', location: 'Auditorio B', active: true },
+  { id: 'w8', name: 'Taller de Fotografía', description: 'Aprende fotografía análoga y digital, composición y edición con instructores profesionales.', category: 'CULTURE', schedule: 'Miércoles 2:00 PM – 5:00 PM', contact: 'fotografia@escuelaing.edu.co', location: 'Sala Multimedia', active: true },
+  { id: 'w9', name: 'Cine Club ECI', description: 'Proyección y análisis de cine latinoamericano e independiente. Entrada libre para estudiantes.', category: 'CULTURE', schedule: 'Jueves 5:00 PM – 8:00 PM', contact: 'cineclub@escuelaing.edu.co', location: 'Auditorio Principal', active: false },
+  { id: 'w10', name: 'Psicología Estudiantil', description: 'Atención psicológica individual y grupal. Apoyo en crisis, duelo, ansiedad y salud emocional.', category: 'EMOTIONAL_SUPPORT', schedule: 'Lun–Vie 8:00 AM – 5:00 PM', contact: 'psicologia@escuelaing.edu.co', location: 'Bloque A, Piso 2', active: true, phone: '601 745 6390 ext. 101', recommendationReason: 'Recomendado por indicios de ansiedad o necesidad de escucha' },
+  { id: 'w11', name: 'Grupo de Apoyo: Estrés Académico', description: 'Sesiones grupales para manejar el estrés, la procrastinación y la presión del rendimiento académico.', category: 'EMOTIONAL_SUPPORT', schedule: 'Martes 4:00 PM – 6:00 PM', contact: 'bienestar@escuelaing.edu.co', location: 'Sala Bienestar', active: true },
+  { id: 'w12', name: 'Orientación Vocacional y Proyecto de Vida', description: 'Acompañamiento en decisiones de carrera, exploración vocacional y construcción del proyecto de vida.', category: 'EMOTIONAL_SUPPORT', schedule: 'Lun–Vie 9:00 AM – 4:00 PM', contact: 'orientacion@escuelaing.edu.co', location: 'Bloque A, Piso 2', active: true },
 ];
 export const vibraCategories = [
   { id: 'v1', name: 'Música en Vivo', emoji: '🎵', gradient: GRADIENT },

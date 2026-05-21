@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
-import { GRADIENT, TEAL } from '../types/mockData';
+import { GRADIENT } from '../types/mockData';
 import { format, subDays } from 'date-fns';
 type TipoEstadistica = 'EVENTOS' | 'PARTICIPACION' | 'ACTIVIDAD_SOCIAL' | 'TODAS';
 type TendenciaSemanal = 'SUBIENDO' | 'ESTABLE' | 'BAJANDO';
@@ -16,6 +16,7 @@ export function WellnessStatsPage() {
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 90), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [tipoEstadistica, setTipoEstadistica] = useState<TipoEstadistica>('TODAS');
+  const [tendenciaSemanal] = useState<TendenciaSemanal>('SUBIENDO');
   const eventosCreados = 24;
   const eventosActivos = 18;
   const eventosCancelados = 3;
@@ -29,7 +30,6 @@ export function WellnessStatsPage() {
     { facultad: 'Administración', participacion: 65 },
     { facultad: 'Matemáticas', participacion: 58 },
   ];
-  const tendenciaSemanal: TendenciaSemanal = 'SUBIENDO';
   const tendenciaData = {
     SUBIENDO: { label: 'Subiendo', color: '#10B981', icon: TrendingUp },
     ESTABLE: { label: 'Estable', color: '#3B82F6', icon: Minus },
