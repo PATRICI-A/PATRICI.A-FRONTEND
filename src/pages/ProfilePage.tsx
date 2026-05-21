@@ -104,7 +104,7 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+      <div className="max-w-2xl mx-auto w-full px-5 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -113,7 +113,7 @@ export function ProfilePage() {
           >
             <ChevronLeft size={20} />
           </button>
-          <h1 className="text-gray-900 dark:text-white">Mi Perfil</h1>
+          <h1 className="text-gray-900 dark:text-white text-2xl font-black">Mi Perfil</h1>
           <img src={patyImg} alt="Paty" className="h-24 w-auto" style={{ mixBlendMode: isDark ? 'screen' : 'multiply' }} />
         </div>
         <div className="flex items-center gap-2">
@@ -151,6 +151,7 @@ export function ProfilePage() {
         </div>
       </div>
 
+      <div className="max-w-2xl mx-auto w-full">
       <div className="px-5 mb-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -341,7 +342,7 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <div className="px-5 mb-4">
+      <div className="px-5 mb-4 hidden">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-white">Patricias Album</h3>
@@ -512,6 +513,7 @@ export function ProfilePage() {
             Cerrar Sesión
           </button>
         )}
+      </div>
       </div>
 
       <AnimatePresence>

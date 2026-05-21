@@ -15,6 +15,7 @@ import logoImg from '../assets/logo_nuevo_patricia.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
+import patyRegistro from '../assets/patyRegistro.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const interestCategories = [
@@ -200,13 +201,11 @@ function InterestCategory({
         boxShadow: catSelected.length > 0 ? `0 4px 20px ${cat.color}20` : 'none',
       }}
     >
-      {}
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 p-4 text-left transition-all"
       >
-        {}
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: cat.gradient }}
@@ -221,7 +220,6 @@ function InterestCategory({
             </p>
           )}
         </div>
-        {}
         {catSelected.length > 0 && (
           <motion.div
             initial={{ scale: 0 }}
@@ -240,7 +238,6 @@ function InterestCategory({
           <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
         </motion.div>
       </button>
-      {}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -501,32 +498,41 @@ export function RegisterPage() {
   };
   const steps = ['Cuenta', 'Verificación', 'Perfil', 'Intereses'];
   return (
-    <div className="min-h-screen transition-colors duration-300 flex flex-col md:items-center md:justify-center relative">
-      {}
+    <div className="min-h-screen transition-colors duration-300 flex flex-col md:flex-row relative">
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           backgroundImage: `url("${isDark ? fondoOscuro : fondoClaro}")`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
           zIndex: 0,
         }}
       />
-      {}
-      <div className="relative w-full md:max-w-lg md:my-8 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 transition-colors duration-300" style={{ zIndex: 1 }}>
-        {}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
+
+      <button
+        onClick={toggleTheme}
+        className="fixed top-4 right-4 z-50 w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-md text-gray-900 dark:text-white active:scale-90 transition-transform"
+      >
+        {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
+
+      <div className="flex-1 flex flex-col min-h-screen relative z-10">
+        <div className="relative z-10 flex flex-col flex-1">
+        <div className="px-4 sm:px-6 py-4 flex-shrink-0">
           <button onClick={handleBack} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-900 dark:text-white active:scale-90 transition-transform">
             <ArrowLeft size={18} />
           </button>
-          <button onClick={toggleTheme} className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-900 dark:text-white active:scale-90 transition-transform">
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col px-4 sm:px-6 md:px-8 pb-8 w-full">
-          {}
+          <div className="flex flex-col px-4 sm:px-6 md:px-8 pb-8 w-full max-w-xl mx-auto">
+          <div
+            className="rounded-3xl px-6 py-5 mb-2"
+            style={{
+              background: isDark ? 'rgba(8,16,40,0.72)' : 'rgba(255,255,255,0.72)',
+              backdropFilter: 'blur(16px)',
+              boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(10,25,47,0.10)',
+            }}
+          >
           <div className="mb-5 sm:mb-6 mt-1">
             <div className="flex items-center justify-between">
               {steps.map((s, i) => (
@@ -554,7 +560,6 @@ export function RegisterPage() {
             </div>
           </div>
           <AnimatePresence mode="wait">
-            {}
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="text-center mb-6">
@@ -565,7 +570,6 @@ export function RegisterPage() {
                   <p className="text-sm text-gray-900 dark:text-white">Comienza tu viaje en patrici.a</p>
                 </div>
                 <div className="space-y-3 sm:space-y-4">
-                  {}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Nombre</label>
@@ -586,7 +590,6 @@ export function RegisterPage() {
                       {touched.lastName && focused !== 'lastName' && errors.lastName && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.lastName}</p>}
                     </div>
                   </div>
-                  {}
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Correo institucional</label>
                     <div className="relative">
@@ -597,7 +600,6 @@ export function RegisterPage() {
                     {touched.email && focused !== 'email' && errors.email && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.email}</p>}
                     <p className="text-[10px] text-gray-600 dark:text-gray-200 mt-1">Solo correos @mail.escuelaing.edu.co</p>
                   </div>
-                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Fecha de nacimiento</label>
@@ -623,7 +625,6 @@ export function RegisterPage() {
                       {touched.gender && errors.gender && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={10} />{errors.gender}</p>}
                     </div>
                   </div>
-                  {}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-1.5">Contraseña</label>
@@ -683,7 +684,6 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-            {}
             {step === 2 && (
               <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="text-center mb-6">
@@ -694,7 +694,6 @@ export function RegisterPage() {
                   <p className="text-sm text-gray-900 dark:text-white mt-1">Enviamos un código de 6 dígitos a</p>
                   <p className="text-sm font-semibold mt-0.5" style={{ color: TEAL }}>{maskEmail(email)}</p>
                 </div>
-                {}
                 <div className="flex justify-center mb-6">
                   <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
                     style={{
@@ -707,7 +706,6 @@ export function RegisterPage() {
                     {otpStatus === 'expired' ? 'Código expirado' : `Código válido por ${formatTime(otpTimeLeft)}`}
                   </div>
                 </div>
-                {}
                 {otpAttempts > 0 && otpStatus !== 'locked' && (
                   <div className="flex justify-center mb-4">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ background: 'rgba(245,158,11,0.1)', color: GOLD, border: '1px solid rgba(245,158,11,0.3)' }}>
@@ -715,7 +713,6 @@ export function RegisterPage() {
                     </div>
                   </div>
                 )}
-                {}
                 <div className="flex gap-1.5 sm:gap-2.5 justify-center mb-4 px-1">
                   {code.map((digit, i) => (
                     <input key={i} ref={el => { codeRefs.current[i] = el; }}
@@ -744,7 +741,6 @@ export function RegisterPage() {
                     <p className="text-xs text-red-600 dark:text-red-400">{errors.code}</p>
                   </div>
                 )}
-                {}
                 <div className="text-center mb-4">
                   {resendCooldown > 0 ? (
                     <p className="text-xs text-gray-700 dark:text-gray-400">Puedes reenviar en <span className="font-semibold" style={{ color: TEAL }}>{resendCooldown}s</span></p>
@@ -770,7 +766,6 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-            {}
             {step === 3 && (
               <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="mb-6">
@@ -778,7 +773,6 @@ export function RegisterPage() {
                   <p className="text-sm text-gray-900 dark:text-white">Ayúdanos a conectarte mejor</p>
                 </div>
                 <div className="space-y-5">
-                  {}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Carrera</label>
                     <div className="relative">
@@ -797,7 +791,6 @@ export function RegisterPage() {
                     </div>
                     {errors.program && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.program}</p>}
                   </div>
-                  {}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">
                       Segunda carrera <span className="text-gray-500 font-normal">(opcional)</span>
@@ -817,7 +810,6 @@ export function RegisterPage() {
                       <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none" />
                     </div>
                   </div>
-                  {}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Semestre actual</label>
                     <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
@@ -832,7 +824,6 @@ export function RegisterPage() {
                     </div>
                     {errors.semester && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertCircle size={11} />{errors.semester}</p>}
                   </div>
-                  {}
                   <div>
                     <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1.5">Código estudiantil</label>
                     <div className="relative">
@@ -858,15 +849,12 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-            {}
             {step === 4 && (
               <motion.div key="step4" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
-                {}
                 <div className="mb-5">
                   <h1 className="text-gray-900 dark:text-white">¿Qué te apasiona?</h1>
                   <p className="text-sm text-gray-900 dark:text-white">Explora las categorías y elige lo que más te gusta</p>
                 </div>
-                {}
                 <div className="sticky top-0 z-10 mb-4">
                   <div
                     className="rounded-2xl p-3 flex items-center justify-between backdrop-blur-sm"
@@ -895,7 +883,6 @@ export function RegisterPage() {
                         </p>
                       </div>
                     </div>
-                    {}
                     <div className="flex items-center gap-1.5">
                       {Array.from({ length: MIN_INTERESTS }, (_, i) => (
                         <motion.div
@@ -921,13 +908,11 @@ export function RegisterPage() {
                     </div>
                   </div>
                 </div>
-                {}
                 {errors.interests && (
                   <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                     <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1"><AlertCircle size={11} />{errors.interests}</p>
                   </div>
                 )}
-                {}
                 <div className="space-y-3">
                   {interestCategories.map((cat, idx) => {
                     const catCount = cat.options.filter(o => selectedInterests.includes(`${cat.id}::${o}`)).length;
@@ -948,7 +933,6 @@ export function RegisterPage() {
                     );
                   })}
                 </div>
-                {}
                 {selectedInterests.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -978,7 +962,6 @@ export function RegisterPage() {
                     </div>
                   </motion.div>
                 )}
-                {}
                 <div className="mt-6 space-y-3">
                   <motion.button
                     onClick={handleFinish}
@@ -1013,7 +996,13 @@ export function RegisterPage() {
             )}
           </AnimatePresence>
           </div>
+          </div>
         </div>
+        </div>
+      </div>
+
+      <div className="hidden md:flex md:w-5/12 flex-col items-center justify-center sticky top-0 h-screen flex-shrink-0 z-10" style={{ pointerEvents: 'none' }}>
+        <img src={patyRegistro} alt="Paty" className="w-auto object-contain drop-shadow-2xl" style={{ maxHeight: '70vh' }} />
       </div>
 
       <AnimatePresence>
