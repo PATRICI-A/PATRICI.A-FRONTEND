@@ -180,11 +180,11 @@ export function EventsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="font-semibold text-gray-800 dark:text-white">{event.title}</h3>
+                      <h3 className="font-bold text-base text-gray-800 dark:text-white">{event.title}</h3>
                       {event.official && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: ORANGE, background: 'rgba(6,182,212,0.12)' }}>OFICIAL</span>}
                       {past && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-[#172A45] text-gray-400">PASADO</span>}
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{event.description}</p>
+                    <p className="text-sm text-gray-400 mt-0.5 line-clamp-2">{event.description}</p>
                   </div>
                   {!past && (
                     <button onClick={e => toggleReminder(event.id, e)} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-[#172A45]">
@@ -192,7 +192,7 @@ export function EventsPage() {
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-gray-400">
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400">
                   <span className="flex items-center gap-1"><Calendar size={10} />{event.date}</span>
                   <span className="flex items-center gap-1"><Clock size={10} />{event.time}</span>
                   <span className="flex items-center gap-1"><MapPin size={10} />{event.location}</span>
@@ -219,7 +219,7 @@ export function EventsPage() {
     );
   };
   return (
-    <div className="flex flex-col min-h-screen pb-20">
+    <div className="w-full md:w-4/6 md:mx-auto flex flex-col min-h-screen pb-20">
       {}
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">
@@ -229,7 +229,7 @@ export function EventsPage() {
             </button>
             <div>
               <h1 className="text-gray-900 dark:text-white">📅 Eventos</h1>
-              <p className="text-sm text-gray-400">Lo que está pasando en el campus</p>
+              <p className="text-base text-gray-400">Lo que está pasando en el campus</p>
             </div>
           </div>
           <button
@@ -322,8 +322,8 @@ export function EventsPage() {
       <div className="px-5 mb-6">
         <div className="flex items-center gap-2 mb-3">
           <Calendar size={16} style={{ color: PINK }} />
-          <h2 className="font-bold text-gray-800 dark:text-white">Eventos Próximos</h2>
-          <span className="ml-auto text-xs text-gray-400">{upcomingEvents.length} eventos</span>
+          <h2 className="font-bold text-xl text-gray-800 dark:text-white">Eventos Próximos</h2>
+          <span className="ml-auto text-sm text-gray-400">{upcomingEvents.length} eventos</span>
         </div>
         {upcomingEvents.length === 0 ? (
           <div className="text-center py-10">
@@ -346,8 +346,8 @@ export function EventsPage() {
         <div className="px-5 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <History size={16} className="text-gray-400" />
-            <h2 className="font-bold text-gray-500 dark:text-gray-400">Historial</h2>
-            <span className="ml-auto text-xs text-gray-400">{pastEvents.length} eventos</span>
+            <h2 className="font-bold text-xl text-gray-500 dark:text-gray-400">Historial</h2>
+            <span className="ml-auto text-sm text-gray-400">{pastEvents.length} eventos</span>
           </div>
           <div className="space-y-3">
             {pastEvents.map((event, i) => <EventCard key={event.id} event={event} index={i} />)}
@@ -372,13 +372,6 @@ export function EventsPage() {
         </div>
       )}
       {}
-      <button
-        onClick={() => setShowCreate(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl z-30 active:scale-95 transition-transform"
-        style={{ background: GRADIENT, boxShadow: '0 8px 24px rgba(99,102,241,0.4)' }}
-      >
-        <Plus size={24} />
-      </button>
       {}
       <AnimatePresence>
         {selectedEvent && (
