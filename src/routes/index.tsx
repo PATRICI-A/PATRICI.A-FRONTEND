@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from '../components/layout/Layout';
 import { LandingPage } from '../pages/LandingPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -50,8 +50,6 @@ export const router = createBrowserRouter([
   { path: '/student/activity', Component: StudentActivityPage },
   { path: '/student/interaction', Component: StudentInteractionPage },
   { path: '/wellness/stats', Component: WellnessStatsPage },
-  { path: '/chat/:id', Component: ChatPage },
-  { path: '/direct-chat/:id', Component: DirectChatPage },
   { path: '/parches/create', Component: CreateParchePage },
   { path: '/parches/:id', Component: ParchemDetailPage },
   {
@@ -61,6 +59,8 @@ export const router = createBrowserRouter([
       { path: 'home', Component: HomePage },
       { path: 'parches', Component: ParchesPage },
       { path: 'chat', Component: ChatListPage },
+      { path: 'chat/:id', Component: ChatPage },
+      { path: 'direct-chat/:id', Component: DirectChatPage },
       { path: 'events', Component: EventsPage },
       { path: 'profile', Component: ProfilePage },
       { path: 'monas', Component: MonasAlbumPage },
