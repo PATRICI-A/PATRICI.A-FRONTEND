@@ -1167,7 +1167,7 @@ export function MonasAlbumPage() {
 
       </div>
       <div className="mt-5 w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto">
-        <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto pb-4 px-1 scrollbar-hide snap-x">
           {CATEGORIES.map(cat => {
             const prog = catProgress(cat.id);
             const isActive = activeCategory === cat.id;
@@ -1175,18 +1175,20 @@ export function MonasAlbumPage() {
               <button
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.id)}
-                className="flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all"
+                className={`flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-full transition-all snap-center hover:scale-105 ${isActive ? 'shadow-lg' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                 style={{
-                  background: isActive ? `linear-gradient(135deg, ${cat.color}33, ${cat.color}22)` : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                  border: `1.5px solid ${isActive ? cat.color : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                  boxShadow: isActive ? `0 0 12px ${cat.color}44` : 'none',
+                  width: '90px',
+                  height: '90px',
+                  background: isActive ? cat.color : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                  border: `2px solid ${isActive ? cat.color : isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
+                  boxShadow: isActive ? `0 8px 24px ${cat.color}66` : 'none',
                 }}
               >
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <EmojiIcon emoji={cat.emoji} size={16} color={isActive ? cat.color : isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)'} strokeWidth={2} />
+                <div className="flex items-center justify-center mb-0.5" style={{ filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none' }}>
+                  <EmojiIcon emoji={cat.emoji} size={24} color={isActive ? '#FFFFFF' : cat.color} strokeWidth={isActive ? 2 : 1.5} />
                 </div>
-                <span className="text-[9px] font-bold" style={{ color: isActive ? cat.color : isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)' }}>{cat.label}</span>
-                <span className="text-[8px]" style={{ color: isActive ? cat.color : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)' }}>{prog.done}/{prog.total}</span>
+                <span className="text-[10px] font-black leading-tight text-center px-1" style={{ color: isActive ? '#FFFFFF' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>{cat.label}</span>
+                <span className="text-[9px] font-bold" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{prog.done}/{prog.total}</span>
               </button>
             );
           })}
