@@ -52,7 +52,7 @@ const LANDMARKS: Landmark[] = [
   { id: 'harvies',      name: 'Harvies',        shortName: 'Harvies', x: 19, y: 22, Icon: ShoppingBag,    color: '#EA580C', type: 'food'     },
   { id: 'food-truckus', name: 'Food Truckus',   shortName: 'FT',      x:  9, y: 50, Icon: Truck,          color: '#B45309', type: 'food'     },
   { id: 'basket',    name: 'Basket',             shortName: 'Basket',  x: 11.5, y: 7.9,  Icon: Building2,    color: '#3B82F6', type: 'building' },
-  { id: 'tennis',    name: 'Tennis',             shortName: 'Tennis',  x: 9.3,  y: 20.0, Icon: Building2,    color: '#3B82F6', type: 'building' },
+  { id: 'tennis',    name: 'Tennis',             shortName: 'Tennis',  x: 9.9,  y: 18.9, Icon: Building2,    color: '#3B82F6', type: 'building' },
   { id: 'volley',    name: 'Volley',             shortName: 'Volley',  x: 14.7, y: 24.0, Icon: Building2,    color: '#3B82F6', type: 'building' },
   { id: 'entrada-p', name: 'Entrada Peatonal',  shortName: 'Peat.',   x: 90, y: 27, Icon: Navigation,     color: '#475569', type: 'entry'    },
   { id: 'entrada-v', name: 'Entrada Vehicular', shortName: 'Veh.',    x: 89, y: 72, Icon: Car,            color: '#475569', type: 'entry'    },
