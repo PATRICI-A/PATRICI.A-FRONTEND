@@ -181,22 +181,50 @@ export function ForgotPasswordPage() {
               />
             </div>
           </motion.div>
-          <div className="md:hidden w-full mb-4">
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-44 h-44 overflow-hidden bg-transparent flex-shrink-0">
-                <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain" />
-              </div>
-              <div className="text-center">
-                <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.</p>
+          <div className="flex flex-col w-full">
+            <div className="md:hidden w-full mb-4">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-44 h-44 overflow-hidden bg-transparent flex-shrink-0 relative z-20">
+                  <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain block" />
+                </div>
+                <div className="text-center">
+                  <h1 className="text-gray-900 dark:text-white" style={phase === 'reset' ? { color: '#000' } : undefined}>{phase === 'reset' ? 'Restablecer contraseña' : 'Olvidé mi contraseña'}</h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed" style={phase === 'reset' ? { color: '#000' } : undefined}>
+                    {phase === 'reset'
+                      ? (statusMsg || 'Introduce el código enviado y crea una nueva contraseña.')
+                      : 'Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.'}
+                </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="relative w-full mx-auto md:max-w-md my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
-        {}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
+            <div className="hidden md:flex flex-col items-center mb-6 text-center">
+              {phase === 'reset' ? (
+                <>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: GRADIENT }}>
+                    <ShieldCheck size={28} color="white" strokeWidth={2} />
+                  </div>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-white" style={{ color: '#000' }}>Restablecer contraseña</h1>
+                  {statusMsg && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md" style={{ color: '#000' }} aria-live="polite">
+                      {statusMsg}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md">
+                    Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="relative w-full mx-auto md:max-w-md my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
+              {}
+              <div className="flex-1 overflow-y-auto">
+                <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
             <AnimatePresence mode="wait">
               {}
               {phase === 'email' && (
@@ -208,14 +236,7 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="mb-8 mt-2">
-                    <div className="hidden md:block text-center">
-                      <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
-                        Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
-                      </p>
-                    </div>
-                  </div>
+                  <div className="mb-8 mt-2" />
                   {}
                   <div className="mb-5">
                     <label htmlFor="fp-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -332,24 +353,7 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="text-center mb-6 mt-2">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
-                      <ShieldCheck size={28} color="white" strokeWidth={2} />
-                    </div>
-                    <h1 className="text-gray-900 dark:text-white">Restablecer contraseña</h1>
-                    {}
-                    {statusMsg && (
-                      <motion.p
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-xs mt-2 px-4 leading-relaxed"
-                        style={{ color: TEAL }}
-                        aria-live="polite"
-                      >
-                        {statusMsg}
-                      </motion.p>
-                    )}
-                  </div>
+                  <div className="mb-6 mt-2" />
                   {}
                   <div className="flex justify-center mb-5">
                     <div
@@ -598,9 +602,10 @@ export function ForgotPasswordPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </div>
       </div>
     </div>
