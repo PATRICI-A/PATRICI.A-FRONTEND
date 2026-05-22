@@ -144,8 +144,7 @@ export function CampusMapPage() {
   const [eventsOpen, setEventsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<LandmarkFilter>('all');
   const [iconSize, setIconSize] = useState<number>(12);
-  const [pinScale, setPinScale] = useState<number>(1);
-
+  const MAP_FIXED_WIDTH = 1200; // px — fixed inner map width with internal scrollbar
   useEffect(() => {
     function calc() {
       const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
@@ -160,21 +159,8 @@ export function CampusMapPage() {
     window.addEventListener('resize', calc);
     return () => window.removeEventListener('resize', calc);
   }, []);
-
-  useEffect(() => {
-    function calcScale() {
-      const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      // baseline 1200px -> scale 1, clamp to reasonable range so pins don't disappear or explode
-      const s = Math.max(0.7, Math.min(1.6, w / 1200));
-      setPinScale(s);
-    }
-    calcScale();
-    window.addEventListener('resize', calcScale);
-    return () => window.removeEventListener('resize', calcScale);
-  }, []);
   const [isMobile, setIsMobile] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const watchIdRef = useRef<number | null>(null);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -191,18 +177,7 @@ export function CampusMapPage() {
     doc.style.overflow = 'hidden';
     return () => { doc.style.overflow = prev; };
   }, [isMobile]);
-  useLayoutEffect(() => {
-    if (!isMobile) return;
-    const update = () => {
-      if (mapContainerRef.current) {
-        const r = mapContainerRef.current.getBoundingClientRect();
-        setContainerSize({ w: r.width, h: r.height });
-      }
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [isMobile]);
+  
   useEffect(() => {
     if (!geo.enabled) {
       if (watchIdRef.current !== null) {
@@ -466,16 +441,11 @@ export function CampusMapPage() {
             : lm.shortName;
           const baseFont = isSel ? 14 : (hasEv ? 12 : 10);
           const textLen = innerText.length;
-          // scale font for large screens and keep a reasonable minimum
-          const baseFontScaled = Math.max(8, Math.round(baseFont * pinScale));
-          // approximate width based on text length and scaled font size
-          const approxWidth = Math.max(24, Math.min(120, Math.round(textLen * (baseFontScaled * 0.6) + 8)));
-          const rawPinSize = isSel ? Math.max(36, approxWidth) : (hasEv ? Math.max(30, approxWidth) : Math.max(24, approxWidth));
-          const rawWideWidth = isSel ? Math.max(44, approxWidth) : Math.max(38, approxWidth - 4);
-          const rawWideHeight = isSel ? 24 : 22;
-          const pinSize = Math.round(rawPinSize * pinScale);
-          const widePinWidth = Math.round(rawWideWidth * pinScale);
-          const widePinHeight = Math.round(rawWideHeight * pinScale);
+          // approximate width based on text length and font size
+          const approxWidth = Math.max(24, Math.min(56, Math.round(textLen * (baseFont * 0.6) + 8)));
+          const pinSize = isSel ? Math.max(36, approxWidth) : (hasEv ? Math.max(30, approxWidth) : Math.max(24, approxWidth));
+          const widePinWidth = isSel ? Math.max(44, approxWidth) : Math.max(38, approxWidth - 4);
+          const widePinHeight = isSel ? 24 : 22;
 
           return (
             <button
@@ -944,27 +914,16 @@ export function CampusMapPage() {
       {isMobile ? (
         <div
           ref={mapContainerRef}
-          className="flex-1 relative overflow-hidden"
-          style={{ background: isDark ? '#061220' : '#D9E8F5' }}
+          className="flex-1 relative"
+          style={{ background: isDark ? '#061220' : '#D9E8F5', overflow: 'auto' }}
         >
-          {containerSize.w > 0 && containerSize.h > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%', left: '50%',
-                width:  `${containerSize.w}px`,
-                height: `${containerSize.h}px`,
-                transform: 'translate(-50%, -50%)',
-                transformOrigin: 'center center',
-              }}
-            >
-              {renderMapContent()}
-            </div>
-          )}
+          <div style={{ width: MAP_FIXED_WIDTH, position: 'relative' }}>
+            {renderMapContent()}
+          </div>
         </div>
       ) : (
-        <div className="flex-1" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5', overflow: 'visible' }}>
-          <div style={{ position: 'relative', width: '100%', overflow: 'visible', minHeight: '0' }}>
+        <div className="flex-1" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5', overflow: 'auto' }}>
+          <div style={{ position: 'relative', width: MAP_FIXED_WIDTH, minHeight: '0' }}>
             {renderMapContent()}
           </div>
         </div>
