@@ -32,7 +32,7 @@ interface Metric {
   label: string;
   value: string | number;
   change: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
   color: string;
   bg: string;
 }
@@ -49,7 +49,7 @@ interface User {
   email: string;
   avatar: string;
   faculty: string;
-  status: 'active' | 'suspended' | 'banned';
+  status: 'active' | 'suspended' | 'banned' | 'flagged';
   verified: boolean;
   xp: number;
   level: number;

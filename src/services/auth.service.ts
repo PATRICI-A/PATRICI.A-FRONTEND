@@ -1,5 +1,5 @@
 ﻿import api from './http';
-import type { User } from '../types/mockData';
+import type { User } from '../store/AppContext';
 export interface LoginPayload {
   email: string;
   password: string;

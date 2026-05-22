@@ -497,7 +497,7 @@ function QRScannerModal({
             key={i}
             className="absolute"
             style={{
-              ...pos,
+              ...(pos as unknown as React.CSSProperties),
               width: 28, height: 28,
               borderColor: step === 'success' ? '#10B981' : step === 'error' ? '#EF4444' : GOLD_LIGHT,
               borderStyle: 'solid',
