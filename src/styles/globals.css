@@ -1,0 +1,6 @@
+/* AppBackground component (position:fixed) handles all backgrounds.
+   Force-clear any body background from cached CSS versions. */
+body {
+  background-color: transparent !important;
+  background-image: none !important;
+}

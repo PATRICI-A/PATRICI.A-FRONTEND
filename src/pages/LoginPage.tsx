@@ -1,0 +1,265 @@
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { motion } from 'motion/react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sun, Moon, Calendar } from 'lucide-react';
+import { useApp } from '../store/AppContext';
+import { GRADIENT, PINK } from '../types/mockData';
+import logoImg from '../assets/logo_nuevo_patricia.png';
+import loginIllustration from '../assets/Pati-Login.png';
+import fondoClaro from '../assets/fondoClaroPATRICIA.png';
+import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
+export function LoginPage() {
+  const navigate = useNavigate();
+  const { login, isDark, toggleTheme } = useApp();
+  useEffect(() => {
+    document.documentElement.dataset.page = 'auth';
+    return () => { delete document.documentElement.dataset.page; };
+  }, []);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+  const emailValid = email.toLowerCase().endsWith('@mail.escuelaing.edu.co') && email.includes('@');
+  const emailHintColor = !emailTouched || email.length === 0 ? (isDark ? 'text-gray-400' : 'text-gray-600') : emailValid ? (isDark ? 'text-green-400' : 'text-green-700') : 'text-red-400';
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Por favor completa todos los campos');
+      return;
+    }
+    if (!emailValid) {
+      setError('Debes usar tu correo institucional (@mail.escuelaing.edu.co)');
+      return;
+    }
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
+    await new Promise(r => setTimeout(r, 1200));
+    const userRole = email.toLowerCase().includes('organizador') ? 'ORGANIZADOR' : 'ESTUDIANTE';
+    if (userRole === 'ORGANIZADOR') {
+      localStorage.setItem('organizerSession', JSON.stringify({
+        email,
+        name: email.split('@')[0],
+        role: 'ORGANIZADOR'
+      }));
+      setIsLoading(false);
+      navigate('/organizer/dashboard');
+      return;
+    }
+    login({
+      id: 'u1',
+      name: 'Patricia S.',
+      email: email,
+      avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+      faculty: 'Ingeniería en Sistemas',
+      semester: 6,
+      interests: ['Programación', 'Fotografía', 'Música', 'Diseño', 'Gaming'],
+      bio: 'Estudiante de sistemas apasionada por el diseño y la tecnología.',
+      socialImpact: 1240,
+      xp: 3450,
+      level: 14,
+      activeParches: 8,
+      streak: 12,
+      rankFaculty: 4,
+      monas: ['tech-puppy', 'honors', 'social', 'pionera', 'genio'],
+    });
+    setIsLoading(false);
+    navigate('/home');
+  };
+  return (
+    <div className="min-h-screen transition-colors duration-300 flex flex-col relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("${isDark ? fondoOscuro : fondoClaro}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+      />
+      {}
+      <div className="relative flex flex-col flex-1" style={{ zIndex: 1 }}>
+        <div className="flex items-center justify-between p-4 sm:p-6 lg:p-8">
+          <button
+            onClick={() => navigate('/')}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
+
+        <div className="flex-1 px-6 pb-8 w-full">
+          <div className="mx-auto w-full max-w-6xl lg:hidden">
+            <div className="grid grid-cols-[0.92fr_1.08fr] items-center justify-items-center gap-3 mb-6">
+              <div className="flex justify-center">
+                <div className="w-full max-w-[180px] bg-transparent">
+                  <img
+                    src={loginIllustration}
+                    alt="Patricia usando un portátil en la pantalla de inicio de sesión"
+                    className="w-full h-auto object-contain bg-transparent drop-shadow-none"
+                  />
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden bg-white shadow-lg mb-2 mx-auto">
+                  <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
+                </div>
+                <h1 className="text-gray-900 dark:text-white mb-1 text-[clamp(1.15rem,4.5vw,1.8rem)] leading-tight font-semibold">
+                  Bienvenido de vuelta
+                </h1>
+                <p className="text-[clamp(0.72rem,2.8vw,0.95rem)] text-gray-800 dark:text-white leading-snug">
+                  Conecta con tu comunidad universitaria
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-8 lg:grid-cols-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4 }}
+              className="hidden lg:flex justify-center lg:justify-end"
+            >
+              <div className="w-full max-w-[520px] bg-transparent">
+                <img
+                  src={loginIllustration}
+                  alt="Patricia usando un portátil en la pantalla de inicio de sesión"
+                  className="w-full h-auto object-contain bg-transparent drop-shadow-none"
+                />
+              </div>
+            </motion.div>
+
+            <div className="relative w-full max-w-md mx-auto flex flex-col dark:bg-[#0D1F3C] bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden lg:col-start-2">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col justify-center px-6 sm:px-8 py-8"
+              >
+                <div className="hidden lg:block text-center mb-8">
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 bg-white shadow-lg">
+                    <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
+                  </div>
+                  <h1 className="text-gray-900 dark:text-white mb-1">Bienvenido de vuelta</h1>
+                  <p className="text-sm text-gray-800 dark:text-white">Conecta con tu comunidad universitaria</p>
+                </div>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Correo Institucional
+                    </label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        onBlur={() => setEmailTouched(true)}
+                        placeholder="nombre@mail.escuelaing.edu.co"
+                        className={`w-full pl-11 pr-4 py-3.5 rounded-xl bg-white dark:bg-[#112240] border text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                          emailTouched && email.length > 0
+                            ? emailValid
+                              ? 'border-green-400 focus:border-green-500'
+                              : 'border-red-400 focus:border-red-500'
+                            : 'border-gray-200 dark:border-[#233554]'
+                        }`}
+                        style={{ '--tw-ring-color': PINK } as any}
+                      />
+                    </div>
+                    <p className={`text-xs mt-1.5 transition-colors ${emailHintColor}`}>
+                      {emailTouched && email.length > 0 ? (emailValid ? '✓ ' : '✗ ') : ''}
+                      Debe terminar en{' '}
+                      <span className="font-medium">@mail.escuelaing.edu.co</span>
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Contraseña
+                    </label>
+                    <div className="relative">
+                      <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="Mínimo 8 caracteres"
+                        className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <div className="text-right mt-1">
+                      <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-medium" style={{ color: isDark ? '#F59E0B' : PINK }}>
+                        ¿Olvidaste tu contraseña?
+                      </button>
+                    </div>
+                  </div>
+                  {error && (
+                    <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                      <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg mt-2"
+                    style={{ background: GRADIENT }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Iniciando...
+                      </>
+                    ) : (
+                      'Iniciar Sesión'
+                    )}
+                  </button>
+                </form>
+                <p className="text-center text-sm text-gray-800 dark:text-white mt-8">
+                  ¿Aún no tienes una cuenta?{' '}
+                  <button onClick={() => navigate('/register')} className="font-semibold" style={{ color: isDark ? '#F59E0B' : PINK }}>
+                    Regístrate aquí
+                  </button>
+                </p>
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#1E3A5F] space-y-2">
+                  <button
+                    onClick={() => navigate('/admin/login')}
+                    className="w-full text-xs text-gray-700 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Lock size={12} />
+                    Acceso de administrador
+                  </button>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-700 dark:text-gray-400">
+                      <Calendar size={12} className="inline mr-1" />
+                      Organizadores de eventos: usen sus credenciales institucionales
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
