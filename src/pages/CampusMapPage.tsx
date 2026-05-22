@@ -136,6 +136,15 @@ export function CampusMapPage() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // Hide document-level scrollbar on desktop so only the app root scrolls
+  useEffect(() => {
+    if (isMobile) return;
+    const doc = document.documentElement;
+    const prev = doc.style.overflow;
+    doc.style.overflow = 'hidden';
+    return () => { doc.style.overflow = prev; };
+  }, [isMobile]);
   useLayoutEffect(() => {
     if (!isMobile) return;
     const update = () => {
@@ -577,7 +586,8 @@ export function CampusMapPage() {
       style={{
         height: '100dvh',
         background: isDark ? '#0A192F' : '#F0F7FF',
-        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'hidden',
         isolation: 'isolate',
       }}
     >
@@ -851,9 +861,9 @@ export function CampusMapPage() {
               style={{
                 position: 'absolute',
                 top: '50%', left: '50%',
-                width:  `${containerSize.h}px`,
-                height: `${containerSize.w}px`,
-                transform: 'translate(-50%, -50%) rotate(90deg)',
+                width:  `${containerSize.w}px`,
+                height: `${containerSize.h}px`,
+                transform: 'translate(-50%, -50%)',
                 transformOrigin: 'center center',
               }}
             >
@@ -862,8 +872,8 @@ export function CampusMapPage() {
           )}
         </div>
       ) : (
-        <div className="flex-1 overflow-auto" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5' }}>
-          <div style={{ position: 'relative', width: '100%', minWidth: '480px' }}>
+        <div className="flex-1" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5', overflow: 'visible' }}>
+          <div style={{ position: 'relative', width: '100%', overflow: 'visible', minHeight: '0' }}>
             {renderMapContent()}
           </div>
         </div>
