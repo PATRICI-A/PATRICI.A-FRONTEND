@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion } from 'motion/react';
-import { Search, ScanLine, MessageSquare, Users, User, ArrowLeft } from 'lucide-react';
-import { parches, directChats, chatMessages, GRADIENT, GOLD_GRADIENT, TEAL } from '../../types/mockData';
+import { Search, MessageSquare, Users, User } from 'lucide-react';
+import { parches, directChats, chatMessages, TEAL } from '../../types/mockData';
 import { EmojiIcon } from '../ui/EmojiIcon';
 import { Avatar } from '../ui/Avatar';
 import { useApp } from '../../store/AppContext';
@@ -92,48 +92,7 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
 
   return (
     <div className="w-full flex flex-col h-full bg-white dark:bg-[#060D1A] border-r border-gray-200/80 dark:border-[#1E3A5F]/40">
-      {/* Header */}
       <div className="px-5 pt-5 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3 flex-1">
-            <button
-              onClick={() => navigate(activeId ? '/chat' : '/home')}
-              className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#112240] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A2F4A] transition-colors active:scale-95"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 m-0">
-                💬 Chats
-              </h2>
-              <p className="text-[11px] text-gray-400 font-medium tracking-wide m-0 uppercase">
-                {allChats.length} ACTIVOS
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              onClick={() => navigate('/monas')}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white text-[11px] font-bold shadow-md shadow-amber-500/10 hover:shadow-amber-500/20 transition-shadow"
-              style={{ background: GOLD_GRADIENT }}
-            >
-              <ScanLine size={12} />
-              QR
-            </motion.button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200/80 dark:border-[#1E3A5F] shadow-sm hover:scale-105 active:scale-95 transition-transform"
-            >
-              <img
-                src={currentUser?.avatar}
-                alt={currentUser?.name}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          </div>
-        </div>
-
         {/* Search */}
         <div className="relative mb-3.5">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />

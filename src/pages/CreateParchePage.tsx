@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles } from 'lucide-react';
-import { usePageHeader } from '../store/PageHeaderContext';
-import { GRADIENT, PINK, ORANGE } from '../types/mockData';
+import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
+import { GRADIENT, PINK, ORANGE, events, ECI_LOCATIONS } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+import patySelfieImg from '../assets/PATY SELFIE.png';
+import patyBalonesImg from '../assets/PATY BALONES.png';
 const categories = [
   { id: 'musica', label: 'Música', emoji: '🎵', gradient: GRADIENT },
   { id: 'deporte', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
@@ -23,11 +24,7 @@ const friends = [
 ];
 export function CreateParchePage() {
   const navigate = useNavigate();
-  const { setHeader } = usePageHeader();
-  useEffect(() => {
-    setHeader({ title: 'Crear Parche', subtitle: 'Arma tu plan perfecto', showBack: true });
-    return () => setHeader(null);
-  }, []);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -37,13 +34,25 @@ export function CreateParchePage() {
   const [time, setTime] = useState('');
   const [maxMembers, setMaxMembers] = useState('10');
   const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [created, setCreated] = useState(false);
   const toggleFriend = (id: string) => {
     setInvitedFriends(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const handleCreate = async () => {
-    if (!name || !category) return;
+    if (!name || !category || !coverImage) return;
     setIsLoading(true);
     await new Promise(r => setTimeout(r, 1500));
     setCreated(true);
@@ -59,13 +68,10 @@ export function CreateParchePage() {
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
-            style={{ background: GRADIENT }}
-          >
-            <Sparkles size={40} color="white" />
+          <div className="flex justify-center mb-6">
+            <img src={patySelfieImg} alt="Mascota" className="w-40 h-40 object-contain drop-shadow-2xl" />
           </div>
-          <h2 className="text-gray-900 dark:text-white mb-2">¡Parche creado!</h2>
+          <h2 className="text-gray-900 dark:text-white mb-2 text-2xl font-black">¡Parche creado!</h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             Tu parche <strong style={{ color: PINK }}>{name}</strong> ya está activo
           </p>
@@ -76,6 +82,21 @@ export function CreateParchePage() {
   }
   return (
     <div className="min-h-screen pb-8">
+      <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 md:top-0 z-10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#172A45] text-gray-500 dark:text-gray-400 hover:scale-105 transition-transform"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-gray-900 dark:text-white font-bold text-base">Crear Parche</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Arma tu plan perfecto</p>
+          </div>
+        </div>
+        <img src={patyBalonesImg} alt="Paty" className="w-12 h-12 object-contain drop-shadow-sm -my-1" />
+      </div>
       <div className="px-5 pt-6 w-full md:w-4/6 md:mx-auto">
         {}
         {(name || selectedCategory) && (
@@ -103,7 +124,23 @@ export function CreateParchePage() {
           </motion.div>
         )}
         <div className="space-y-5">
-          {}
+          {/* Imagen de Portada */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen de Portada *</label>
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1A2C4E]"
+                   style={{ borderColor: coverImage ? PINK : '#E5E7EB', overflow: 'hidden' }}>
+              {coverImage ? (
+                <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-gray-400">
+                  <ImageIcon size={28} className="mb-2" />
+                  <span className="text-sm font-medium">Toca para subir imagen</span>
+                </div>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </label>
+          </div>
+          {/* Nombre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre del parche *</label>
             <input
@@ -115,7 +152,6 @@ export function CreateParchePage() {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{name.length}/50</p>
           </div>
-          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
             <textarea
@@ -128,7 +164,6 @@ export function CreateParchePage() {
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/200</p>
           </div>
-          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categoría *</label>
             <div className="grid grid-cols-4 gap-2">
@@ -157,7 +192,6 @@ export function CreateParchePage() {
               ))}
             </div>
           </div>
-          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de parche</label>
             <div className="grid grid-cols-2 gap-3">
@@ -187,18 +221,42 @@ export function CreateParchePage() {
               ))}
             </div>
           </div>
-          {}
+          {/* Evento */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Evento asociado (Opcional)</label>
+            <div className="relative">
+              <Ticket size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <select
+                value={eventId}
+                onChange={e => setEventId(e.target.value)}
+                className="w-full pl-8 pr-3 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all appearance-none"
+              >
+                <option value="">Ninguno</option>
+                {events.map(ev => (
+                  <option key={ev.id} value={ev.id}>{ev.title}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {/* Ubicacion y hora */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lugar</label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
+                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
+                <select
                   value={location}
                   onChange={e => setLocation(e.target.value)}
-                  placeholder="Ubicación"
-                  className="w-full pl-8 pr-3 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#1D4ED8] text-sm transition-all"
-                />
+                  className="w-full pl-8 pr-10 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all appearance-none"
+                >
+                  <option value="" disabled>Selecciona el lugar...</option>
+                  {ECI_LOCATIONS.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
               </div>
             </div>
             <div>
@@ -278,7 +336,7 @@ export function CreateParchePage() {
           {}
           <button
             onClick={handleCreate}
-            disabled={!name || !category || isLoading}
+            disabled={!name || !category || !coverImage || isLoading}
             className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
             style={{ background: GRADIENT }}
           >

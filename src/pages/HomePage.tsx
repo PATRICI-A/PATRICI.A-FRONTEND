@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
-import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
+import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { parches, matchUsers, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfie from '../assets/PatySelfie.png';
 import patyAlbum from '../assets/Album.png';
+import mascotFutbol from '../assets/mascota_futbol.png';
 import vibraMusica from '../assets/Musica-removebg-preview.png';
 import vibraAireLibre from '../assets/AireLibre-removebg-preview.png';
 import vibraEstudio from '../assets/Estudio-removebg-preview.png';
@@ -19,68 +20,58 @@ export function HomePage() {
   const { currentUser, isDark, geo } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
+
+  const [currentEventIndex, setCurrentEventIndex] = useState(0);
+  const autoplayTimerRef = useRef<any>(null);
+
+  const startAutoplay = () => {
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+    }
+    autoplayTimerRef.current = setInterval(() => {
+      setCurrentEventIndex(prev => (prev + 1) % events.length);
+    }, 6000);
+  };
+
+  const stopAutoplay = () => {
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+      autoplayTimerRef.current = null;
+    }
+  };
+
   useEffect(() => {
-    const invitedParche = parches[2];
-    const dismissedKey = `invite-dismissed-${invitedParche.id}`;
-    if (localStorage.getItem(dismissedKey)) return;
-    const timer = setTimeout(() => {
-      let toastId: string | number;
-      toastId = toast.custom(() => (
-        <div
-          className="flex flex-col gap-2.5 px-4 py-3 rounded-2xl shadow-xl"
-          style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)',
-            border: '1px solid rgba(6,182,212,0.3)',
-            minWidth: '320px',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
-              style={{ background: invitedParche.coverColor }}
-            >
-              {invitedParche.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-semibold opacity-70 mb-0.5">🎉 Fuiste invitado a un parche</p>
-              <p className="text-white font-bold text-sm truncate">{invitedParche.name}</p>
-              <p className="text-white/60 text-xs truncate">{invitedParche.description.slice(0, 40)}...</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => { localStorage.setItem(dismissedKey, '1'); toast.dismiss(toastId); }}
-              className="flex-1 py-2 rounded-xl text-white text-xs font-semibold transition-colors"
-              style={{ background: 'linear-gradient(135deg, #DC2626, #EF4444)' }}
-            >
-              Rechazar
-            </button>
-            <button
-              onClick={() => { toast.dismiss(toastId); navigate(`/parches/${invitedParche.id}`); }}
-              className="flex-1 py-2 rounded-xl text-white text-xs font-bold transition-colors"
-              style={{ background: 'linear-gradient(135deg, #16A34A, #22C55E)' }}
-            >
-              Aceptar
-            </button>
-          </div>
-        </div>
-      ), { duration: 8000 });
-    }, 1500);
-    return () => clearTimeout(timer);
+    startAutoplay();
+    return () => stopAutoplay();
   }, []);
 
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [carouselAtEnd, setCarouselAtEnd] = useState(false);
-  const [carouselAtStart, setCarouselAtStart] = useState(true);
-  const scrollCarousel = (dir: 'left' | 'right') => {
-    if (!carouselRef.current) return;
-    carouselRef.current.scrollBy({ left: dir === 'right' ? 420 : -420, behavior: 'smooth' });
+  const handleNextEvent = () => {
+    setCurrentEventIndex(prev => (prev + 1) % events.length);
+    startAutoplay();
   };
-  const handleCarouselScroll = () => {
-    if (!carouselRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-    setCarouselAtStart(scrollLeft <= 10);
-    setCarouselAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
+
+  const handlePrevEvent = () => {
+    setCurrentEventIndex(prev => (prev === 0 ? events.length - 1 : prev - 1));
+    startAutoplay();
+  };
+
+  const handleSelectEvent = (index: number) => {
+    setCurrentEventIndex(index);
+    startAutoplay();
+  };
+
+  const parchesCarouselRef = useRef<HTMLDivElement>(null);
+  const [parchesAtEnd, setParchesAtEnd] = useState(false);
+  const [parchesAtStart, setParchesAtStart] = useState(true);
+  const scrollParchesCarousel = (dir: 'left' | 'right') => {
+    if (!parchesCarouselRef.current) return;
+    parchesCarouselRef.current.scrollBy({ left: dir === 'right' ? 440 : -440, behavior: 'smooth' });
+  };
+  const handleParchesCarouselScroll = () => {
+    if (!parchesCarouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = parchesCarouselRef.current;
+    setParchesAtStart(scrollLeft <= 10);
+    setParchesAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
   };
 
   const vibraRef = useRef<HTMLDivElement>(null);
@@ -267,32 +258,106 @@ export function HomePage() {
       <section className="px-5 mb-6">
         {!geo.enabled ? (
           <motion.button
-            whileHover={{ scale: 1.015 }}
+            whileHover={{ scale: 1.015, translateY: -2 }}
             whileTap={{ scale: 0.985 }}
             onClick={() => navigate('/campus-map')}
-            className="w-full rounded-2xl overflow-hidden text-left relative"
-            style={{
-              background: 'linear-gradient(135deg, rgba(6,182,212,0.08) 0%, rgba(59,130,246,0.08) 100%)',
+            className="w-full rounded-[2rem] overflow-hidden text-left relative group transition-all duration-300"
+            style={isDark ? {
+              background: 'linear-gradient(135deg, #0A192F 0%, #0D2C54 60%, #081B33 100%)',
               border: '1.5px solid rgba(6,182,212,0.3)',
-              boxShadow: '0 4px 16px rgba(6,182,212,0.15)',
+              boxShadow: '0 12px 32px rgba(6,182,212,0.18), 0 4px 12px rgba(0,0,0,0.4)',
+            } : {
+              background: 'linear-gradient(135deg, #F0FDFA 0%, #E0F2FE 60%, #E0E7FF 100%)',
+              border: '1.5px solid rgba(14,165,233,0.22)',
+              boxShadow: '0 12px 32px rgba(14,165,233,0.1), 0 4px 12px rgba(0,0,0,0.03)',
             }}
           >
-            <div className="p-5 flex items-center gap-4">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
-                style={{ background: TEAL_GRADIENT, boxShadow: '0 4px 12px rgba(6,182,212,0.4)' }}
-              >
-                <MapPin size={32} className="text-white" />
+            
+            <div
+              className="absolute inset-0 pointer-events-none opacity-25 dark:opacity-10 mix-blend-overlay"
+              style={{
+                backgroundImage: 'radial-gradient(circle, #3B82F6 1.5px, transparent 1.5px)',
+                backgroundSize: '20px 20px',
+              }}
+            />
+
+            
+            <div className="absolute top-0 right-1/4 w-36 h-36 rounded-full bg-cyan-400/20 dark:bg-cyan-500/10 blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+            <div className="absolute bottom-0 right-0 w-44 h-44 rounded-full bg-indigo-400/20 dark:bg-indigo-500/10 blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+
+            <div className="relative z-20 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5 flex-1 min-w-0">
+                
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 relative"
+                  style={{ background: TEAL_GRADIENT, boxShadow: '0 8px 24px rgba(6,182,212,0.35)' }}
+                >
+                  <MapPin size={28} className="text-white" />
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                  </span>
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  
+                  <div 
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase mb-2"
+                    style={isDark ? {
+                      background: 'rgba(6,182,212,0.15)',
+                      color: '#22D3EE',
+                      border: '1px solid rgba(6,182,212,0.3)',
+                    } : {
+                      background: 'rgba(14,165,233,0.1)',
+                      color: '#0284C7',
+                      border: '1px solid rgba(14,165,233,0.2)',
+                    }}
+                  >
+                    <span>MAPA EN VIVO</span>
+                  </div>
+
+                  <h3 
+                    className="font-black text-lg md:text-xl tracking-tight mb-1"
+                    style={{ color: isDark ? '#FFFFFF' : '#0A192F' }}
+                  >
+                    Descubre tu campus en tiempo real
+                  </h3>
+                  
+                  <p 
+                    className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl"
+                  >
+                    Encuentra parches activos, amigos libres y eventos especiales cerca de ti ahora mismo. ¡No te pierdas de nada!
+                  </p>
+
+                  
+                  <div className="flex items-center gap-3.5 mt-2.5 text-[11px] font-bold text-gray-500 dark:text-gray-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      12 Parches hoy
+                    </span>
+                    <span className="text-gray-300 dark:text-gray-700">·</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                      5 Eventos activos
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-black text-base" style={{ color: TEAL }}>
-                  Descubre lo que tu campus tiene en tiempo real para ti
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  Toca aquí para explorar el mapa del campus
-                </p>
+
+              
+              <div className="flex-shrink-0 self-end md:self-auto">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="px-5 py-3 rounded-2xl flex items-center gap-2 text-white font-black text-xs md:text-sm shadow-md cursor-pointer transition-all duration-300"
+                  style={{ 
+                    background: TEAL_GRADIENT,
+                    boxShadow: '0 6px 20px rgba(6,182,212,0.3)'
+                  }}
+                >
+                  <span>Explorar Campus</span>
+                  <ChevronRight size={16} />
+                </motion.div>
               </div>
-              <ChevronRight size={24} style={{ color: TEAL }} className="flex-shrink-0" />
             </div>
           </motion.button>
         ) : geo.onCampus ? (
@@ -507,10 +572,10 @@ export function HomePage() {
                 background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
                 boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
                 border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
-                height: '140px',
+                height: '160px',
               }}
             >
-              {/* Mitad izquierda: imagen */}
+              
               <div className="relative flex-shrink-0" style={{ width: '50%' }}>
                 <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)' }}>
                   <span className="text-white font-bold text-4xl select-none">{user.name.charAt(0)}</span>
@@ -521,16 +586,14 @@ export function HomePage() {
                     onError={e => { e.currentTarget.style.display = 'none'; }}
                   />
                 </div>
-                {/* Fade derecho */}
+                
                 <div className="absolute inset-y-0 right-0 w-8 pointer-events-none" style={{ background: isDark ? 'linear-gradient(to right, transparent, #112240)' : 'linear-gradient(to right, transparent, rgba(253,252,248,0.95))' }} />
                 <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold text-white shadow" style={{ background: TEAL_GRADIENT }}>
                   {user.matchPercent}%
                 </div>
-                {user.online && (
-                  <div className="absolute bottom-2 left-2 w-3 h-3 rounded-full border-2 border-white" style={{ background: TEAL }} />
-                )}
+
               </div>
-              {/* Mitad derecha: info + botón */}
+              
               <div className="flex flex-col justify-between p-4" style={{ width: '50%' }}>
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
@@ -546,7 +609,7 @@ export function HomePage() {
                   </div>
                   <p className="text-xs text-gray-400 flex items-center gap-1 mt-1"><MapPin size={11} /> {user.commonPlace}</p>
                 </div>
-                <div className="mt-4">
+                <div className="mt-2">
                 <button
                   className="w-full py-2 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95 text-white text-xs font-bold shadow-md"
                   style={{
@@ -572,321 +635,442 @@ export function HomePage() {
         </div>
       </section>
       {}
-      <section className="px-5 mb-6">
-        <div className="flex items-center justify-between mb-3">
+      <section className="px-5 mb-8 relative">
+        
+        <div className="flex items-end justify-between mb-4 relative z-20">
           <div>
-            <h2 className="text-gray-800 dark:text-white font-bold text-xl">📅 Eventos</h2>
-            <p className="text-base text-gray-400">Lo que está pasando en el campus</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-gray-800 dark:text-white font-bold text-2xl flex items-center gap-2">
+                <span>📅 Campus Pulse</span>
+              </h2>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">Lo que está pasando hoy en la universidad</p>
           </div>
-          <button onClick={() => navigate('/events')} className="text-xs font-semibold flex items-center gap-1" style={{ color: PINK }}>
-            Ver más <ChevronRight size={16} />
+          <button onClick={() => navigate('/events')} className="text-xs font-bold flex items-center gap-1 transition-all hover:scale-105 active:scale-95 px-3 py-1.5 rounded-xl backdrop-blur-md" style={{ color: PINK, background: isDark ? 'rgba(244,63,94,0.1)' : 'rgba(244,63,94,0.05)', border: `1px solid ${isDark ? 'rgba(244,63,94,0.2)' : 'rgba(244,63,94,0.1)'}` }}>
+            Ver todos <ChevronRight size={14} />
           </button>
         </div>
-        {}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={() => navigate(`/events`)}
-          className="relative rounded-2xl overflow-hidden mb-4 cursor-pointer active:scale-[0.98] transition-all"
-          style={{ height: '180px' }}
-        >
-          <img
-            src={featuredEvent.coverImage}
-            alt={featuredEvent.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%)' }} />
-          <div className="absolute top-3 left-3">
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white" style={{ background: GRADIENT }}>
-              EVENTO OFICIAL
-            </span>
+
+        
+        <div className="relative group/events-slider">
+          <div className="relative min-h-[460px] sm:min-h-[360px] w-full overflow-visible">
+            <AnimatePresence mode="wait">
+              {(() => {
+                const event = events[currentEventIndex];
+                return (
+                  <motion.div
+                    key={currentEventIndex}
+                    initial={{ opacity: 0, x: 60, scale: 0.97 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -60, scale: 0.97 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0 w-full h-full flex flex-col sm:flex-row rounded-[2.5rem] overflow-hidden border cursor-pointer group"
+                    onClick={() => navigate('/events')}
+                    style={{
+                      background: isDark ? 'rgba(17, 34, 64, 0.55)' : 'rgba(255, 255, 255, 0.95)',
+                      borderColor: isDark ? 'rgba(30, 58, 95, 0.7)' : 'rgba(229, 231, 235, 0.9)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      boxShadow: isDark 
+                        ? '0 20px 40px rgba(0,0,0,0.35), inset 0 1px 2px rgba(255,255,255,0.05)' 
+                        : '0 20px 40px rgba(0,0,0,0.06)',
+                    }}
+                  >
+                    
+                    <div className="flex-1 p-6 md:p-7 flex flex-col justify-between z-10 min-w-0 pr-6 sm:pr-10">
+                      <div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                          <span 
+                            className="px-3 py-1 rounded-full text-[9px] font-black tracking-wider uppercase text-white shadow-sm flex items-center gap-1"
+                            style={{ background: event.official ? GRADIENT : 'rgba(156,163,175,0.8)' }}
+                          >
+                            {event.official ? '👑 OFICIAL' : '⭐ EVENTO'}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gray-100 dark:bg-gray-800/80 px-2 py-0.5 rounded-md">
+                            {event.category}
+                          </span>
+                        </div>
+
+                        
+                        <div className="flex items-center gap-3 mb-2 min-w-0">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md" style={{ background: event.coverGradient }}>
+                            <EmojiIcon emoji={event.emoji} size={20} color="white" strokeWidth={2} />
+                          </div>
+                          <h3 className="text-gray-900 dark:text-white font-black text-xl md:text-2xl leading-tight tracking-tight truncate flex-1">
+                            {event.title}
+                          </h3>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs md:text-sm line-clamp-2 leading-relaxed mb-4">
+                          {event.description}
+                        </p>
+                      </div>
+
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-450">
+                          <div className="w-5 h-5 rounded-lg flex items-center justify-center bg-orange-500/10 text-orange-500">
+                            <Clock size={12} strokeWidth={2.5} />
+                          </div>
+                          <span className="font-semibold">{event.date} · {event.time}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-450">
+                          <div className="w-5 h-5 rounded-lg flex items-center justify-center bg-rose-500/10 text-rose-500">
+                            <MapPin size={12} strokeWidth={2.5} />
+                          </div>
+                          <span className="font-semibold truncate">{event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-450">
+                          <div className="w-5 h-5 rounded-lg flex items-center justify-center bg-cyan-500/10 text-cyan-500">
+                            <Users size={12} strokeWidth={2.5} />
+                          </div>
+                          <span className="font-semibold">{event.attendees}+ asistirán</span>
+                        </div>
+                      </div>
+
+                      
+                      <div className="w-fit">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.success(`¡Te has inscrito al evento "${event.title}"! 🎉Te notificaremos pronto.`);
+                          }}
+                          className="px-5 py-2.5 rounded-2xl text-white font-black text-xs shadow-lg flex items-center gap-2 transition-transform"
+                          style={{ background: GRADIENT, boxShadow: '0 6px 20px rgba(30, 58, 138, 0.3)' }}
+                        >
+                          <span>Inscribirme al evento</span>
+                          <ChevronRight size={14} strokeWidth={3} />
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    
+                    <div 
+                      className="w-full sm:w-[40%] relative min-h-[140px] sm:min-h-0 overflow-hidden flex items-center justify-center"
+                      style={{ background: event.coverGradient }}
+                    >
+                      
+                      <div 
+                        className="absolute inset-0 opacity-10 mix-blend-overlay"
+                        style={{
+                          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                          backgroundSize: '16px 16px',
+                        }}
+                      />
+
+                      
+                      <motion.div
+                        initial={{ scale: 0.7, opacity: 0, rotate: -15 }}
+                        animate={{ scale: 1, opacity: 0.9, rotate: 0 }}
+                        exit={{ scale: 0.7, opacity: 0, rotate: 15 }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 110, 
+                          damping: 15,
+                          delay: 0.1 
+                        }}
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center backdrop-blur-md shadow-2xl border"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: 'rgba(255, 255, 255, 0.25)',
+                          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
+                        }}
+                      >
+                        <EmojiIcon 
+                          emoji={event.emoji} 
+                          size={54} 
+                          color="white" 
+                          strokeWidth={2.5} 
+                          className="drop-shadow-[0_6px_12px_rgba(0,0,0,0.25)]" 
+                        />
+                      </motion.div>
+
+                      
+                      <motion.div
+                        initial={{ y: 150, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 150, opacity: 0 }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 90, 
+                          damping: 14, 
+                          delay: 0.15 
+                        }}
+                        className="absolute right-4 bottom-2 z-20 pointer-events-auto"
+                      >
+                        <motion.img
+                          src={mascotFutbol}
+                          alt="Pato Futbolista"
+                          className="w-[125px] h-[125px] sm:w-[145px] sm:h-[145px] object-contain cursor-grab active:cursor-grabbing drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)]"
+                          whileHover={{ scale: 1.08, rotate: 3 }}
+                          whileTap={{ scale: 0.95, rotate: -3 }}
+                          drag
+                          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                          dragElastic={0.25}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="text-white font-bold mb-1">{featuredEvent.title}</h3>
-            <p className="text-white/70 text-xs mb-2 line-clamp-1">{featuredEvent.description}</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 text-white/70 text-xs">
-                <span className="flex items-center gap-1"><Clock size={13} />{featuredEvent.time}</span>
-                <span className="flex items-center gap-1"><Users size={13} /> {featuredEvent.attendees}+ van</span>
-              </div>
+
+          
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handlePrevEvent}
+            className="absolute left-[-15px] top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center shadow-2xl z-20 backdrop-blur-md transition-all border pointer-events-auto"
+            style={{ 
+              background: isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0,0,0,0.1)',
+              boxShadow: `0 4px 20px ${isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}`
+            }}
+          >
+            <ChevronLeft size={20} style={{ color: PINK }} strokeWidth={3} />
+          </motion.button>
+
+          
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleNextEvent}
+            className="absolute right-[-15px] top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center shadow-2xl z-20 backdrop-blur-md transition-all border pointer-events-auto"
+            style={{ 
+              background: isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0,0,0,0.1)',
+              boxShadow: `0 4px 20px ${isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}`
+            }}
+          >
+            <ChevronRight size={20} style={{ color: PINK }} strokeWidth={3} />
+          </motion.button>
+
+          
+          <div className="flex justify-center gap-2 mt-4 relative z-20">
+            {events.map((_, idx) => (
               <button
-                className="px-3 py-1.5 rounded-full text-white text-xs font-semibold"
-                style={{ background: GRADIENT }}
-                onClick={e => { e.stopPropagation(); }}
-              >
-                Inscribirme
-              </button>
-            </div>
+                key={idx}
+                onClick={() => handleSelectEvent(idx)}
+                className="h-2.5 rounded-full transition-all duration-300 pointer-events-auto"
+                style={{
+                  width: idx === currentEventIndex ? '28px' : '10px',
+                  background: idx === currentEventIndex 
+                    ? 'linear-gradient(135deg, #1D4ED8, #06B6D4)' 
+                    : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+                  boxShadow: idx === currentEventIndex ? '0 0 8px rgba(6, 182, 212, 0.4)' : 'none'
+                }}
+              />
+            ))}
           </div>
-        </motion.div>
-        {}
-        <div className="relative">
-        <div
-          ref={carouselRef}
-          onScroll={handleCarouselScroll}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5"
-          style={{ WebkitMaskImage: 'linear-gradient(to right, black 92%, transparent 100%)', maskImage: 'linear-gradient(to right, black 92%, transparent 100%)' }}
-        >
-          {}
-          {events.slice(1).map(event => (
+        </div>
+      </section>
+      {}
+      <section className="px-5 mb-8 relative">
+        
+        <div className="flex items-end justify-between mb-4 relative z-20">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-gray-800 dark:text-white font-bold text-2xl flex items-center gap-2">
+                <span>🤝 Parches Sugeridos</span>
+              </h2>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">Arma planes, comparte intereses y conecta en el campus</p>
+          </div>
+          <button onClick={() => navigate('/parches')} className="text-xs font-bold flex items-center gap-1 transition-all hover:scale-105 active:scale-95 px-3 py-1.5 rounded-xl backdrop-blur-md" style={{ color: PINK, background: isDark ? 'rgba(244,63,94,0.1)' : 'rgba(244,63,94,0.05)', border: `1px solid ${isDark ? 'rgba(244,63,94,0.2)' : 'rgba(244,63,94,0.1)'}` }}>
+            Ver todos <ChevronRight size={14} />
+          </button>
+        </div>
+
+        
+
+        
+        <div className="relative group/parches-carousel">
+          <div
+            ref={parchesCarouselRef}
+            onScroll={handleParchesCarouselScroll}
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-5 px-5 scroll-smooth"
+            style={{ 
+              WebkitMaskImage: 'linear-gradient(to right, black 94%, transparent 100%)', 
+              maskImage: 'linear-gradient(to right, black 94%, transparent 100%)' 
+            }}
+          >
+            
             <motion.button
-              key={event.id}
+              key="futbol-mascot-card"
               whileHover={{ scale: 1.03, y: -3 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/events')}
-              className="flex-shrink-0 rounded-2xl overflow-hidden text-left flex flex-col"
+              onClick={() => navigate('/create-parche')}
+              className="flex-shrink-0 rounded-3xl overflow-hidden text-left flex flex-col relative"
               style={{
-                width: 200,
-                height: 230,
-                background: isDark ? '#112240' : 'white',
-                border: `1.5px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                width: 210,
+                height: 255,
+                background: isDark 
+                  ? 'linear-gradient(135deg, #1E1B4B 0%, #311042 100%)' 
+                  : 'linear-gradient(135deg, #EEF2FF 0%, #FAE8FF 100%)',
+                border: `1.5px solid ${isDark ? 'rgba(139, 92, 246, 0.4)' : 'rgba(139, 92, 246, 0.2)'}`,
+                boxShadow: isDark 
+                  ? '0 8px 24px rgba(139, 92, 246, 0.15), inset 0 1px 1px rgba(255,255,255,0.05)' 
+                  : '0 8px 24px rgba(139, 92, 246, 0.08)',
               }}
             >
-              {}
-              <div className="h-24 flex items-center justify-center relative" style={{ background: event.coverGradient }}>
-                <EmojiIcon emoji={event.emoji} size={34} color="white" strokeWidth={2} />
-                {event.official && (
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
-                    OFICIAL
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
-                  <Users size={10} /> {event.attendees}
+              
+              <div 
+                className="h-28 flex items-center justify-center relative overflow-hidden" 
+                style={{ background: 'linear-gradient(135deg, #4F46E5 0%, #9333EA 100%)' }}
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.15)_0%,transparent_60%)] animate-pulse" />
+                <img
+                  src={mascotFutbol}
+                  alt="Mascota Futbolista Tarjeta"
+                  className="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] transform -rotate-6 transition-transform hover:scale-110"
+                />
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[8px] font-black text-white tracking-widest" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                  ⚽ DEPORTE
+                </div>
+                <div className="absolute top-2 right-2 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8px] font-black text-white" style={{ background: 'rgba(0,0,0,0.25)' }}>
+                  <Sparkles size={8} className="text-yellow-300 animate-spin" /> EXCLUSIVO
                 </div>
               </div>
-              {}
-              <div className="p-3">
-                <p className="text-[13px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{event.title}</p>
-                <p className="text-[11px] text-gray-400 flex items-center gap-1 mb-1.5">
-                  <Clock size={11} /> {event.date} · {event.time}
-                </p>
-                <p className="text-[11px] text-gray-400 flex items-center gap-1 line-clamp-1">
-                  <MapPin size={11} /> {event.location}
-                </p>
-                <div className="mt-2">
+              
+              
+              <div className="p-3.5 flex-1 flex flex-col justify-between">
+                <div>
+                  <p className="text-[13px] font-black text-gray-900 dark:text-white leading-tight line-clamp-2">
+                    ¿Falta 1 para el fútbol?
+                  </p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-350 mt-1 leading-snug line-clamp-2">
+                    Crea un parche deportivo al instante y reúne al equipo hoy mismo.
+                  </p>
+                </div>
+                <div className="mt-2.5">
                   <span
-                    className="text-[11px] font-bold px-3 py-1 rounded-full text-white"
-                    style={{ background: GRADIENT }}
+                    className="text-[9px] font-black px-3 py-1.5 rounded-xl text-white inline-flex items-center gap-1 shadow-md w-full justify-center"
+                    style={{ background: 'linear-gradient(135deg, #4F46E5, #9333EA)' }}
                   >
-                    Inscribirme
+                    <Plus size={10} /> Organizar Parche
                   </span>
                 </div>
               </div>
             </motion.button>
-          ))}
-          {}
-          {parches.slice(0, 5).map(parche => (
-            <motion.button
-              key={`p-${parche.id}`}
-              whileHover={{ scale: 1.03, y: -3 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate(`/parches/${parche.id}`)}
-              className="flex-shrink-0 rounded-2xl overflow-hidden text-left flex flex-col"
-              style={{
-                width: 200,
-                height: 230,
-                background: isDark ? '#112240' : 'white',
-                border: `1.5px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              }}
-            >
-              {}
-              <div className="h-24 flex items-center justify-center relative" style={{ background: parche.coverColor }}>
-                <EmojiIcon emoji={parche.emoji} size={34} color="white" strokeWidth={2} />
-                {parche.trending && (
-                  <div className="absolute top-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: 'rgba(0,0,0,0.35)' }}>
-                    <TrendingUp size={10} /> HOT
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'rgba(0,0,0,0.35)', color: 'white' }}>
-                  {parche.type === 'public' ? '🌐' : '🔒'}
-                </div>
-              </div>
-              {}
-              <div className="p-3">
-                <p className="text-[13px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{parche.name}</p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-tight mb-1.5">{parche.description.slice(0, 52)}...</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex -space-x-1.5">
-                    {parche.memberAvatars.slice(0, 3).map((av, i) => (
-                      <img key={i} src={av} alt="" className="w-6 h-6 rounded-full object-cover border border-white dark:border-[#112240]" />
-                    ))}
-                  </div>
-                  <span className="text-[11px] text-gray-400">{parche.members}/{parche.maxMembers}</span>
-                </div>
-              </div>
-            </motion.button>
-          ))}
-          {}
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/events')}
-            className="flex-shrink-0 rounded-2xl flex flex-col items-center justify-center gap-2 flex-shrink-0"
-            style={{
-              width: 100,
-              background: isDark ? '#112240' : '#F0F7FF',
-              border: `1.5px dashed ${isDark ? '#1E3A5F' : '#BFDBFE'}`,
-            }}
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ background: GRADIENT }}
-            >
-              <ChevronRight size={22} color="white" />
-            </div>
-            <span className="text-[10px] font-bold text-center px-2" style={{ color: PINK }}>Ver todos los eventos</span>
-          </motion.button>
-        </div>
-        {!carouselAtStart && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={() => scrollCarousel('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg z-10"
-            style={{ background: GRADIENT }}
-          >
-            <ChevronRight size={20} color="white" className="rotate-180" />
-          </motion.button>
-        )}
-        {!carouselAtEnd && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={() => scrollCarousel('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center shadow-lg z-10"
-            style={{ background: GRADIENT }}
-          >
-            <ChevronRight size={20} color="white" />
-          </motion.button>
-        )}
-        </div>
-      </section>
-      {}
-      <section className="px-5 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-gray-800 dark:text-white font-bold text-xl">🤝 Parches Sugeridos</h2>
-            <p className="text-base text-gray-400">Basados en tus intereses</p>
-          </div>
-          <button onClick={() => navigate('/parches')} className="text-xs font-semibold flex items-center gap-1" style={{ color: PINK }}>
-            Ver todos <ChevronRight size={16} />
-          </button>
-        </div>
-        {}
-        {topParches[0] && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => navigate(`/parches/${topParches[0].id}`)}
-            className="rounded-2xl p-6 pb-10 mb-4 cursor-pointer active:scale-[0.98] transition-all overflow-hidden relative"
-            style={{ background: topParches[0].coverColor }}
-          >
-            <img
-              src={patySelfie}
-              alt=""
-              className="absolute -bottom-4 right-3 h-44 sm:-bottom-20 sm:right-6 sm:h-60 object-contain object-top pointer-events-none"
-              style={{ opacity: 0.4 }}
-            />
-            <div className="flex items-start justify-between mb-3 relative z-10">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)' }}
-                >
-                  <EmojiIcon emoji={topParches[0].emoji} size={28} color="white" strokeWidth={2} />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg">{topParches[0].name}</h3>
-                  <p className="text-white/70 text-sm">{topParches[0].description}</p>
-                </div>
-              </div>
-              {topParches[0].trending && (
-                <span className="flex-shrink-0 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold flex items-center gap-1">
-                  <Flame size={13} /> TRENDING
-                </span>
-              )}
-            </div>
-            <div className="flex items-center justify-between mt-4 relative z-10">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {topParches[0].memberAvatars.slice(0, 3).map((av, i) => (
-                    <img key={i} src={av} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/50" />
-                  ))}
-                </div>
-                <span className="text-white/80 text-sm">+{topParches[0].members - 3} más</span>
-              </div>
-              <button
-                className="px-5 py-2 rounded-full bg-white text-sm font-bold"
-                style={{ color: PINK }}
-                onClick={e => { e.stopPropagation(); navigate(`/parches/${topParches[0].id}`); }}
+
+            
+            {parches.slice(0, 6).map(parche => (
+              <motion.button
+                key={`p-${parche.id}`}
+                whileHover={{ scale: 1.03, y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate(`/parches/${parche.id}`)}
+                className="flex-shrink-0 rounded-3xl overflow-hidden text-left flex flex-col relative transition-all"
+                style={{
+                  width: 210,
+                  height: 255,
+                  background: isDark ? 'rgba(17, 34, 64, 0.45)' : 'white',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: `1.5px solid ${isDark ? 'rgba(30, 58, 95, 0.6)' : 'rgba(229, 231, 235, 0.8)'}`,
+                  boxShadow: isDark 
+                    ? '0 8px 24px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.03)' 
+                    : '0 8px 24px rgba(0,0,0,0.04)',
+                }}
               >
-                Unirme
-              </button>
-            </div>
-          </motion.div>
-        )}
-        {}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {topParches.slice(1, 3).map(parche => (
-            <button
-              key={parche.id}
-              onClick={() => navigate(`/parches/${parche.id}`)}
-              className="rounded-2xl p-5 text-left active:scale-[0.98] transition-all"
+                
+                <div className="h-28 flex items-center justify-center relative" style={{ background: parche.coverColor }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+                  <EmojiIcon emoji={parche.emoji} size={38} color="white" strokeWidth={2} className="drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)]" />
+                  
+                  {parche.trending && (
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[8px] font-black text-white tracking-wider" style={{ background: 'rgba(220,38,38,0.85)', boxShadow: '0 2px 6px rgba(220,38,38,0.3)' }}>
+                      <TrendingUp size={10} className="animate-bounce" /> HOT
+                    </div>
+                  )}
+                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[8px] font-black" style={{ background: 'rgba(0,0,0,0.4)', color: 'white' }}>
+                    {parche.type === 'public' ? '🌐 Público' : '🔒 Privado'}
+                  </div>
+                </div>
+
+                
+                <div className="p-3.5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <p className="text-[13px] font-black text-gray-900 dark:text-white leading-tight line-clamp-1 mb-1">{parche.name}</p>
+                    <p className="text-[10px] text-gray-550 dark:text-gray-400 line-clamp-2 leading-snug mb-2">{parche.description.slice(0, 52)}...</p>
+                  </div>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex -space-x-1.5">
+                      {parche.memberAvatars.slice(0, 3).map((av, i) => (
+                        <img key={i} src={av} alt="" className="w-6 h-6 rounded-full object-cover border-2 border-white dark:border-[#112240] shadow" />
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-black bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-lg text-gray-500 dark:text-gray-400">
+                      👥 {parche.members}/{parche.maxMembers}
+                    </span>
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+
+            
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate('/parches')}
+              className="flex-shrink-0 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all"
               style={{
-                background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
-                boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
-                border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
+                width: 110,
+                height: 255,
+                background: isDark ? 'rgba(30, 58, 95, 0.2)' : 'rgba(240, 247, 255, 0.5)',
+                border: `1.5px dashed ${isDark ? '#1E3A5F' : '#BFDBFE'}`,
               }}
             >
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-3"
-                style={{ background: parche.coverColor }}
+                className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transform group-hover/parches-carousel:scale-115 transition-transform"
+                style={{ background: GRADIENT }}
               >
-                <EmojiIcon emoji={parche.emoji} size={26} color="white" strokeWidth={2} />
+                <ChevronRight size={24} color="white" />
               </div>
-              <p className="text-base font-semibold text-gray-800 dark:text-white mb-1">{parche.name}</p>
-              <p className="text-xs text-gray-400">{parche.description.slice(0, 50)}...</p>
-              <div className="flex items-center gap-1 mt-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: TEAL }} />
-                <span className="text-xs text-gray-400">{parche.members} miembros</span>
-              </div>
-            </button>
-          ))}
+              <span className="text-[10px] font-black text-center px-2 leading-tight" style={{ color: PINK }}>Ver todos los parches</span>
+            </motion.button>
+          </div>
+
+          
+          {!parchesAtStart && (
+            <motion.button
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => scrollParchesCarousel('left')}
+              className="absolute left-[-15px] top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center shadow-2xl z-20 backdrop-blur-md transition-all active:scale-90 border"
+              style={{ 
+                background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.95)',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0,0,0,0.1)',
+                boxShadow: `0 4px 20px ${isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.12)'}`
+              }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <ChevronLeft size={20} style={{ color: PINK }} strokeWidth={3} />
+            </motion.button>
+          )}
+          {!parchesAtEnd && (
+            <motion.button
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => scrollParchesCarousel('right')}
+              className="absolute right-[-15px] top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center shadow-2xl z-20 backdrop-blur-md transition-all active:scale-90 border"
+              style={{ 
+                background: isDark ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.95)',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0,0,0,0.1)',
+                boxShadow: `0 4px 20px ${isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.12)'}`
+              }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <ChevronRight size={20} style={{ color: PINK }} strokeWidth={3} />
+            </motion.button>
+          )}
         </div>
-      </section>
-      {}
-      <section className="px-5 mb-4">
-        {parches.slice(4, 5).map(parche => (
-          <button
-            key={parche.id}
-            onClick={() => navigate(`/parches/${parche.id}`)}
-            className="w-full rounded-2xl p-5 flex items-center gap-4 active:scale-[0.98] transition-all"
-            style={{
-              background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
-              boxShadow: isDark ? '0 2px 16px rgba(0,0,0,0.2)' : '0 2px 16px rgba(10,25,47,0.07)',
-              border: isDark ? '1px solid rgba(30,58,95,0.3)' : '1px solid rgba(10,25,47,0.06)',
-            }}
-          >
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1763890965393-1cea435581ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100"
-                alt={parche.name}
-                className="w-20 h-20 rounded-xl object-cover"
-              />
-              <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: GRADIENT }}>
-                NUEVO
-              </span>
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-gray-400 mb-1 flex items-center gap-1"><MapPin size={13} /> A 500m en el campus</p>
-              <h3 className="font-semibold text-gray-800 dark:text-white text-base">{parche.name}</h3>
-              <p className="text-sm text-gray-400 mt-0.5">{parche.description.slice(0, 60)}...</p>
-              <p className="text-sm font-medium mt-1" style={{ color: PINK }}>{parche.members} miembros activos</p>
-            </div>
-          </button>
-        ))}
       </section>
       {}
       <button
