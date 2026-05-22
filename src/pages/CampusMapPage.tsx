@@ -6,13 +6,11 @@ import {
   ArrowLeft, MapPin, X, ChevronUp, ChevronDown, ChevronRight, Calendar,
   Building2, GraduationCap, Monitor, FlaskConical, Zap, Wrench, Radio,
   Trophy, Activity, Droplets, Leaf, Coffee, UtensilsCrossed, ShoppingBag,
-  Truck, Navigation, Car, Map, BookOpen, Cpu, Dumbbell,
-  Music, Lightbulb, Palette, Sparkles,
+  Truck, Navigation, Car, Map, Cpu,
   LocateFixed, Locate, AlertTriangle, CheckCircle2, Loader2, AlertCircle,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { events, GOLD_GRADIENT, GOLD_LIGHT, GRADIENT } from '../types/mockData';
-import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import campusMap from '../assets/campus_map.png';
 type LucideIconType = React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
@@ -26,55 +24,18 @@ interface Landmark {
   color: string;
   type: 'building' | 'food' | 'sport' | 'nature' | 'entry';
 }
-const CAMPUS_BOUNDS = {
-  north: 4.9800,
-  south: 4.9722,
-  east:  -74.0418,
-  west:  -74.0490,
-};
-function coordsToMapPct(lat: number, lng: number) {
-  const x = ((lng - CAMPUS_BOUNDS.west) / (CAMPUS_BOUNDS.east - CAMPUS_BOUNDS.west)) * 100;
-  const y = ((CAMPUS_BOUNDS.north - lat) / (CAMPUS_BOUNDS.north - CAMPUS_BOUNDS.south)) * 100;
-  return {
-    x: Math.max(2, Math.min(98, x)),
-    y: Math.max(2, Math.min(98, y)),
-  };
-}
-function isOnCampus(lat: number, lng: number): boolean {
-  return (
-    lat >= CAMPUS_BOUNDS.south &&
-    lat <= CAMPUS_BOUNDS.north &&
-    lng >= CAMPUS_BOUNDS.west &&
-    lng <= CAMPUS_BOUNDS.east
-  );
-}
-function detectZone(mapX: number, mapY: number, landmarks: Landmark[]): string {
-  let closest = landmarks[0];
-  let minDist = Infinity;
-  for (const lm of landmarks) {
-    if (lm.type === 'entry') continue; // skip entry points
-    const dx = lm.x - mapX;
-    const dy = lm.y - mapY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < minDist) {
-      minDist = dist;
-      closest = lm;
-    }
-  }
-  return minDist < 18 ? `Cerca de ${closest.name}` : 'Campus ECI';
-}
 const LANDMARKS: Landmark[] = [
-  { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 75, y: 46, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 70, y: 36, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 78.9, y: 51.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 70.4, y: 44.0, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-c', name: 'Bloque C',           shortName: 'C',       x: 76.9, y: 68.7, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-d', name: 'Bloque D',           shortName: 'D',       x: 52, y: 28, Icon: GraduationCap,  color: '#6366F1', type: 'building' },
-  { id: 'bloque-e', name: 'Bloque E',           shortName: 'E',       x: 56, y: 46, Icon: Wrench,         color: '#0EA5E9', type: 'building' },
-  { id: 'bloque-f', name: 'Bloque F',           shortName: 'F',       x: 63, y: 18, Icon: Monitor,        color: '#8B5CF6', type: 'building' },
-  { id: 'bloque-g', name: 'Bloque G',           shortName: 'G',       x: 78, y: 20, Icon: FlaskConical,   color: '#EC4899', type: 'building' },
-  { id: 'bloque-h', name: 'Bloque H',           shortName: 'H',       x: 34, y: 70, Icon: Zap,            color: '#F59E0B', type: 'building' },
-  { id: 'bloque-i', name: 'Bloque I',           shortName: 'I',       x: 42, y: 70, Icon: Cpu,            color: '#10B981', type: 'building' },
-  { id: 'bloque-l', name: 'Bloque L',           shortName: 'L',       x: 38, y: 22, Icon: Radio,          color: '#06B6D4', type: 'building' },
-  { id: 'coliseo',  name: 'Coliseo El Otoño',   shortName: 'Coliseo', x:  7, y: 35, Icon: Trophy,         color: '#EF4444', type: 'sport'    },
+  { id: 'bloque-d', name: 'Bloque D',           shortName: 'D',       x: 56.9, y: 38.0, Icon: GraduationCap,  color: '#6366F1', type: 'building' },
+  { id: 'bloque-e', name: 'Bloque E',           shortName: 'E',       x: 55.9, y: 58.2, Icon: Wrench,         color: '#0EA5E9', type: 'building' },
+  { id: 'bloque-f', name: 'Bloque F',           shortName: 'F',       x: 62.1, y: 24.0, Icon: Monitor,        color: '#8B5CF6', type: 'building' },
+  { id: 'bloque-g', name: 'Bloque G',           shortName: 'G',       x: 72.3, y: 29.7, Icon: FlaskConical,   color: '#EC4899', type: 'building' },
+  { id: 'bloque-h', name: 'Bloque H',           shortName: 'H',       x: 34.2, y: 84.2, Icon: Zap,            color: '#F59E0B', type: 'building' },
+  { id: 'bloque-i', name: 'Bloque I',           shortName: 'I',       x: 44.2, y: 79.6, Icon: Cpu,            color: '#10B981', type: 'building' },
+  { id: 'bloque-l', name: 'Bloque L',           shortName: 'L',       x: 44.6, y: 25.9, Icon: Radio,          color: '#06B6D4', type: 'building' },
+  { id: 'coliseo',  name: 'Coliseo El Otoño',   shortName: 'Coliseo', x: 12.0, y: 37.4, Icon: Trophy,         color: '#EF4444', type: 'sport'    },
   { id: 'canchas',  name: 'Canchas Fútbol',      shortName: 'Canchas', x: 19, y: 44, Icon: Activity,       color: '#16A34A', type: 'sport'    },
   { id: 'lago',     name: 'El Lago',            shortName: 'Lago',    x: 33, y: 40, Icon: Droplets,       color: '#0284C7', type: 'nature'   },
   { id: 'nativos',  name: 'Nativos',            shortName: 'Nativos', x: 50, y: 58, Icon: Leaf,           color: '#15803D', type: 'nature'   },
@@ -86,53 +47,38 @@ const LANDMARKS: Landmark[] = [
   { id: 'entrada-v', name: 'Entrada Vehicular', shortName: 'Veh.',    x: 89, y: 72, Icon: Car,            color: '#475569', type: 'entry'    },
 ];
 const EVENT_LOCATION: Record<string, string> = {
-  'e1': 'bloque-d',
-  'e2': 'cafe-planet',
-  'e3': 'bloque-e',
-  'e4': 'bloque-g',
-  'e5': 'nativos',
-  'e6': 'bloque-l',
+  e1: 'bloque-d',
+  e2: 'bloque-f',
+  e3: 'bloque-a',
+  e4: 'bloque-f',
+  e5: 'bloque-l',
+  e6: 'bloque-g',
 };
+
 const FILTERS = [
-  { key: 'all',   label: 'Todo',     Icon: Map      },
-  { key: 'event', label: 'Eventos',  Icon: MapPin   },
-  { key: 'food',  label: 'Comida',   Icon: Coffee   },
-  { key: 'sport', label: 'Deporte',  Icon: Dumbbell },
-] as const;
+  { key: 'all', label: 'Todo', Icon: Map },
+  { key: 'event', label: 'Eventos', Icon: MapPin },
+  { key: 'food', label: 'Comida', Icon: Coffee },
+  { key: 'sport', label: 'Deporte', Icon: Activity },
+];
+
 function EventPinIcon({ emoji, size = 14, color = 'white' }: { emoji: string; size?: number; color?: string }) {
-  return <EmojiIcon emoji={emoji} size={size} color={color} strokeWidth={2.2} />;
+  return (
+    <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(size * 0.8), color }}>
+      {emoji}
+    </div>
+  );
 }
-function GeoBanner({
-  isDark, geo
-}: { isDark: boolean; geo: ReturnType<typeof useApp>['geo'] }) {
-  if (!geo.enabled) return null;
-  let bg: string;
-  let Icon: React.ReactNode;
-  let text: string;
-  let subtext: string;
-  if (geo.loading) {
-    bg = isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.10)';
-    Icon = <Loader2 size={13} color="#06B6D4" className="animate-spin" />;
-    text = 'Obteniendo tu ubicación…';
-    subtext = 'Asegúrate de tener GPS activo';
-  } else if (geo.error) {
-    bg = isDark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.08)';
-    Icon = <AlertCircle size={13} color="#EF4444" />;
-    text = 'GPS no disponible';
-    subtext = geo.error;
-  } else if (!geo.onCampus && geo.lat !== null) {
-    bg = isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)';
-    Icon = <AlertTriangle size={13} color="#F59E0B" />;
-    text = 'Estás fuera del campus';
-    subtext = `${geo.lat.toFixed(5)}, ${geo.lng!.toFixed(5)} · ±${Math.round(geo.accuracy ?? 0)}m`;
-  } else if (geo.onCampus) {
-    bg = isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)';
-    Icon = <CheckCircle2 size={13} color="#10B981" />;
-    text = geo.detectedZone ?? 'En el campus';
-    subtext = `±${Math.round(geo.accuracy ?? 0)}m de precisión`;
-  } else {
-    return null;
-  }
+
+function GeoBanner({ isDark, geo }: { isDark: boolean; geo: any }) {
+  if (!geo) return null;
+  const Icon = geo.loading ? <Loader2 size={16} className="animate-spin" /> : geo.error ? <AlertCircle size={16} /> : geo.onCampus ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />;
+  const bg = geo.loading ? (isDark ? '#0C2A45' : '#E0F7FA') : geo.error ? (isDark ? '#2D1515' : '#FEF2F2') : geo.onCampus ? (isDark ? '#0D2A1E' : '#ECFDF5') : (isDark ? '#2D2010' : '#FFFBEB');
+  const text = geo.loading ? 'Buscando ubicación…' : geo.error ? 'Error GPS' : geo.onCampus ? (geo.detectedZone ? geo.detectedZone.replace('Cerca de ', '') : 'En campus') : 'Fuera del campus';
+  const subtext = geo.loading ? '' : geo.error ? String(geo.error) : '';
+
+  if (!geo.enabled && !geo.loading && !geo.error) return null;
+
   return (
     <motion.div
       initial={{ height: 0, opacity: 0 }}
@@ -165,7 +111,7 @@ function GeoBanner({
 }
 export function CampusMapPage() {
   const navigate = useNavigate();
-  const { isDark, toggleTheme, currentUser, geo, updateGeo, toggleGeo } = useApp();
+  const { isDark, currentUser, geo, updateGeo, toggleGeo } = useApp();
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'event' | 'food' | 'sport'>('all');
@@ -247,7 +193,7 @@ export function CampusMapPage() {
   const mappedEvents = events.filter(ev => EVENT_LOCATION[ev.id]);
   const getEventsAt = useCallback((lmId: string) =>
     mappedEvents.filter(e => EVENT_LOCATION[e.id] === lmId), [mappedEvents]);
-  const hasEvent = (lmId: string) => getEventsAt(lmId).length > 0;
+  
   // Show only buildings on the map; color indicates active events
   const isVisible = (lm: Landmark) => lm.type === 'building';
   const handlePin = (lm: Landmark) => {
@@ -395,13 +341,16 @@ export function CampusMapPage() {
           const evHere = getEventsAt(lm.id);
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
-          const { Icon } = lm;
+          
           // choose pin background based on whether building has active events
           // If has event -> orange (GOLD_GRADIENT). If no event -> blue.
-          const DEFAULT_BLUE = '#3B82F6';
+          // darker colors for labels and pins
+          const DEFAULT_BLUE = '#1E40AF'; // darker blue for better contrast
+          const EVENT_DARK = '#C27800'; // darker orange for event labels
           const pinBg = hasEv ? GOLD_GRADIENT : DEFAULT_BLUE;
           const pinBorder = isSel ? 'white' : 'rgba(255,255,255,0.8)';
-          const labelColor = hasEv ? GOLD_LIGHT : DEFAULT_BLUE;
+          // label color: darker orange for events, darker blue otherwise
+          const labelColor = hasEv ? EVENT_DARK : DEFAULT_BLUE;
 
           return (
             <button
@@ -451,8 +400,13 @@ export function CampusMapPage() {
                     transition: 'width .2s, height .2s',
                     position: 'relative', zIndex: 1,
                   }}>
-                    <div style={{ transform: 'rotate(45deg)' }}>
-                      <Icon size={isSel ? 15 : (hasEv ? 12 : 10)} color="white" strokeWidth={2.2} />
+                    {/* counter-rotate so inner text stays upright and stacked vertically */}
+                    <div style={{ transform: 'rotate(45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: isSel ? 14 : (hasEv ? 12 : 10), lineHeight: 1 }}>
+                        {Array.from(String(lm.shortName)).map((ch, i) => (
+                          <span key={i} style={{ display: 'block', transform: 'rotate(0deg)' }}>{ch}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   {hasEv && evHere.length > 1 && (
@@ -467,18 +421,7 @@ export function CampusMapPage() {
                     </div>
                   )}
                 </div>
-                <span style={{
-                  fontSize: 8, fontWeight: 900,
-                  color: labelColor,
-                  textShadow: isDark
-                    ? '0 1px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.8)'
-                    : '0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)',
-                  whiteSpace: 'nowrap',
-                  marginTop: 2,
-                  lineHeight: 1,
-                }}>
-                  {lm.shortName}
-                </span>
+                {/* external label removed; building short name is displayed inside the pin */}
               </motion.div>
             </button>
           );
@@ -878,4 +821,41 @@ export function CampusMapPage() {
       
     </div>
   );
+}
+const CAMPUS_BOUNDS = {
+  north: 4.9800,
+  south: 4.9722,
+  east:  -74.0418,
+  west:  -74.0490,
+};
+function coordsToMapPct(lat: number, lng: number) {
+  const x = ((lng - CAMPUS_BOUNDS.west) / (CAMPUS_BOUNDS.east - CAMPUS_BOUNDS.west)) * 100;
+  const y = ((CAMPUS_BOUNDS.north - lat) / (CAMPUS_BOUNDS.north - CAMPUS_BOUNDS.south)) * 100;
+  return {
+    x: Math.max(2, Math.min(98, x)),
+    y: Math.max(2, Math.min(98, y)),
+  };
+}
+function isOnCampus(lat: number, lng: number): boolean {
+  return (
+    lat >= CAMPUS_BOUNDS.south &&
+    lat <= CAMPUS_BOUNDS.north &&
+    lng >= CAMPUS_BOUNDS.west &&
+    lng <= CAMPUS_BOUNDS.east
+  );
+}
+function detectZone(mapX: number, mapY: number, landmarks: Landmark[]): string {
+  let closest = landmarks[0];
+  let minDist = Infinity;
+  for (const lm of landmarks) {
+    if (lm.type === 'entry') continue;
+    const dx = lm.x - mapX;
+    const dy = lm.y - mapY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = lm;
+    }
+  }
+  return minDist < 18 ? `Cerca de ${closest.name}` : 'Campus ECI';
 }
