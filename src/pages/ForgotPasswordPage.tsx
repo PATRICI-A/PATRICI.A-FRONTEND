@@ -12,6 +12,7 @@ import { GRADIENT, PINK } from '../types/mockData';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 import patiContrasena from '../assets/Pati-Contrasena.png';
+import patiRestablecer from '../assets/Pati-restablecer.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -149,6 +150,22 @@ export function ForgotPasswordPage() {
       />
       {}
       <div className="mx-auto w-full max-w-6xl relative px-4 sm:px-6" style={{ zIndex: 1 }}>
+        <div className="flex items-center justify-between p-4 sm:p-6 lg:p-8">
+          <button
+            onClick={handleBack}
+            aria-label="Volver"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <button
+            onClick={toggleTheme}
+            aria-label="Cambiar tema"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
         <div className="grid md:grid-cols-2 items-center gap-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -158,30 +175,25 @@ export function ForgotPasswordPage() {
           >
             <div className="w-full max-w-[460px] lg:max-w-[820px] xl:max-w-[920px] bg-transparent">
               <img
-                src={patiContrasena}
+                src={phase === 'reset' ? patiRestablecer : patiContrasena}
                 alt="Patricia ilustración de contraseña"
                 className="w-full h-auto object-contain bg-transparent drop-shadow-none"
               />
             </div>
           </motion.div>
+          <div className="md:hidden w-full mb-4">
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-44 h-44 overflow-hidden bg-transparent flex-shrink-0">
+                <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain" />
+              </div>
+              <div className="text-center">
+                <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.</p>
+              </div>
+            </div>
+          </div>
+
           <div className="relative w-full mx-auto md:max-w-md my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
-        {}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
-          <button
-            onClick={handleBack}
-            aria-label="Volver"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <button
-            onClick={toggleTheme}
-            aria-label="Cambiar tema"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
-          >
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
         {}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
@@ -197,17 +209,6 @@ export function ForgotPasswordPage() {
                 >
                   {}
                   <div className="mb-8 mt-2">
-                    <div className="flex items-center gap-3 md:hidden">
-                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-transparent flex items-center justify-center flex-shrink-0">
-                        <img src={patiContrasena} alt="Patricia" className="w-full h-full object-contain" />
-                      </div>
-                      <div className="flex-1 text-center">
-                        <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
-                          Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
-                        </p>
-                      </div>
-                    </div>
                     <div className="hidden md:block text-center">
                       <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
