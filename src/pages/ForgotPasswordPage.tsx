@@ -144,30 +144,31 @@ export function ForgotPasswordPage() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
       </div>
       {}
-      <div className="relative w-full max-w-6xl mx-auto my-10 rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300">
+      <div className="relative w-full max-w-6xl mx-auto my-10 rounded-3xl shadow-none overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-transparent bg-transparent md:backdrop-blur-sm md:dark:bg-transparent transition-colors duration-300">
         {}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
-          <button
-            onClick={handleBack}
-            aria-label="Volver"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <button
-            onClick={toggleTheme}
-            aria-label="Cambiar tema"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
-          >
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
+        {}
         {}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
             <motion.div className="grid gap-8 lg:grid-cols-[1fr_1fr] items-center w-full">
               <div className="order-1 lg:order-2">
-                <div className="rounded-[2rem] bg-white/90 dark:bg-[#0f172a]/90 shadow-2xl border border-gray-200 dark:border-[#1E3A5F] p-8">
+                <div className="rounded-[2rem] bg-white/90 dark:bg-[#0f172a]/90 shadow-none border border-transparent dark:border-transparent p-8 relative">
+                  <div className="flex items-center justify-between mb-6">
+                    <button
+                      onClick={handleBack}
+                      aria-label="Volver"
+                      className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-none text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <button
+                      onClick={toggleTheme}
+                      aria-label="Cambiar tema"
+                      className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-none text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
+                    >
+                      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                    </button>
+                  </div>
                   <AnimatePresence mode="wait">
                 {}
                 {phase === 'email' && (
@@ -180,7 +181,7 @@ export function ForgotPasswordPage() {
                 >
                   {}
                   <div className="text-center mb-8 mt-2">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-none" style={{ background: GRADIENT }}>
                       <KeyRound size={28} color="white" strokeWidth={2} />
                     </div>
                     <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
@@ -273,7 +274,7 @@ export function ForgotPasswordPage() {
                     onClick={handleSend}
                     disabled={!emailValid || sendLoading || blockCooldown > 0}
                     whileTap={emailValid && !sendLoading && blockCooldown === 0 ? { scale: 0.97 } : {}}
-                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg transition-all"
+                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-none transition-all"
                     style={{
                       background: emailValid && blockCooldown === 0 ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'),
                       opacity: emailValid && !sendLoading && blockCooldown === 0 ? 1 : 0.65,
@@ -312,7 +313,7 @@ export function ForgotPasswordPage() {
                 >
                   {}
                   <div className="text-center mb-6 mt-2">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-none" style={{ background: GRADIENT }}>
                       <ShieldCheck size={28} color="white" strokeWidth={2} />
                     </div>
                     <h1 className="text-gray-900 dark:text-white">Restablecer contraseña</h1>
@@ -517,7 +518,7 @@ export function ForgotPasswordPage() {
                     onClick={handleReset}
                     disabled={!resetValid || resetLoading}
                     whileTap={resetValid && !resetLoading ? { scale: 0.97 } : {}}
-                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-65"
+                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-none transition-all disabled:opacity-65"
                     style={{
                       background: resetValid ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'),
                       cursor: resetValid && !resetLoading ? 'pointer' : 'not-allowed',
@@ -552,7 +553,7 @@ export function ForgotPasswordPage() {
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-xl"
+                    className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-none"
                     style={{ background: 'linear-gradient(135deg,#10B981,#06B6D4)' }}
                   >
                     <CheckCircle2 size={40} color="white" strokeWidth={2.5} />
@@ -569,7 +570,7 @@ export function ForgotPasswordPage() {
                     transition={{ delay: 0.4 }}
                     onClick={() => navigate('/login')}
                     whileTap={{ scale: 0.97 }}
-                    className="mt-8 w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg"
+                    className="mt-8 w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-none"
                     style={{ background: GRADIENT }}
                   >
                     Iniciar sesión
