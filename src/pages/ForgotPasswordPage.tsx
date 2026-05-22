@@ -10,7 +10,8 @@ import {
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
-import patiLoginImg from '../assets/pati-login.png';
+import patiOlvidareImg from '../assets/pati-olvidar.png';
+import patiRestablecerImg from '../assets/pati-restablecer.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -582,8 +583,8 @@ export function ForgotPasswordPage() {
               </div>
               <div className="order-2 lg:order-1 flex justify-center">
                 <img
-                  src={patiLoginImg}
-                  alt="Patricia Login"
+                  src={phase === 'email' ? patiOlvidareImg : patiRestablecerImg}
+                  alt={phase === 'email' ? 'Patricia Olvidé contraseña' : 'Patricia Restablecer contraseña'}
                   className="w-full max-w-md rounded-[2rem] object-cover bg-transparent"
                 />
               </div>
