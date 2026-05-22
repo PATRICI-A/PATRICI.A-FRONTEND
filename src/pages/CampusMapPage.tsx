@@ -7,7 +7,7 @@ import {
   Building2, GraduationCap, Monitor, FlaskConical, Zap, Wrench, Radio,
   Trophy, Activity, Droplets, Leaf, Coffee, UtensilsCrossed, ShoppingBag,
   Truck, Navigation, Car, Map, BookOpen, Cpu, Dumbbell,
-  Music, Lightbulb, Palette, Sparkles, Sun, Moon,
+  Music, Lightbulb, Palette, Sparkles,
   LocateFixed, Locate, AlertTriangle, CheckCircle2, Loader2, AlertCircle,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
@@ -64,16 +64,16 @@ function detectZone(mapX: number, mapY: number, landmarks: Landmark[]): string {
   return minDist < 18 ? `Cerca de ${closest.name}` : 'Campus ECI';
 }
 const LANDMARKS: Landmark[] = [
-  { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 73, y: 50, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 68, y: 41, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-c', name: 'Bloque C',           shortName: 'C',       x: 72, y: 60, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-d', name: 'Bloque D',           shortName: 'D',       x: 50, y: 32, Icon: GraduationCap,  color: '#6366F1', type: 'building' },
-  { id: 'bloque-e', name: 'Bloque E',           shortName: 'E',       x: 54, y: 49, Icon: Wrench,         color: '#0EA5E9', type: 'building' },
-  { id: 'bloque-f', name: 'Bloque F',           shortName: 'F',       x: 62, y: 16, Icon: Monitor,        color: '#8B5CF6', type: 'building' },
-  { id: 'bloque-g', name: 'Bloque G',           shortName: 'G',       x: 77, y: 24, Icon: FlaskConical,   color: '#EC4899', type: 'building' },
-  { id: 'bloque-h', name: 'Bloque H',           shortName: 'H',       x: 36, y: 74, Icon: Zap,            color: '#F59E0B', type: 'building' },
-  { id: 'bloque-i', name: 'Bloque I',           shortName: 'I',       x: 44, y: 74, Icon: Cpu,            color: '#10B981', type: 'building' },
-  { id: 'bloque-l', name: 'Bloque L',           shortName: 'L',       x: 40, y: 18, Icon: Radio,          color: '#06B6D4', type: 'building' },
+  { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 75, y: 46, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 70, y: 36, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-c', name: 'Bloque C',           shortName: 'C',       x: 72, y: 54, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-d', name: 'Bloque D',           shortName: 'D',       x: 52, y: 28, Icon: GraduationCap,  color: '#6366F1', type: 'building' },
+  { id: 'bloque-e', name: 'Bloque E',           shortName: 'E',       x: 56, y: 46, Icon: Wrench,         color: '#0EA5E9', type: 'building' },
+  { id: 'bloque-f', name: 'Bloque F',           shortName: 'F',       x: 63, y: 18, Icon: Monitor,        color: '#8B5CF6', type: 'building' },
+  { id: 'bloque-g', name: 'Bloque G',           shortName: 'G',       x: 78, y: 20, Icon: FlaskConical,   color: '#EC4899', type: 'building' },
+  { id: 'bloque-h', name: 'Bloque H',           shortName: 'H',       x: 34, y: 70, Icon: Zap,            color: '#F59E0B', type: 'building' },
+  { id: 'bloque-i', name: 'Bloque I',           shortName: 'I',       x: 42, y: 70, Icon: Cpu,            color: '#10B981', type: 'building' },
+  { id: 'bloque-l', name: 'Bloque L',           shortName: 'L',       x: 38, y: 22, Icon: Radio,          color: '#06B6D4', type: 'building' },
   { id: 'coliseo',  name: 'Coliseo El Otoño',   shortName: 'Coliseo', x:  7, y: 35, Icon: Trophy,         color: '#EF4444', type: 'sport'    },
   { id: 'canchas',  name: 'Canchas Fútbol',      shortName: 'Canchas', x: 19, y: 44, Icon: Activity,       color: '#16A34A', type: 'sport'    },
   { id: 'lago',     name: 'El Lago',            shortName: 'Lago',    x: 33, y: 40, Icon: Droplets,       color: '#0284C7', type: 'nature'   },
@@ -712,31 +712,7 @@ export function CampusMapPage() {
           )}
         </motion.button>
         {}
-        <button
-          onClick={() => navigate('/profile')}
-          className="w-9 h-9 rounded-full overflow-hidden border-2 shadow-sm active:scale-95 transition-transform flex-shrink-0"
-          style={{ borderColor: isDark ? '#1E3A5F' : '#E5E7EB' }}
-        >
-          <img
-            src={currentUser?.avatar}
-            alt={currentUser?.name}
-            className="w-full h-full object-cover"
-          />
-        </button>
-        {}
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          onClick={toggleTheme}
-          aria-label="Cambiar tema"
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-          style={{
-            background: isDark ? '#172A45' : '#F3F4F6',
-            color: isDark ? '#FBBF24' : '#6B7280',
-            boxShadow: isDark ? '0 0 10px rgba(251,191,36,0.2)' : '0 1px 4px rgba(0,0,0,0.08)',
-          }}
-        >
-          {isDark ? <Sun size={16} /> : <Moon size={16} />}
-        </motion.button>
+        
       </header>
       {}
       <div
@@ -786,47 +762,6 @@ export function CampusMapPage() {
           </div>
         )}
       </div>
-      {}
-      <div
-        className="flex-shrink-0 relative"
-        style={{
-          background: isDark ? 'rgba(13,27,46,0.97)' : 'rgba(255,255,255,0.97)',
-          zIndex: 28,
-        }}
-      >
-        <AnimatePresence>
-          <GeoBanner isDark={isDark} geo={geo} />
-        </AnimatePresence>
-      </div>
-      {}
-      {isMobile ? (
-        <div
-          ref={mapContainerRef}
-          className="flex-1 relative overflow-hidden"
-          style={{ background: isDark ? '#061220' : '#D9E8F5' }}
-        >
-          {containerSize.w > 0 && containerSize.h > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%', left: '50%',
-                width:  `${containerSize.h}px`,
-                height: `${containerSize.w}px`,
-                transform: 'translate(-50%, -50%) rotate(90deg)',
-                transformOrigin: 'center center',
-              }}
-            >
-              {renderMapContent()}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex-1 overflow-auto" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5' }}>
-          <div style={{ position: 'relative', width: '100%', minWidth: '480px' }}>
-            {renderMapContent()}
-          </div>
-        </div>
-      )}
       {}
       <div
         className="flex-shrink-0 border-t relative"
@@ -914,6 +849,48 @@ export function CampusMapPage() {
           )}
         </AnimatePresence>
       </div>
+      <div
+        className="flex-shrink-0 relative"
+        style={{
+          background: isDark ? 'rgba(13,27,46,0.97)' : 'rgba(255,255,255,0.97)',
+          zIndex: 28,
+        }}
+      >
+        <AnimatePresence>
+          <GeoBanner isDark={isDark} geo={geo} />
+        </AnimatePresence>
+      </div>
+      {}
+      {isMobile ? (
+        <div
+          ref={mapContainerRef}
+          className="flex-1 relative overflow-hidden"
+          style={{ background: isDark ? '#061220' : '#D9E8F5' }}
+        >
+          {containerSize.w > 0 && containerSize.h > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%', left: '50%',
+                width:  `${containerSize.h}px`,
+                height: `${containerSize.w}px`,
+                transform: 'translate(-50%, -50%) rotate(90deg)',
+                transformOrigin: 'center center',
+              }}
+            >
+              {renderMapContent()}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5' }}>
+          <div style={{ position: 'relative', width: '100%', minWidth: '480px' }}>
+            {renderMapContent()}
+          </div>
+        </div>
+      )}
+      {}
+      
     </div>
   );
 }
