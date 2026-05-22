@@ -25,8 +25,8 @@ interface Landmark {
   type: 'building' | 'food' | 'sport' | 'nature' | 'entry';
 }
 const LANDMARKS: Landmark[] = [
-  { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 78.9, y: 51.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 70.4, y: 44.0, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 71.3, y: 52.7, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 71.5, y: 44.2, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-c', name: 'Bloque C',           shortName: 'C',       x: 76.9, y: 68.7, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-d', name: 'Bloque D',           shortName: 'D',       x: 56.9, y: 38.0, Icon: GraduationCap,  color: '#6366F1', type: 'building' },
   { id: 'bloque-e', name: 'Bloque E',           shortName: 'E',       x: 55.9, y: 58.2, Icon: Wrench,         color: '#0EA5E9', type: 'building' },
@@ -37,8 +37,13 @@ const LANDMARKS: Landmark[] = [
   { id: 'bloque-l', name: 'Bloque L',           shortName: 'L',       x: 44.6, y: 25.9, Icon: Radio,          color: '#06B6D4', type: 'building' },
   { id: 'coliseo',  name: 'Coliseo El Otoño',   shortName: 'C',       x: 9.2, y: 41.8, Icon: Trophy,         color: '#EF4444', type: 'building'    },
   { id: 'diali',    name: 'Diali',              shortName: 'D',       x: 44.6, y: 37.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'reggio',   name: 'Reggio',             shortName: 'R',       x: 51.6, y: 46.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'reggio',   name: 'Reggio\'s',          shortName: 'R',       x: 51.6, y: 46.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'harvies-b',name: 'Harvies',            shortName: 'H',       x: 24.1, y: 26.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bienestar',name: 'Bienestar',          shortName: 'B',       x: 78.3, y: 53.2, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'z1',       name: 'Z1',                 shortName: 'Z1',      x: 63.5, y: 38.7, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'z2',       name: 'Z2',                 shortName: 'Z2',      x: 50.1, y: 57.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'z3',       name: 'Z3',                 shortName: 'Z3',      x: 33.8, y: 50.8, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'futbol',   name: 'Fútbol',             shortName: 'Fútbol',  x: 23.3, y: 41.5, Icon: Activity,      color: '#16A34A', type: 'building' },
   { id: 'canchas',  name: 'Canchas Fútbol',      shortName: 'Canchas', x: 19, y: 44, Icon: Activity,       color: '#16A34A', type: 'sport'    },
   { id: 'lago',     name: 'El Lago',            shortName: 'Lago',    x: 33, y: 40, Icon: Droplets,       color: '#0284C7', type: 'nature'   },
   { id: 'nativos',  name: 'Nativos',            shortName: 'Nativos', x: 50, y: 58, Icon: Leaf,           color: '#15803D', type: 'nature'   },
@@ -46,6 +51,9 @@ const LANDMARKS: Landmark[] = [
   { id: 'dialimentos',  name: 'Dialimentos',    shortName: 'Diali.',  x: 44, y: 33, Icon: UtensilsCrossed, color: '#DC2626', type: 'food'    },
   { id: 'harvies',      name: 'Harvies',        shortName: 'Harvies', x: 19, y: 22, Icon: ShoppingBag,    color: '#EA580C', type: 'food'     },
   { id: 'food-truckus', name: 'Food Truckus',   shortName: 'FT',      x:  9, y: 50, Icon: Truck,          color: '#B45309', type: 'food'     },
+  { id: 'basket',    name: 'Basket',             shortName: 'Basket',  x: 11.5, y: 7.9,  Icon: Building2,    color: '#3B82F6', type: 'building' },
+  { id: 'tennis',    name: 'Tennis',             shortName: 'Tennis',  x: 9.3,  y: 20.0, Icon: Building2,    color: '#3B82F6', type: 'building' },
+  { id: 'volley',    name: 'Volley',             shortName: 'Volley',  x: 14.7, y: 24.0, Icon: Building2,    color: '#3B82F6', type: 'building' },
   { id: 'entrada-p', name: 'Entrada Peatonal',  shortName: 'Peat.',   x: 90, y: 27, Icon: Navigation,     color: '#475569', type: 'entry'    },
   { id: 'entrada-v', name: 'Entrada Vehicular', shortName: 'Veh.',    x: 89, y: 72, Icon: Car,            color: '#475569', type: 'entry'    },
 ];
@@ -349,7 +357,7 @@ export function CampusMapPage() {
           const evHere = getEventsAt(lm.id);
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
-          const isWideLabelPin = lm.id === 'coliseo' || lm.id === 'diali' || lm.id === 'reggio' || lm.id === 'harvies-b';
+          const isWideLabelPin = lm.id === 'coliseo' || lm.id === 'diali' || lm.id === 'reggio' || lm.id === 'harvies-b' || lm.id === 'bienestar' || lm.id === 'z1' || lm.id === 'z2' || lm.id === 'z3' || lm.id === 'futbol' || lm.id === 'basket' || lm.id === 'volley' || lm.id === 'tennis';
           
           // choose pin background based on whether building has active events
           // If has event -> orange (GOLD_GRADIENT). If no event -> blue.
@@ -363,9 +371,25 @@ export function CampusMapPage() {
             : lm.id === 'diali'
             ? 'Diali'
             : lm.id === 'reggio'
-            ? 'Reggio'
+            ? 'Reggio\'s'
             : lm.id === 'harvies-b'
             ? 'Harvies'
+            : lm.id === 'bienestar'
+            ? 'Bienestar'
+            : lm.id === 'z1'
+            ? 'Z1'
+            : lm.id === 'z2'
+            ? 'Z2'
+            : lm.id === 'z3'
+            ? 'Z3'
+            : lm.id === 'futbol'
+            ? 'Fútbol'
+            : lm.id === 'basket'
+            ? 'Basket'
+            : lm.id === 'volley'
+            ? 'Volley'
+            : lm.id === 'tennis'
+            ? 'Tennis'
             : lm.shortName;
           const baseFont = isSel ? 14 : (hasEv ? 12 : 10);
           const textLen = innerText.length;
