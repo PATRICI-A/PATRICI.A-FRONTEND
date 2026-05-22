@@ -174,18 +174,19 @@ export function ForgotPasswordPage() {
             transition={{ duration: 0.4 }}
             className="hidden md:flex justify-center md:justify-start"
           >
-            <div className="w-full max-w-[460px] lg:max-w-[820px] xl:max-w-[920px] bg-transparent">
+            <div className="w-full max-w-[460px] lg:max-w-[820px] xl:max-w-[920px] bg-transparent" style={{ aspectRatio: '3 / 4' }}>
               <img
                 src={phase === 'reset' ? patiRestablecer : patiContrasena}
                 alt="Patricia ilustración de contraseña"
-                className="w-full h-auto object-contain bg-transparent drop-shadow-none"
+                className="w-full h-full object-contain bg-transparent drop-shadow-none"
+                style={{ width: '100%', height: '100%' }}
               />
             </div>
           </motion.div>
           <div className="flex flex-col w-full">
-            <div className="md:hidden w-full mb-4">
+            <div className="md:hidden w-full mb-4 px-6 sm:px-8">
               <div className="flex items-center justify-center gap-3">
-                <div className="w-44 h-44 overflow-hidden bg-transparent flex-shrink-0 relative z-20">
+                <div className="w-44 overflow-hidden bg-transparent flex-shrink-0 relative z-20" style={{ aspectRatio: '3 / 4' }}>
                   <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain block" />
                 </div>
                 <div className="text-center">
@@ -228,10 +229,10 @@ export function ForgotPasswordPage() {
               )}
             </div>
 
-            <div className="relative w-full mx-auto md:max-w-md my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
+            <div className="relative w-full max-w-md mx-auto my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
               {}
               <div className="flex-1 overflow-y-auto">
-                <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
+                <div className="px-6 sm:px-8 py-8 w-full">
             <AnimatePresence mode="wait">
               {}
               {phase === 'email' && (
