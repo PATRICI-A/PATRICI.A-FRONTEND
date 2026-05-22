@@ -27,6 +27,32 @@ import imgEmbajadorCampus from '../assets/EMBAJADOR DEL CAMPUS.png';
 import imgNetworking10 from '../assets/NETWORKING 10.png';
 import imgNetworking50 from '../assets/NETWORKING 50.png';
 import imgNoctambuloAcademico from '../assets/NOCTAMBULO ACADEMICO.png';
+export const ECI_LOCATIONS = [
+  'Cafetería Central',
+  'Cafetería Bloque A',
+  'Cafetería Bloque B',
+  'Auditorio Central',
+  'Auditorio Principal',
+  'Plaza Central',
+  'Biblioteca Central',
+  'Sala de Cómputo 1',
+  'Sala de Cómputo 2',
+  'Sala de Cómputo 3',
+  'Gimnasio Campus',
+  'Canchas Los Pinos',
+  'Sala de Bienestar',
+  'Laboratorio de Innovación',
+  'Edificio A',
+  'Edificio B',
+  'Edificio C',
+  'Edificio D',
+  'Edificio E',
+  'Edificio F',
+  'Edificio Internacional',
+  'Entrada Principal',
+  'Zona Verde',
+  'Otro',
+];
 export interface MatchUser {
   id: string;
   name: string;

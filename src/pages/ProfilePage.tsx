@@ -65,6 +65,12 @@ function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
   );
 }
 
+const achievements = [
+  { id: 'a1', emoji: '🏆', title: 'Primer Parche', description: 'Creaste tu primer parche en el campus', date: 'Hace 2 días', xp: 50 },
+  { id: 'a2', emoji: '🤝', title: 'Networker', description: 'Conectaste con 10 compañeros', date: 'Hace 5 días', xp: 75 },
+  { id: 'a3', emoji: '⭐', title: 'Explorador', description: 'Visitaste 5 zonas distintas del campus', date: 'Hace 1 semana', xp: 60 },
+];
+
 const RARITY_CFG = {
   común:      { bg: 'linear-gradient(160deg, #0F2450 0%, #1D4ED8 100%)', border: '#3B82F6', glow: 'rgba(59,130,246,0.5)',   textColor: '#BFDBFE', stars: 1 },
   'poco común': { bg: 'linear-gradient(160deg, #064E3B 0%, #059669 100%)', border: '#10B981', glow: 'rgba(16,185,129,0.45)', textColor: '#D1FAE5', stars: 1 },
