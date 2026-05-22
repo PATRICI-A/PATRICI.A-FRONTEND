@@ -344,8 +344,8 @@ export function ParchemDetailPage() {
               <h3 className="text-xl font-black text-gray-900 dark:text-white">Miembros ({parche.members})</h3>
             </div>
             {joined && (
-              <button onClick={() => setShowInviteModal(true)} className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20" style={{ color: PINK }}>
-                <UserPlus size={14} /> Invitar
+              <button onClick={() => navigate(`/chat/${parche.id}`)} className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20" style={{ color: PINK }}>
+                <MessageCircle size={14} /> Chat
               </button>
             )}
           </div>
@@ -411,12 +411,12 @@ export function ParchemDetailPage() {
             <>
               <motion.button
                 whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(`/chat/${parche.id}`)}
+                onClick={() => setShowInviteModal(true)}
                 className="flex-1 py-4.5 rounded-[1.5rem] text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(59,130,246,0.3)] transition-all"
                 style={{ background: GRADIENT }}
               >
-                <MessageCircle size={20} strokeWidth={2.5} />
-                Ir al Chat
+                <UserPlus size={20} strokeWidth={2.5} />
+                Invitar Amigos
               </motion.button>
               <button
                 onClick={handleLeave}
