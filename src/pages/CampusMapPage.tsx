@@ -776,8 +776,8 @@ export function CampusMapPage() {
               {eventsOpen ? 'Cerrar' : 'Ver todos'}
             </span>
             {eventsOpen
-              ? <ChevronDown size={14} style={{ color: GOLD_LIGHT }} />
-              : <ChevronUp size={14} style={{ color: GOLD_LIGHT }} />}
+              ? <ChevronUp size={14} style={{ color: GOLD_LIGHT }} />
+              : <ChevronDown size={14} style={{ color: GOLD_LIGHT }} />}
           </div>
         </button>
         <AnimatePresence>
