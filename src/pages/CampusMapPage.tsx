@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -29,6 +29,7 @@ interface Landmark {
   color: string;
   type: 'building' | 'food' | 'sport' | 'nature' | 'entry';
 }
+
 const LANDMARKS: Landmark[] = [
   { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 71.3, y: 52.7, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 71.5, y: 44.2, Icon: Building2,      color: '#3B82F6', type: 'building' },
@@ -145,6 +146,20 @@ export function CampusMapPage() {
   const [activeFilter, setActiveFilter] = useState<LandmarkFilter>('all');
   const [iconSize, setIconSize] = useState<number>(12);
   const MAP_FIXED_WIDTH = 1200; // px — fixed inner map width with internal scrollbar
+  // mapRenderWidth: actual width used to render map (either MAP_FIXED_WIDTH or viewport width when viewport > MAP_FIXED_WIDTH)
+  const [mapRenderWidth, setMapRenderWidth] = useState<number>(MAP_FIXED_WIDTH);
+  useEffect(() => {
+    const computeMapWidth = () => {
+      const vw = typeof window !== 'undefined' ? window.innerWidth : MAP_FIXED_WIDTH;
+      setMapRenderWidth(vw > MAP_FIXED_WIDTH ? vw : MAP_FIXED_WIDTH);
+    };
+    computeMapWidth();
+    window.addEventListener('resize', computeMapWidth);
+    return () => window.removeEventListener('resize', computeMapWidth);
+  }, []);
+  // pin scale relative to the baseline MAP_FIXED_WIDTH
+  const rawPinScale = mapRenderWidth / MAP_FIXED_WIDTH;
+  const pinScale = Math.max(0.7, Math.min(rawPinScale, 1.6));
   useEffect(() => {
     function calc() {
       const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
@@ -324,68 +339,74 @@ export function CampusMapPage() {
               }}
             >
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {}
-                <motion.div
-                  animate={{ scale: [1, 1.7, 1], opacity: [0.6, 0, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{
-                    position: 'absolute',
-                    width: 42, height: 42,
-                    borderRadius: '50%',
-                    border: `2.5px solid ${geo.enabled && geo.onCampus ? '#10B981' : '#06B6D4'}`,
-                    zIndex: 0,
-                  }}
-                />
-                <motion.div
-                  animate={{ scale: [1, 1.35, 1], opacity: [0.8, 0.2, 0.8] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-                  style={{
-                    position: 'absolute',
-                    width: 32, height: 32,
-                    borderRadius: '50%',
-                    border: `2px solid ${geo.enabled && geo.onCampus ? '#10B981' : '#06B6D4'}`,
-                    zIndex: 0,
-                  }}
-                />
-                {}
-                {geo.enabled && geo.onCampus && geo.accuracy && geo.accuracy < 60 && (
-                  <div style={{
-                    position: 'absolute',
-                    width: Math.min(80, geo.accuracy * 1.2),
-                    height: Math.min(80, geo.accuracy * 1.2),
-                    borderRadius: '50%',
-                    background: 'rgba(16,185,129,0.08)',
-                    border: '1px dashed rgba(16,185,129,0.35)',
-                    zIndex: 0,
-                  }} />
-                )}
-                {}
-                <div style={{
-                  width: 28, height: 28,
-                  borderRadius: '50%',
-                  border: `2.5px solid ${geo.enabled && geo.onCampus ? '#10B981' : '#06B6D4'}`,
-                  boxShadow: `0 0 0 2px white, 0 4px 12px ${geo.enabled && geo.onCampus ? 'rgba(16,185,129,0.6)' : 'rgba(6,182,212,0.6)'}`,
-                  overflow: 'hidden',
-                  background: '#0A192F',
-                  position: 'relative',
-                  zIndex: 1,
-                }}>
-                  {currentUser?.avatar ? (
-                    <img
-                      src={currentUser.avatar}
-                      alt="Tú"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '100%', height: '100%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: GRADIENT, color: 'white', fontSize: 10, fontWeight: 900,
-                    }}>
-                      {currentUser?.name?.[0] ?? 'Y'}
-                    </div>
-                  )}
-                </div>
+                {(() => {
+                  const outerPulse = Math.max(28, Math.round(42 * pinScale));
+                  const innerPulse = Math.max(20, Math.round(32 * pinScale));
+                  const avatarSz = Math.max(18, Math.round(28 * pinScale));
+                  return (
+                    <>
+                      <motion.div
+                        animate={{ scale: [1, 1.7, 1], opacity: [0.6, 0, 0.6] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{
+                          position: 'absolute',
+                          width: outerPulse, height: outerPulse,
+                          borderRadius: '50%',
+                          border: `2.5px solid ${geo.enabled && geo.onCampus ? '#10B981' : '#06B6D4'}`,
+                          zIndex: 0,
+                        }}
+                      />
+                      <motion.div
+                        animate={{ scale: [1, 1.35, 1], opacity: [0.8, 0.2, 0.8] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                        style={{
+                          position: 'absolute',
+                          width: innerPulse, height: innerPulse,
+                          borderRadius: '50%',
+                          border: `2px solid ${geo.enabled && geo.onCampus ? '#10B981' : '#06B6D4'}`,
+                          zIndex: 0,
+                        }}
+                      />
+                      {geo.enabled && geo.onCampus && geo.accuracy && geo.accuracy < 60 && (
+                        <div style={{
+                          position: 'absolute',
+                          width: Math.min(80, geo.accuracy * 1.2),
+                          height: Math.min(80, geo.accuracy * 1.2),
+                          borderRadius: '50%',
+                          background: 'rgba(16,185,129,0.08)',
+                          border: '1px dashed rgba(16,185,129,0.35)',
+                          zIndex: 0,
+                        }} />
+                      )}
+                      <div style={{
+                        width: avatarSz, height: avatarSz,
+                        borderRadius: '50%',
+                        border: `2.5px solid ${geo.enabled && geo.onCampus ? '#10B981' : '#06B6D4'}`,
+                        boxShadow: `0 0 0 2px white, 0 4px 12px ${geo.enabled && geo.onCampus ? 'rgba(16,185,129,0.6)' : 'rgba(6,182,212,0.6)'}`,
+                        overflow: 'hidden',
+                        background: '#0A192F',
+                        position: 'relative',
+                        zIndex: 1,
+                      }}>
+                        {currentUser?.avatar ? (
+                          <img
+                            src={currentUser.avatar}
+                            alt="Tú"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: '100%', height: '100%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: GRADIENT, color: 'white', fontSize: Math.max(8, Math.round(10 * pinScale)), fontWeight: 900,
+                          }}>
+                            {currentUser?.name?.[0] ?? 'Y'}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
               <span style={{
                 fontSize: 8, fontWeight: 900,
@@ -440,12 +461,15 @@ export function CampusMapPage() {
             ? 'Tennis'
             : lm.shortName;
           const baseFont = isSel ? 14 : (hasEv ? 12 : 10);
+          const baseFontScaled = Math.max(9, Math.round(baseFont * pinScale));
           const textLen = innerText.length;
-          // approximate width based on text length and font size
-          const approxWidth = Math.max(24, Math.min(56, Math.round(textLen * (baseFont * 0.6) + 8)));
-          const pinSize = isSel ? Math.max(36, approxWidth) : (hasEv ? Math.max(30, approxWidth) : Math.max(24, approxWidth));
-          const widePinWidth = isSel ? Math.max(44, approxWidth) : Math.max(38, approxWidth - 4);
-          const widePinHeight = isSel ? 24 : 22;
+          // approximate width based on text length and scaled font size
+          const minApprox = Math.round(24 * pinScale);
+          const maxApprox = Math.round(56 * pinScale);
+          const approxWidth = Math.max(minApprox, Math.min(maxApprox, Math.round(textLen * (baseFontScaled * 0.6) + 8)));
+          const pinSize = isSel ? Math.max(Math.round(36 * pinScale), approxWidth) : (hasEv ? Math.max(Math.round(30 * pinScale), approxWidth) : Math.max(Math.round(24 * pinScale), approxWidth));
+          const widePinWidth = isSel ? Math.max(Math.round(44 * pinScale), approxWidth) : Math.max(Math.round(38 * pinScale), approxWidth - Math.round(4 * pinScale));
+          const widePinHeight = isSel ? Math.max(Math.round(24 * pinScale), Math.round(24 * pinScale)) : Math.round(22 * pinScale);
 
           return (
             <button
@@ -498,9 +522,9 @@ export function CampusMapPage() {
                     {/* counter-rotate so inner text stays upright */}
                     <div style={{ transform: isWideLabelPin ? 'none' : 'rotate(45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 2 }}>
                       {isWideLabelPin ? (
-                        <span style={{ color: 'white', fontWeight: 900, fontSize: baseFont, lineHeight: 1, textAlign: 'center', whiteSpace: 'nowrap' }}>{innerText}</span>
+                        <span style={{ color: 'white', fontWeight: 900, fontSize: baseFontScaled, lineHeight: 1, textAlign: 'center', whiteSpace: 'nowrap' }}>{innerText}</span>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: baseFont, lineHeight: 1 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: baseFontScaled, lineHeight: 1 }}>
                           {Array.from(String(lm.shortName)).map((ch, i) => (
                             <span key={i} style={{ display: 'block', transform: 'rotate(0deg)' }}>{ch}</span>
                           ))}
@@ -574,6 +598,8 @@ export function CampusMapPage() {
                     <SportsVolleyball sx={{ fontSize: 14, color: 'white' }} />
                   ) : selectedLandmark?.id === 'futbol' ? (
                     <SportsSoccer sx={{ fontSize: 14, color: 'white' }} />
+                  ) : selectedLandmark?.id === 'bienestar' ? (
+                    <CheckCircle2 size={13} color="white" strokeWidth={2.2} />
                   ) : (
                     <Building2 size={13} color="white" strokeWidth={2.2} />
                   )}
@@ -915,15 +941,15 @@ export function CampusMapPage() {
         <div
           ref={mapContainerRef}
           className="flex-1 relative"
-          style={{ background: isDark ? '#061220' : '#D9E8F5', overflow: 'auto' }}
+          style={{ background: isDark ? '#061220' : '#D9E8F5', overflow: mapRenderWidth > MAP_FIXED_WIDTH ? 'visible' : 'auto' }}
         >
-          <div style={{ width: MAP_FIXED_WIDTH, position: 'relative' }}>
+          <div style={{ width: mapRenderWidth > MAP_FIXED_WIDTH ? '100%' : MAP_FIXED_WIDTH, position: 'relative', margin: mapRenderWidth > MAP_FIXED_WIDTH ? undefined : '0 auto' }}>
             {renderMapContent()}
           </div>
         </div>
       ) : (
-        <div className="flex-1" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5', overflow: 'auto' }}>
-          <div style={{ position: 'relative', width: MAP_FIXED_WIDTH, minHeight: '0' }}>
+        <div className="flex-1" style={{ WebkitOverflowScrolling: 'touch', background: isDark ? '#061220' : '#D9E8F5', overflow: mapRenderWidth > MAP_FIXED_WIDTH ? 'visible' : 'auto' }}>
+          <div style={{ position: 'relative', width: mapRenderWidth > MAP_FIXED_WIDTH ? '100%' : MAP_FIXED_WIDTH, minHeight: '0', margin: mapRenderWidth > MAP_FIXED_WIDTH ? undefined : '0 auto' }}>
             {renderMapContent()}
           </div>
         </div>
