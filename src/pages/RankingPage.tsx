@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ArrowLeft, Trophy, Crown, Zap, BookOpen, Users,
+  ArrowLeft, Trophy, Crown, Zap, Users,
   Flame, TrendingUp, Award, Sparkles,
 } from 'lucide-react';
 import {
@@ -16,26 +16,17 @@ const TIER = {
   2: { bg: 'linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)', border: '#CBD5E1', label: 'PLATA', height: 100 },
   3: { bg: 'linear-gradient(135deg, #92400E 0%, #B45309 100%)', border: '#D97706', label: 'BRONCE', height: 80 },
 } as const;
-type RankTab = 'xp' | 'monas' | 'parches';
-type Period  = 'semana' | 'mes' | 'semestre';
+type RankTab = 'xp' | 'parches';
 const TABS: { key: RankTab; label: string; Icon: typeof Zap; color: string }[] = [
-  { key: 'xp',      label: 'XP',     Icon: Zap,     color: GOLD_LIGHT },
-  { key: 'monas',   label: 'Patricias',  Icon: BookOpen, color: '#06B6D4'  },
-  { key: 'parches', label: 'Parches',Icon: Users,    color: '#3B82F6'  },
-];
-const PERIODS: { key: Period; label: string }[] = [
-  { key: 'semana',    label: 'Semana'    },
-  { key: 'mes',       label: 'Mes'       },
-  { key: 'semestre',  label: 'Semestre'  },
+  { key: 'xp',      label: 'XP',     Icon: Zap,   color: GOLD_LIGHT },
+  { key: 'parches', label: 'Parches', Icon: Users, color: '#3B82F6'  },
 ];
 function getValue(user: RankingUser, tab: RankTab): string {
-  if (tab === 'xp')      return `${user.xp.toLocaleString('es-CO')} XP`;
-  if (tab === 'monas')   return `${user.monasCount} patricias`;
+  if (tab === 'xp') return `${user.xp.toLocaleString('es-CO')} XP`;
   return `${user.parchesCount} parches`;
 }
 function getRaw(user: RankingUser, tab: RankTab): number {
-  if (tab === 'xp')      return user.xp;
-  if (tab === 'monas')   return user.monasCount;
+  if (tab === 'xp') return user.xp;
   return user.parchesCount;
 }
 function PodiumSlot({
@@ -194,14 +185,36 @@ function RankRow({
     </motion.div>
   );
 }
+const ALL_CAREERS = [
+  'Ingeniería Civil',
+  'Ingeniería Eléctrica',
+  'Ingeniería de Sistemas',
+  'Ingeniería Industrial',
+  'Ingeniería Electrónica',
+  'Economía',
+  'Administración de Empresas',
+  'Matemáticas',
+  'Ingeniería Mecánica',
+  'Ingeniería Biomédica',
+  'Ingeniería Ambiental',
+  'Ingeniería Estadística',
+  'Ingeniería de Inteligencia Artificial',
+  'Ingeniería de Ciberseguridad',
+  'Ingeniería en Biotecnología',
+];
+
 export function RankingPage() {
   const navigate = useNavigate();
   const { isDark } = useApp();
-  const [tab, setTab]       = useState<RankTab>('xp');
-  const [period, setPeriod] = useState<Period>('mes');
-  const sorted = useMemo(() => (
-    [...rankingUsers].sort((a, b) => getRaw(b, tab) - getRaw(a, tab))
-  ), [tab]);
+  const [tab, setTab]                 = useState<RankTab>('xp');
+  const [facultyFilter, setFacultyFilter] = useState('');
+
+  const sorted = useMemo(() => {
+    let list = [...rankingUsers];
+    if (facultyFilter) list = list.filter(u => u.faculty === facultyFilter);
+    return list.sort((a, b) => getRaw(b, tab) - getRaw(a, tab));
+  }, [tab, facultyFilter]);
+
   const top3   = sorted.slice(0, 3);
   const rest   = sorted.slice(3);
   const meRank = sorted.findIndex(u => u.isCurrentUser) + 1;
@@ -236,25 +249,7 @@ export function RankingPage() {
           <div className="w-9" />
         </div>
         {}
-        <div className="flex gap-2 justify-center mb-5">
-          {PERIODS.map(p => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className="px-4 py-1.5 rounded-full text-xs font-bold transition-all"
-              style={{
-                background: period === p.key ? GOLD_GRADIENT : 'rgba(255,255,255,0.06)',
-                color: period === p.key ? 'white' : 'rgba(255,255,255,0.45)',
-                border: period === p.key ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                boxShadow: period === p.key ? '0 4px 12px rgba(217,119,6,0.35)' : 'none',
-              }}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        {}
-        <div className="flex gap-2 bg-white/5 rounded-2xl p-1">
+        <div className="flex gap-2 bg-white/5 rounded-2xl p-1 mb-3">
           {TABS.map(({ key, label, Icon, color }) => (
             <button
               key={key}
@@ -270,6 +265,24 @@ export function RankingPage() {
               {label}
             </button>
           ))}
+        </div>
+        {}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Filtrar por carrera</p>
+          <div className="flex flex-wrap gap-2">
+            {['', ...ALL_CAREERS].map(f => (
+              <button
+                key={f || 'all'}
+                onClick={() => setFacultyFilter(f)}
+                className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+                style={facultyFilter === f
+                  ? { background: GOLD_GRADIENT, color: 'white', boxShadow: '0 3px 10px rgba(217,119,6,0.35)' }
+                  : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                {f || 'Todas'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {}

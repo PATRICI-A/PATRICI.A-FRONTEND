@@ -1,4 +1,5 @@
-﻿import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { notifications as initialNotifications, type Notification } from '../types/mockData';
 export interface User {
   id: string;
   name: string;
@@ -16,6 +17,7 @@ export interface User {
   streak: number;
   rankFaculty: number;
   monas: string[];
+  studentId?: string;
 }
 export interface GeoState {
   enabled: boolean;
@@ -49,6 +51,8 @@ interface AppContextType {
   login: (user: User) => void;
   logout: () => void;
   notifications: number;
+  notificationsList: Notification[];
+  setNotificationsList: React.Dispatch<React.SetStateAction<Notification[]>>;
   geo: GeoState;
   updateGeo: (patch: Partial<GeoState>) => void;
   toggleGeo: () => void;
@@ -59,11 +63,11 @@ const mockCurrentUser: User = {
   name: 'Patricia S.',
   email: 'patricia.smith@universidad.edu.co',
   avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
-  faculty: 'IngenierÃ­a',
-  program: 'IngenierÃ­a en Sistemas',
+  faculty: 'Ingeniería de Sistemas',
+  program: 'Ingeniería de Sistemas',
   semester: 6,
-  interests: ['ProgramaciÃ³n', 'FotografÃ­a', 'MÃºsica', 'DiseÃ±o', 'Gaming'],
-  bio: 'Estudiante de sistemas apasionada por el diseÃ±o y la tecnologÃ­a. Busco personas con quienes aprender y crear cosas geniales.',
+  interests: ['Programación', 'Fotografía', 'Música', 'Diseño', 'Gaming'],
+  bio: 'Estudiante de sistemas apasionada por el diseño y la tecnología. Busco personas con quienes aprender y crear cosas geniales.',
   socialImpact: 1240,
   xp: 3450,
   level: 14,
@@ -71,11 +75,13 @@ const mockCurrentUser: User = {
   streak: 12,
   rankFaculty: 4,
   monas: ['tech-puppy', 'honors', 'social', 'pionera', 'genio'],
+  studentId: '2023123456',
 };
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(mockCurrentUser);
+  const [notificationsList, setNotificationsList] = useState<Notification[]>(initialNotifications);
   const [geo, setGeoState] = useState<GeoState>(GEO_INITIAL);
   useEffect(() => {
     const saved = localStorage.getItem('patricia-theme');
@@ -129,12 +135,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return { ...prev, enabled: true, loading: true, error: null };
     });
   }, []);
+  const unreadNotificationsCount = notificationsList.filter(n => !n.read).length;
+
   return (
     <AppContext.Provider
       value={{
         isDark, toggleTheme,
         isLoggedIn, currentUser, login, logout,
-        notifications: 3,
+        notifications: unreadNotificationsCount,
+        notificationsList,
+        setNotificationsList,
         geo, updateGeo, toggleGeo,
       }}
     >

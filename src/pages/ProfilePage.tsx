@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, Shield, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
+import patyImg from '../assets/patyProfile.png';
 import { useApp } from '../store/AppContext';
 import { monas, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+
 function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
   const N = 21;
   const cell = size / N;
@@ -62,6 +64,7 @@ function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
     </svg>
   );
 }
+
 const RARITY_CFG = {
   común:      { bg: 'linear-gradient(160deg, #0F2450 0%, #1D4ED8 100%)', border: '#3B82F6', glow: 'rgba(59,130,246,0.5)',   textColor: '#BFDBFE', stars: 1 },
   'poco común': { bg: 'linear-gradient(160deg, #064E3B 0%, #059669 100%)', border: '#10B981', glow: 'rgba(16,185,129,0.45)', textColor: '#D1FAE5', stars: 1 },
@@ -69,22 +72,27 @@ const RARITY_CFG = {
   épico:      { bg: 'linear-gradient(160deg, #1E1B4B 0%, #6D28D9 100%)', border: '#8B5CF6', glow: 'rgba(139,92,246,0.6)', textColor: '#DDD6FE', stars: 3 },
   legendario: { bg: 'linear-gradient(160deg, #1C1107 0%, #92400E 100%)', border: '#F59E0B', glow: 'rgba(245,158,11,0.7)', textColor: '#FDE68A', stars: 4 },
 } as const;
+
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useApp();
+  const { currentUser, logout, isDark } = useApp();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+
   if (!currentUser) return null;
+
   const unlockedMonas = monas.filter(m => m.unlocked);
   const xpForNextLevel = 5000;
   const xpPercent = (currentUser.xp / xpForNextLevel) * 100;
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const campusRank = rankingUsers.findIndex(u => u.isCurrentUser) + 1;
-  const topThree   = rankingUsers.slice(0, 3);
+  const topThree = rankingUsers.slice(0, 3);
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
   const handleShareQR = async () => {
     const url = `${window.location.origin}/profile?user=${currentUser.id}`;
     if (typeof navigator.share === 'function') {
@@ -94,10 +102,10 @@ export function ProfilePage() {
     setShowQRModal(false);
     setTimeout(() => alert('¡Enlace copiado al portapapeles!'), 100);
   };
+
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      {}
-      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+      <div className="w-full md:w-4/6 md:mx-auto px-5 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -106,10 +114,10 @@ export function ProfilePage() {
           >
             <ChevronLeft size={20} />
           </button>
-          <h1 className="text-gray-900 dark:text-white">Mi Perfil</h1>
+          <h1 className="text-gray-900 dark:text-white text-2xl font-black">Mi Perfil</h1>
+          <img src={patyImg} alt="Paty" className="h-24 w-auto" style={{ mixBlendMode: isDark ? 'screen' : 'multiply' }} />
         </div>
         <div className="flex items-center gap-2">
-          {}
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => navigate('/notifications')}
@@ -127,7 +135,6 @@ export function ProfilePage() {
               </motion.div>
             )}
           </motion.button>
-          {}
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setShowQRModal(true)}
@@ -144,7 +151,8 @@ export function ProfilePage() {
           </button>
         </div>
       </div>
-      {}
+
+      <div className="w-full md:w-4/6 md:mx-auto">
       <div className="px-5 mb-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -200,7 +208,6 @@ export function ProfilePage() {
               </div>
             </div>
           </div>
-          {}
           <div className="flex flex-wrap gap-1.5 mt-4">
             {currentUser.interests.map(interest => (
               <span
@@ -214,7 +221,7 @@ export function ProfilePage() {
           </div>
         </motion.div>
       </div>
-      {}
+
       <div className="px-5 mb-4">
         <motion.button
           whileTap={{ scale: 0.98 }}
@@ -235,11 +242,10 @@ export function ProfilePage() {
           <ChevronRight size={16} style={{ color: TEAL }} />
         </motion.button>
       </div>
-      {}
+
       <div className="px-5 mb-4">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { icon: Heart, value: currentUser.socialImpact.toLocaleString(), label: 'Impacto Social', color: PINK },
             { icon: Zap, value: `${currentUser.xp.toLocaleString()} XP`, label: 'Puntos XP', color: ORANGE },
             { icon: Users, value: currentUser.activeParches, label: 'Parches Activos', color: '#3B82F6' },
             { icon: TrendingUp, value: `${currentUser.streak} días`, label: 'Racha Activa', color: '#10B981' },
@@ -255,7 +261,7 @@ export function ProfilePage() {
           ))}
         </div>
       </div>
-      {}
+
       <div className="px-5 mb-4">
         <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm flex items-center gap-4">
           <div
@@ -274,7 +280,7 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
-      {}
+
       <div className="px-5 mb-4">
         <motion.button
           whileHover={{ scale: 1.015 }}
@@ -287,7 +293,6 @@ export function ProfilePage() {
             boxShadow: '0 4px 20px rgba(217,119,6,0.2)',
           }}
         >
-          {}
           <motion.div
             className="absolute inset-0 pointer-events-none"
             animate={{ x: ['-100%', '200%'] }}
@@ -304,12 +309,12 @@ export function ProfilePage() {
             </div>
             <div className="text-right">
               <p className="font-black text-2xl" style={{ color: GOLD_LIGHT }}>#{campusRank}</p>
-              <p className="text-[10px] text-white/40">de {rankingUsers.length} students</p>
+              <p className="text-[10px] text-white/40">de {rankingUsers.length} estudiantes</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {topThree.map((u, i) => (
+              {topThree.map((u) => (
                 <img key={u.id} src={u.avatar} alt={u.name} className="w-6 h-6 rounded-full object-cover border-2 border-[#0A192F]" />
               ))}
             </div>
@@ -320,25 +325,25 @@ export function ProfilePage() {
           </div>
         </motion.button>
       </div>
-      {}
+
       <div className="px-5 mb-4">
         <div
           className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
-          style={{ background: GRADIENT }}
+          style={{ background: 'linear-gradient(135deg, #F9A8D4 0%, #EC4899 60%, #BE185D 100%)' }}
           onClick={() => navigate('/wellness')}
         >
           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
-            <Heart size={20} color="#EF4444" strokeWidth={2.5} />
+            <Heart size={20} color="#EC4899" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
             <p className="text-white font-semibold text-sm">Soporte y Bienestar 24/7</p>
-            <p className="text-white/70 text-xs">Estamos aquí para escucharte siempre</p>
+            <p className="text-white/80 text-xs">Estamos aquí para escucharte siempre</p>
           </div>
           <ChevronRight size={18} color="white" />
         </div>
       </div>
-      {}
-      <div className="px-5 mb-4">
+
+      <div className="px-5 mb-4 hidden">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-white">Álbum de Patricias</h3>
@@ -352,7 +357,6 @@ export function ProfilePage() {
             Ver Álbum <ChevronRight size={12} />
           </button>
         </div>
-        {}
         <div className="grid grid-cols-10 gap-1">
           {monas.slice(0, 10).map((mona) => {
             const cfg = RARITY_CFG[mona.rarity];
@@ -410,19 +414,55 @@ export function ProfilePage() {
             );
           })}
         </div>
-        {}
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/monas')}
           className="w-full mt-3 py-2.5 rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold"
-          style={{
-            background: GOLD_GRADIENT,
-            boxShadow: '0 4px 16px rgba(217,119,6,0.35)',
-          }}
+          style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 16px rgba(217,119,6,0.35)' }}
         >
           <ScanLine size={13} />
           Escanear QR para desbloquear más patricias
         </motion.button>
+      </div>
+
+      <div className="px-5 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-800 dark:text-white">Hitos Recientes</h3>
+          <button
+            onClick={() => navigate('/stats')}
+            className="text-xs font-semibold flex items-center gap-1"
+            style={{ color: PINK }}
+          >
+            Ver Stats <ChevronRight size={12} />
+          </button>
+        </div>
+        <div className="space-y-3">
+          {achievements.slice(0, 3).map((achievement, i) => (
+            <motion.div
+              key={achievement.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white dark:bg-[#112240] rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: i === 0 ? GRADIENT : i === 1 ? 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' : 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' }}
+              >
+                <EmojiIcon emoji={achievement.emoji} size={20} color="white" strokeWidth={2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-800 dark:text-white text-sm">{achievement.title}</p>
+                <p className="text-xs text-gray-400 line-clamp-1">{achievement.description}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{achievement.date}</p>
+              </div>
+              <div className="flex-shrink-0 text-right">
+                <span className="text-xs font-bold" style={{ color: ORANGE }}>+{achievement.xp}</span>
+                <p className="text-[10px] text-gray-400">XP</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       <div className="px-5 mb-4">
@@ -444,7 +484,7 @@ export function ProfilePage() {
           ))}
         </div>
       </div>
-      {}
+
       <div className="px-5">
         {showLogoutConfirm ? (
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4">
@@ -475,7 +515,8 @@ export function ProfilePage() {
           </button>
         )}
       </div>
-      {}
+      </div>
+
       <AnimatePresence>
         {showQRModal && (
           <>
@@ -492,10 +533,8 @@ export function ProfilePage() {
               className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 rounded-3xl overflow-hidden max-h-[88vh] overflow-y-auto"
               style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.08)' }}
             >
-              {}
               <div className="h-1 w-full" style={{ background: GOLD_GRADIENT }} />
               <div className="p-6 flex flex-col items-center">
-                {}
                 <div className="w-full flex justify-between items-center mb-5">
                   <div>
                     <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
@@ -505,14 +544,12 @@ export function ProfilePage() {
                     <X size={16} className="text-white" />
                   </button>
                 </div>
-                {}
                 <div
                   className="p-4 rounded-2xl mb-4"
                   style={{ background: 'white', boxShadow: `0 0 40px rgba(245,158,11,0.3)` }}
                 >
                   <MockQRCode seed={currentUser.id} size={190} />
                 </div>
-                {}
                 <div className="text-center mb-5">
                   <p className="text-white font-black text-base">{currentUser.name}</p>
                   <p className="text-blue-400 text-xs">{currentUser.faculty} · Niv. {currentUser.level}</p>
@@ -524,7 +561,6 @@ export function ProfilePage() {
                     <span className="text-[10px] text-white/50">#{campusRank} campus</span>
                   </div>
                 </div>
-                {}
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={handleShareQR}
