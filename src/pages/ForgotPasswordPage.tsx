@@ -190,9 +190,15 @@ export function ForgotPasswordPage() {
                   <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain block" />
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden bg-transparent">
-                    <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
-                  </div>
+                  {phase === 'reset' ? (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden" style={{ background: GRADIENT }}>
+                      <ShieldCheck size={28} color="white" strokeWidth={2} />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden bg-transparent">
+                      <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
+                    </div>
+                  )}
                   <h1 className="text-gray-900 dark:text-white" style={phase === 'reset' ? { color: '#000' } : undefined}>{phase === 'reset' ? 'Restablecer contraseña' : 'Olvidé mi contraseña'}</h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed" style={phase === 'reset' ? { color: '#000' } : undefined}>
                     {phase === 'reset'
