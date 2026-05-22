@@ -143,6 +143,35 @@ export function CampusMapPage() {
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [eventsOpen, setEventsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<LandmarkFilter>('all');
+  const [iconSize, setIconSize] = useState<number>(12);
+  const [pinScale, setPinScale] = useState<number>(1);
+
+  useEffect(() => {
+    function calc() {
+      const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      let s = 12;
+      if (w < 420) s = 8;
+      else if (w < 768) s = 10;
+      else if (w < 1024) s = 11;
+      else s = 12; // cap max size to 12 on large screens
+      setIconSize(s);
+    }
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, []);
+
+  useEffect(() => {
+    function calcScale() {
+      const w = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      // baseline 1200px -> scale 1, clamp to reasonable range so pins don't disappear or explode
+      const s = Math.max(0.7, Math.min(1.6, w / 1200));
+      setPinScale(s);
+    }
+    calcScale();
+    window.addEventListener('resize', calcScale);
+    return () => window.removeEventListener('resize', calcScale);
+  }, []);
   const [isMobile, setIsMobile] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
@@ -437,11 +466,16 @@ export function CampusMapPage() {
             : lm.shortName;
           const baseFont = isSel ? 14 : (hasEv ? 12 : 10);
           const textLen = innerText.length;
-          // approximate width based on text length and font size
-          const approxWidth = Math.max(24, Math.min(56, Math.round(textLen * (baseFont * 0.6) + 8)));
-          const pinSize = isSel ? Math.max(36, approxWidth) : (hasEv ? Math.max(30, approxWidth) : Math.max(24, approxWidth));
-          const widePinWidth = isSel ? Math.max(44, approxWidth) : Math.max(38, approxWidth - 4);
-          const widePinHeight = isSel ? 24 : 22;
+          // scale font for large screens and keep a reasonable minimum
+          const baseFontScaled = Math.max(8, Math.round(baseFont * pinScale));
+          // approximate width based on text length and scaled font size
+          const approxWidth = Math.max(24, Math.min(120, Math.round(textLen * (baseFontScaled * 0.6) + 8)));
+          const rawPinSize = isSel ? Math.max(36, approxWidth) : (hasEv ? Math.max(30, approxWidth) : Math.max(24, approxWidth));
+          const rawWideWidth = isSel ? Math.max(44, approxWidth) : Math.max(38, approxWidth - 4);
+          const rawWideHeight = isSel ? 24 : 22;
+          const pinSize = Math.round(rawPinSize * pinScale);
+          const widePinWidth = Math.round(rawWideWidth * pinScale);
+          const widePinHeight = Math.round(rawWideHeight * pinScale);
 
           return (
             <button
@@ -665,7 +699,7 @@ export function CampusMapPage() {
               className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white flex items-center gap-1"
               style={{ background: GOLD_GRADIENT }}
             >
-              <MapPin size={8} />
+                            <MapPin size={iconSize} />
               {mappedEvents.length} eventos
             </span>
           </h1>
@@ -814,7 +848,7 @@ export function CampusMapPage() {
           className="w-full flex items-center justify-between px-5 py-3 transition-all active:opacity-80"
         >
           <div className="flex items-center gap-2">
-            <MapPin size={13} style={{ color: GOLD_LIGHT }} />
+            <MapPin size={iconSize} style={{ color: GOLD_LIGHT }} />
             <span className="text-[11px] font-black" style={{ color: GOLD_LIGHT }}>
               {mappedEvents.length} eventos activos en campus
             </span>
@@ -882,7 +916,7 @@ export function CampusMapPage() {
                         </p>
                         {lm && (
                           <p className="text-[9px] mt-1 font-medium flex items-center gap-1" style={{ color: lm.color }}>
-                            <MapPin size={7} />
+                            <MapPin size={iconSize} />
                             {lm.id.startsWith('bloque-') ? `Edificio ${lm.id.replace('bloque-', '').toUpperCase()}` : lm.name}
                           </p>
                         )}
