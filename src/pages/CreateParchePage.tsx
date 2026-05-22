@@ -1,14 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-<<<<<<< HEAD
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
 import { GRADIENT, PINK, ORANGE, events, ECI_LOCATIONS } from '../types/mockData';
-=======
-import { Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles } from 'lucide-react';
-import { usePageHeader } from '../store/PageHeaderContext';
-import { GRADIENT, PINK, ORANGE } from '../types/mockData';
->>>>>>> bc6c74bd34434fa52008df45c616336c7ee27734
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
@@ -30,11 +24,7 @@ const friends = [
 ];
 export function CreateParchePage() {
   const navigate = useNavigate();
-  const { setHeader } = usePageHeader();
-  useEffect(() => {
-    setHeader({ title: 'Crear Parche', subtitle: 'Arma tu plan perfecto', showBack: true });
-    return () => setHeader(null);
-  }, []);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
