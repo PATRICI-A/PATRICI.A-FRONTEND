@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, MapPin, X, ChevronUp, ChevronDown, ChevronRight, Calendar,
   Building2, GraduationCap, Monitor, FlaskConical, Zap, Wrench, Radio,
-  Trophy, Activity, Droplets, Leaf, Coffee, UtensilsCrossed, ShoppingBag,
-  Truck, Navigation, Car, Map, Cpu,
+  Trophy, Activity, Droplets, Leaf, Coffee, UtensilsCrossed,
+  Navigation, Car, Map, Cpu,
   LocateFixed, Locate, AlertTriangle, CheckCircle2, Loader2, AlertCircle,
 } from 'lucide-react';
 import SportsBasketball from '@mui/icons-material/SportsBasketball';
@@ -18,6 +18,7 @@ import { events, GOLD_GRADIENT, GOLD_LIGHT, GRADIENT } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import campusMap from '../assets/campus_map.png';
 type LucideIconType = React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+type LandmarkFilter = 'all' | 'edificios' | 'zonas' | 'deporte' | 'alimento' | 'bienestar';
 interface Landmark {
   id: string;
   name: string;
@@ -48,13 +49,8 @@ const LANDMARKS: Landmark[] = [
   { id: 'z2',       name: 'Z2',                 shortName: 'Z2',      x: 50.1, y: 57.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'z3',       name: 'Z3',                 shortName: 'Z3',      x: 33.8, y: 50.8, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'futbol',   name: 'Fútbol',             shortName: 'Fútbol',  x: 23.3, y: 41.5, Icon: Activity,      color: '#16A34A', type: 'building' },
-  { id: 'canchas',  name: 'Canchas Fútbol',      shortName: 'Canchas', x: 19, y: 44, Icon: Activity,       color: '#16A34A', type: 'sport'    },
   { id: 'lago',     name: 'El Lago',            shortName: 'Lago',    x: 33, y: 40, Icon: Droplets,       color: '#0284C7', type: 'nature'   },
   { id: 'nativos',  name: 'Nativos',            shortName: 'Nativos', x: 50, y: 58, Icon: Leaf,           color: '#15803D', type: 'nature'   },
-  { id: 'cafe-planet',  name: 'Café Planet',    shortName: 'Café',    x: 46, y: 44, Icon: Coffee,         color: '#92400E', type: 'food'     },
-  { id: 'dialimentos',  name: 'Dialimentos',    shortName: 'Diali.',  x: 44, y: 33, Icon: UtensilsCrossed, color: '#DC2626', type: 'food'    },
-  { id: 'harvies',      name: 'Harvies',        shortName: 'Harvies', x: 19, y: 22, Icon: ShoppingBag,    color: '#EA580C', type: 'food'     },
-  { id: 'food-truckus', name: 'Food Truckus',   shortName: 'FT',      x:  9, y: 50, Icon: Truck,          color: '#B45309', type: 'food'     },
   { id: 'basket',    name: 'Basket',             shortName: 'Basket',  x: 11.5, y: 7.9,  Icon: Building2,    color: '#3B82F6', type: 'building' },
   { id: 'tennis',    name: 'Tennis',             shortName: 'Tennis',  x: 9.9,  y: 18.9, Icon: Building2,    color: '#3B82F6', type: 'building' },
   { id: 'volley',    name: 'Volley',             shortName: 'Volley',  x: 14.7, y: 24.0, Icon: Building2,    color: '#3B82F6', type: 'building' },
@@ -72,10 +68,27 @@ const EVENT_LOCATION: Record<string, string> = {
 
 const FILTERS = [
   { key: 'all', label: 'Todo', Icon: Map },
-  { key: 'event', label: 'Eventos', Icon: MapPin },
-  { key: 'food', label: 'Comida', Icon: Coffee },
-  { key: 'sport', label: 'Deporte', Icon: Activity },
-];
+  { key: 'edificios', label: 'Edificios', Icon: Building2 },
+  { key: 'zonas', label: 'Zonas', Icon: Leaf },
+  { key: 'deporte', label: 'Deporte', Icon: Activity },
+  { key: 'alimento', label: 'Alimento', Icon: Coffee },
+  { key: 'bienestar', label: 'Bienestar', Icon: CheckCircle2 },
+] as const;
+
+const LANDMARK_CATEGORY_IDS = {
+  edificios: new Set(['bloque-a', 'bloque-b', 'bloque-c', 'bloque-d', 'bloque-e', 'bloque-f', 'bloque-g', 'bloque-h', 'bloque-i', 'bloque-l']),
+  zonas: new Set(['z1', 'z2', 'z3']),
+  deporte: new Set(['coliseo', 'basket', 'tennis', 'volley', 'futbol']),
+  alimento: new Set(['harvies-b', 'diali', 'reggio']),
+  bienestar: new Set(['bienestar']),
+} satisfies Record<Exclude<LandmarkFilter, 'all'>, Set<string>>;
+
+function getLandmarkCategory(lm: Landmark): Exclude<LandmarkFilter, 'all'> | null {
+  for (const [category, ids] of Object.entries(LANDMARK_CATEGORY_IDS) as Array<[Exclude<LandmarkFilter, 'all'>, Set<string>]>) {
+    if (ids.has(lm.id)) return category;
+  }
+  return null;
+}
 
 function EventPinIcon({ emoji, size = 14, color = 'white' }: { emoji: string; size?: number; color?: string }) {
   return (
@@ -129,7 +142,7 @@ export function CampusMapPage() {
   const { isDark, currentUser, geo, updateGeo, toggleGeo } = useApp();
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [eventsOpen, setEventsOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'event' | 'food' | 'sport'>('all');
+  const [activeFilter, setActiveFilter] = useState<LandmarkFilter>('all');
   const [isMobile, setIsMobile] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
@@ -218,8 +231,9 @@ export function CampusMapPage() {
   const getEventsAt = useCallback((lmId: string) =>
     mappedEvents.filter(e => EVENT_LOCATION[e.id] === lmId), [mappedEvents]);
   
-  // Show only buildings on the map; color indicates active events
-  const isVisible = (lm: Landmark) => lm.type === 'building';
+  const visibleLandmarks = activeFilter === 'all'
+    ? LANDMARKS.filter(lm => getLandmarkCategory(lm) !== null)
+    : LANDMARKS.filter(lm => getLandmarkCategory(lm) === activeFilter);
   const handlePin = (lm: Landmark) => {
     setSelectedLandmark(prev => prev?.id === lm.id ? null : lm);
     setEventsOpen(false);
@@ -383,7 +397,7 @@ export function CampusMapPage() {
             </motion.div>
           )}
         </AnimatePresence>
-        {LANDMARKS.filter(isVisible).map(lm => {
+        {visibleLandmarks.map(lm => {
           const evHere = getEventsAt(lm.id);
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
@@ -544,7 +558,7 @@ export function CampusMapPage() {
                 >
                   {selectedLandmark?.id === 'z1' || selectedLandmark?.id === 'z2' || selectedLandmark?.id === 'z3' ? (
                     <Leaf size={13} color="white" strokeWidth={2.2} />
-                  ) : selectedLandmark?.id === 'harvies-b' || selectedLandmark?.id === 'diali' || selectedLandmark?.id === 'reggio' ? (
+                  ) : selectedLandmark?.id === 'diali' || selectedLandmark?.id === 'reggio' ? (
                     <UtensilsCrossed size={13} color="white" strokeWidth={2.2} />
                   ) : selectedLandmark?.id === 'coliseo' ? (
                     <Trophy size={13} color="white" strokeWidth={2.2} />
@@ -833,7 +847,16 @@ export function CampusMapPage() {
                   return (
                     <button
                       key={ev.id}
-                      onClick={() => navigate('/events')}
+                      onClick={() => {
+                        if (lm) {
+                          const lmFilter = getLandmarkCategory(lm);
+                          if (lmFilter && activeFilter !== lmFilter) {
+                            setActiveFilter(lmFilter);
+                          }
+                          setSelectedLandmark(lm);
+                          setEventsOpen(false);
+                        }
+                      }}
                       className="flex-shrink-0 mt-3"
                       style={{ width: '160px' }}
                     >
