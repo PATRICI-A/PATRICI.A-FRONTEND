@@ -524,9 +524,9 @@ export function RegisterPage() {
           </button>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col px-4 sm:px-6 md:px-8 pb-8 w-full max-w-xl mx-auto">
+          <div className="flex flex-col px-4 sm:px-6 md:px-8 pb-8 w-full max-w-xl mx-auto items-center">
           <div
-            className="rounded-3xl px-6 py-5 mb-2"
+            className="rounded-3xl px-6 py-5 mb-2 w-full"
             style={{
               background: isDark ? 'rgba(8,16,40,0.72)' : 'rgba(255,255,255,0.72)',
               backdropFilter: 'blur(16px)',
@@ -995,6 +995,9 @@ export function RegisterPage() {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
+          <div className="flex md:hidden justify-center pt-4 pb-4 w-full">
+            <img src={patyRegistro} alt="Paty" className="w-auto object-contain drop-shadow-2xl" style={{ maxHeight: '30vh' }} />
           </div>
           </div>
         </div>

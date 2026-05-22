@@ -104,7 +104,7 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      <div className="max-w-2xl mx-auto w-full px-5 pt-5 pb-4 flex items-center justify-between">
+      <div className="w-full md:w-4/6 md:mx-auto px-5 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -151,7 +151,7 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="w-full md:w-4/6 md:mx-auto">
       <div className="px-5 mb-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -328,15 +328,15 @@ export function ProfilePage() {
       <div className="px-5 mb-4">
         <div
           className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
-          style={{ background: GRADIENT }}
+          style={{ background: 'linear-gradient(135deg, #F9A8D4 0%, #EC4899 60%, #BE185D 100%)' }}
           onClick={() => navigate('/wellness')}
         >
           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
-            <Heart size={20} color="#EF4444" strokeWidth={2.5} />
+            <Heart size={20} color="#EC4899" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
             <p className="text-white font-semibold text-sm">Soporte y Bienestar 24/7</p>
-            <p className="text-white/70 text-xs">Estamos aquí para escucharte siempre</p>
+            <p className="text-white/80 text-xs">Estamos aquí para escucharte siempre</p>
           </div>
           <ChevronRight size={18} color="white" />
         </div>

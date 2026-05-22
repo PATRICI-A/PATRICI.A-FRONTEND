@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Camera, Check, X, Upload, AlertCircle,
   Trophy, Palette, Compass, UtensilsCrossed, Leaf, Gamepad2, Music, Heart, ChevronRight,
-  Lock, Globe, Users,
+  Lock, Globe, Users, Edit2,
 } from 'lucide-react';
+import patyEdit from '../assets/patyEdit.png';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
 
@@ -248,17 +249,24 @@ export function EditProfilePage() {
 
   return (
     <div className="min-h-screen pb-8">
-      <div className="bg-white dark:bg-[#151729] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-[57px] z-10 border-b border-gray-100 dark:border-[#2A2D4A]">
+      <div className="bg-white dark:bg-[#151729] px-4 py-3 flex items-center gap-3 shadow-sm sticky top-[57px] z-10 border-b border-gray-100 dark:border-[#2A2D4A]">
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#1E2038] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#252844] transition-colors active:scale-90"
         >
           <ArrowLeft size={18} />
         </button>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: GRADIENT }}
+        >
+          <Edit2 size={15} color="white" />
+        </div>
         <div className="flex-1">
           <h1 className="text-gray-900 dark:text-white text-base font-semibold">Editar Perfil</h1>
           <p className="text-xs text-gray-400">Actualiza tu información</p>
         </div>
+        <img src={patyEdit} alt="Paty" className="h-20 w-auto drop-shadow-md" style={{ mixBlendMode: isDark ? 'screen' : 'multiply' }} />
         <button
           onClick={handleSave}
           disabled={!canSave}
@@ -274,7 +282,7 @@ export function EditProfilePage() {
         </button>
       </div>
 
-      <div className="px-4 pt-6 max-w-lg mx-auto space-y-5">
+      <div className="px-4 pt-6 w-full md:w-4/6 md:mx-auto space-y-5">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             <div className="w-24 h-24 rounded-2xl overflow-hidden" style={{ boxShadow: `0 0 0 3px ${PINK}` }}>
@@ -327,15 +335,6 @@ export function EditProfilePage() {
             className="w-full px-4 py-3 rounded-xl bg-white dark:bg-[#151729] border border-gray-200 dark:border-[#2A2D4A] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#E8245A] transition-all resize-none"
           />
           <p className="text-right text-[10px] text-gray-400 mt-0.5">{bio.length}/200</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Código estudiantil</label>
-          <div
-            className="w-full px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-[#1E2038] border border-gray-200 dark:border-[#2A2D4A] text-gray-500 dark:text-gray-400 text-sm"
-          >
-            {currentUser.studentId || 'No disponible'}
-          </div>
         </div>
 
         <div>
