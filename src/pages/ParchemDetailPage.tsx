@@ -8,6 +8,7 @@ import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { LuxuryDrawer } from '../components/layout/LuxuryDrawer';
 import logoImg from '../assets/logo_nuevo_patricia.png';
+import patySelfieImg from '../assets/PATY SELFIE.png';
 function ParcheDetailSkeleton() {
   return (
     <div className="min-h-screen animate-pulse">
@@ -403,6 +404,18 @@ export function ParchemDetailPage() {
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-3 text-right">
             {isFull ? '⚠️ Parche lleno' : `${parche.maxMembers - parche.members} ESPACIOS DISPONIBLES`}
           </p>
+        </div>
+
+        {/* Paty Mascot Callout */}
+        <div className="flex items-center gap-4 bg-blue-50/50 dark:bg-slate-800/50 p-4 rounded-[2rem] border border-blue-100/50 dark:border-white/5 shadow-sm mt-2 relative overflow-hidden">
+          <img src={patySelfieImg} alt="Paty" className="w-20 h-20 object-contain drop-shadow-md z-10" />
+          <div className="z-10 relative">
+            <p className="font-black text-gray-900 dark:text-white text-sm">¡Tip de Paty!</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium leading-relaxed">
+              Comparte este parche e invita a más personas para llenarlo más rápido.
+            </p>
+          </div>
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl" />
         </div>
 
         {/* Acciones */}

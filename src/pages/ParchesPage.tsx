@@ -5,6 +5,10 @@ import { Plus, Search, Filter, MapPin, Clock, Users, Lock, Globe, ChevronRight, 
 import { parches, GRADIENT, PINK, ORANGE, GOLD_GRADIENT, GOLD_LIGHT, TEAL_GRADIENT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+import patyBalonesImg from '../assets/PATY BALONES.png';
+import patyCafecitoImg from '../assets/PATY CAFECITO.png';
+import patySelfieImg from '../assets/PATY SELFIE.png';
+
 const uniqueCategories = ['Todos', ...Array.from(new Set(parches.map(p => p.category)))];
 export function ParchesPage() {
   const navigate = useNavigate();
@@ -117,6 +121,23 @@ export function ParchesPage() {
           </motion.button>
         </div>
 
+        {/* Mascot Banner Decorativo */}
+        <div className="relative w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 sm:px-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 overflow-hidden flex items-center justify-between">
+          <div className="z-10 relative md:max-w-[55%]">
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
+              ¡La vida es mejor <span style={{ color: PINK }}>en parche!</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">
+              Descubre grupos, asiste a eventos y colecciona momentos únicos con tus amigos.
+            </p>
+          </div>
+          {/* Mascot images decorating the banner */}
+          <div className="absolute right-[-10px] sm:right-6 bottom-[-15px] flex items-end gap-2 sm:gap-6 opacity-95">
+            <img src={patyCafecitoImg} alt="Paty Cafecito" className="w-24 h-24 sm:w-32 sm:h-32 object-contain drop-shadow-xl translate-y-3 -rotate-6" />
+            <img src={patyBalonesImg} alt="Paty Balones" className="w-24 h-24 sm:w-36 sm:h-36 object-contain drop-shadow-xl hidden sm:block rotate-3" />
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="flex bg-white dark:bg-slate-900 rounded-[2rem] p-2 gap-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
           <button
@@ -173,7 +194,7 @@ export function ParchesPage() {
             {myParches.length === 0 ? (
               <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
                 <div className="flex justify-center mb-4">
-                  <Users size={64} className="text-gray-300 dark:text-gray-600" />
+                  <img src={patyCafecitoImg} alt="No parches" className="w-32 h-32 object-contain opacity-90 drop-shadow-md" />
                 </div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Aún no te has unido a ningún parche</p>
                 <button
@@ -282,7 +303,7 @@ export function ParchesPage() {
             {invitationParches.length === 0 ? (
               <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
                 <div className="flex justify-center mb-4">
-                  <Mail size={64} className="text-gray-300 dark:text-gray-600" />
+                  <img src={patySelfieImg} alt="No invitaciones" className="w-32 h-32 object-contain opacity-90 drop-shadow-md" />
                 </div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">No tienes invitaciones pendientes</p>
               </div>
@@ -485,7 +506,7 @@ export function ParchesPage() {
               {filteredExplore.length === 0 && (
                 <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
                   <div className="flex justify-center mb-4">
-                    <Search size={64} className="text-gray-300 dark:text-gray-600" />
+                    <img src={patyBalonesImg} alt="No parches encontrados" className="w-32 h-32 object-contain opacity-90 drop-shadow-md" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 font-medium">No encontramos parches para esta búsqueda</p>
                 </div>

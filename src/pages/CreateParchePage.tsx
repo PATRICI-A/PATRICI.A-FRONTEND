@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, events } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE, events, ECI_LOCATIONS } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+import patySelfieImg from '../assets/PATY SELFIE.png';
+import patyBalonesImg from '../assets/PATY BALONES.png';
 const categories = [
   { id: 'musica', label: 'Música', emoji: '🎵', gradient: GRADIENT },
   { id: 'deporte', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
@@ -65,13 +67,10 @@ export function CreateParchePage() {
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
-            style={{ background: GRADIENT }}
-          >
-            <Sparkles size={40} color="white" />
+          <div className="flex justify-center mb-6">
+            <img src={patySelfieImg} alt="Mascota" className="w-40 h-40 object-contain drop-shadow-2xl" />
           </div>
-          <h2 className="text-gray-900 dark:text-white mb-2">¡Parche creado!</h2>
+          <h2 className="text-gray-900 dark:text-white mb-2 text-2xl font-black">¡Parche creado!</h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm">
             Tu parche <strong style={{ color: PINK }}>{name}</strong> ya está activo
           </p>
@@ -83,17 +82,20 @@ export function CreateParchePage() {
   return (
     <div className="min-h-screen pb-8">
       {}
-      <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center gap-3 shadow-sm sticky top-0 md:top-0 z-10">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#172A45] text-gray-500 dark:text-gray-400"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div>
-          <h1 className="text-gray-900 dark:text-white text-base">Crear Parche</h1>
-          <p className="text-xs text-gray-400">Arma tu plan perfecto</p>
+      <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 md:top-0 z-10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#172A45] text-gray-500 dark:text-gray-400 hover:scale-105 transition-transform"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-gray-900 dark:text-white font-bold text-base">Crear Parche</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Arma tu plan perfecto</p>
+          </div>
         </div>
+        <img src={patyBalonesImg} alt="Paty" className="w-12 h-12 object-contain drop-shadow-sm -my-1" />
       </div>
       <div className="px-5 pt-6 max-w-lg mx-auto">
         {}
@@ -241,13 +243,20 @@ export function CreateParchePage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lugar</label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
+                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
+                <select
                   value={location}
                   onChange={e => setLocation(e.target.value)}
-                  placeholder="Ubicación"
-                  className="w-full pl-8 pr-3 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#1D4ED8] text-sm transition-all"
-                />
+                  className="w-full pl-8 pr-10 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all appearance-none"
+                >
+                  <option value="" disabled>Selecciona el lugar...</option>
+                  {ECI_LOCATIONS.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
               </div>
             </div>
             <div>

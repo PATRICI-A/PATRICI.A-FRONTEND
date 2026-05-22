@@ -131,6 +131,28 @@ export const TEAL_GRADIENT = 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)'
 export const GOLD = '#D97706';
 export const GOLD_LIGHT = '#F59E0B';
 export const GOLD_GRADIENT = 'linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%)';
+
+export const ECI_LOCATIONS = [
+  "Bloque A",
+  "Bloque B",
+  "Bloque C",
+  "Bloque D",
+  "Bloque E",
+  "Bloque F",
+  "Bloque G",
+  "Bloque I",
+  "Biblioteca Central",
+  "Plazoleta Central",
+  "Cafetería Central",
+  "Coliseo",
+  "Gimnasio",
+  "Canchas Múltiples",
+  "Cancha de Fútbol",
+  "Bienestar Universitario",
+  "Auditorio Principal",
+  "La Candelaria, Café",
+  "Sala de Cómputo 3"
+];
 export interface QREnvelope {
   code: string;
   monaIds: string[];

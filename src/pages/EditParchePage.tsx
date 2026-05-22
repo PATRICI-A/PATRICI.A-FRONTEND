@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Image as ImageIcon, Ticket, Save, CheckCircle } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, events, parches } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE, events, parches, ECI_LOCATIONS } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 
 const categories = [
@@ -242,13 +242,20 @@ export function EditParchePage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lugar</label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
+                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
+                <select
                   value={location}
                   onChange={e => setLocation(e.target.value)}
-                  placeholder="Ubicación"
-                  className="w-full pl-8 pr-3 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#1D4ED8] text-sm transition-all"
-                />
+                  className="w-full pl-8 pr-10 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all appearance-none"
+                >
+                  <option value="" disabled>Selecciona el lugar...</option>
+                  {ECI_LOCATIONS.map(loc => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
               </div>
             </div>
             <div>
