@@ -7,7 +7,7 @@ import { GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import mascotImg from '../assets/mascota_cta_2.png';
 import mascotFeatureImg from '../assets/mascota_features.png';
-import mascotMatch from '../assets/mascota_bienestar_v2.png';
+import mascotMatch from '../assets/mascota_cupido.png';
 import mascotParche from '../assets/mascota_parche_v2.png';
 import mascotBienestar from '../assets/mascota_match_v2.png';
 import slide1 from '../assets/imagen_1_u.jpg';
