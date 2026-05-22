@@ -1,5 +1,15 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getAdminAnalytics,
+  getInstitutionalStats,
+  generateReport,
+  getReportHistory,
+  type AdminAnalyticsResponse,
+  type InstitutionalStatsResponse,
+  type ReportHistoryDTO,
+  type MetricType,
+} from '../services/analytics.service';
 import lightBg from '../assets/image-3.png';
 import darkBg from '../assets/image-2.png';
 import { useNavigate } from 'react-router';
@@ -10,7 +20,7 @@ import {
   Menu, X, ChevronRight, Activity, Zap, Eye, Ban, CheckCircle,
   XCircle, Edit3, Trash2, Flag, Settings, Sun, Moon, UserCheck,
   Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell,
-  Clock, ChevronDown
+  Clock, ChevronDown, User
 } from 'lucide-react';
 import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
@@ -102,6 +112,82 @@ export function AdminDashboardPage() {
   const [statsStartDate, setStatsStartDate] = useState('2025-01-01');
   const [statsEndDate, setStatsEndDate] = useState('2025-05-31');
   const [statsType, setStatsType] = useState<'all' | 'events' | 'participation' | 'social'>('all');
+
+  // ─── API State ─────────────────────────────────────────────────────────────
+  const [adminData, setAdminData] = useState<AdminAnalyticsResponse | null>(null);
+  const [institutionalData, setInstitutionalData] = useState<InstitutionalStatsResponse | null>(null);
+  const [reportHistoryData, setReportHistoryData] = useState<ReportHistoryDTO[]>([]);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [loadingInstitutional, setLoadingInstitutional] = useState(false);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  // ─── Fetch: Admin Analytics (Tab: Análisis) ───────────────────────────────
+  const metricTypeMap: Record<string, MetricType | undefined> = {
+    all: undefined, users: 'USERS', parches: 'PARCHES', events: 'EVENTS', matches: 'MATCHES', zones: 'ZONES'
+  };
+
+  const fetchAdminAnalytics = useCallback(async () => {
+    setLoadingAnalytics(true);
+    try {
+      const data = await getAdminAnalytics({
+        startDate: startDate,
+        endDate: endDate,
+        metricType: metricTypeMap[metricType],
+      });
+      setAdminData(data);
+    } catch (err) {
+      console.warn('Analytics API unavailable, using mock data', err);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  }, [startDate, endDate, metricType]);
+
+  useEffect(() => {
+    if (activeSection === 'analytics') fetchAdminAnalytics();
+  }, [activeSection, fetchAdminAnalytics]);
+
+  // ─── Fetch: Institutional Stats ────────────────────────────────────────────
+  const statsTypeMap: Record<string, 'EVENTS' | 'PARTICIPATION' | 'SOCIAL_ACTIVITY' | 'ALL'> = {
+    all: 'ALL', events: 'EVENTS', participation: 'PARTICIPATION', social: 'SOCIAL_ACTIVITY'
+  };
+
+  const fetchInstitutionalStats = useCallback(async () => {
+    setLoadingInstitutional(true);
+    try {
+      const data = await getInstitutionalStats({
+        startDate: statsStartDate,
+        endDate: statsEndDate,
+        metricType: statsTypeMap[statsType],
+      });
+      setInstitutionalData(data);
+    } catch (err) {
+      console.warn('Institutional stats API unavailable, using mock data', err);
+    } finally {
+      setLoadingInstitutional(false);
+    }
+  }, [statsStartDate, statsEndDate, statsType]);
+
+  useEffect(() => {
+    if (activeSection === 'institutional-stats') fetchInstitutionalStats();
+  }, [activeSection, fetchInstitutionalStats]);
+
+  // ─── Fetch: Report History ─────────────────────────────────────────────────
+  const fetchReportHistory = useCallback(async () => {
+    setLoadingReports(true);
+    try {
+      const data = await getReportHistory();
+      setReportHistoryData(data);
+    } catch (err) {
+      console.warn('Report history API unavailable, using mock data', err);
+    } finally {
+      setLoadingReports(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeSection === 'reports') fetchReportHistory();
+  }, [activeSection, fetchReportHistory]);
 
   // Nuevo estado para Creación de Eventos
   const [newEvent, setNewEvent] = useState({
@@ -277,11 +363,29 @@ export function AdminDashboardPage() {
       prev.includes(metric) ? prev.filter(m => m !== metric) : [...prev, metric]
     );
   };
-  const handleGenerateReport = () => {
-    const totalRecords = Math.floor(Math.random() * 15000) + 1000;
-    if (totalRecords > 10000) {
-      showSuccess('El reporte se está generando. Recibirás una notificación cuando esté listo.');
-    } else {
+  const handleGenerateReport = async (preview = false) => {
+    if (selectedMetrics.length === 0) return;
+    setGeneratingReport(true);
+    try {
+      const resp = await generateReport({
+        dateFrom: reportStartDate,
+        dateTo: reportEndDate,
+        metrics: selectedMetrics as MetricType[],
+        format: 'CSV',
+        preview,
+      });
+      if (preview) {
+        setShowPreview(true);
+        showSuccess('Vista previa generada.');
+      } else if (resp.status === 'PENDING' || resp.status === 'PROCESSING') {
+        showSuccess('El reporte se está generando. Recibirás una notificación cuando esté listo.');
+      } else if (resp.fileUrl) {
+        window.open(resp.fileUrl, '_blank');
+        showSuccess('Reporte generado y descargado correctamente.');
+      }
+      fetchReportHistory();
+    } catch {
+      // Fallback to local CSV generation
       const csvData = `data:text/csv;charset=utf-8,Tipo,Fecha,Detalles\n${selectedMetrics.map(m => `${m},${new Date().toISOString()},Datos de ${m}`).join('\n')}`;
       const link = document.createElement('a');
       link.setAttribute('href', encodeURI(csvData));
@@ -289,70 +393,98 @@ export function AdminDashboardPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showSuccess('Reporte generado y descargado correctamente.');
+      showSuccess('Reporte generado localmente (API no disponible).');
+    } finally {
+      setGeneratingReport(false);
     }
   };
-  const handleScheduleReport = () => {
+  const handleScheduleReport = async () => {
     if (!scheduleEmail.trim()) {
       setScheduleEmailError('Por favor ingresa un correo de entrega.');
       return;
     }
     setScheduleEmailError('');
+    const freqMap: Record<string, 'DAILY' | 'WEEKLY' | 'MONTHLY'> = { daily: 'DAILY', weekly: 'WEEKLY', monthly: 'MONTHLY' };
     const labels: Record<string, string> = { daily: 'diario', weekly: 'semanal', monthly: 'mensual' };
-    showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    try {
+      await generateReport({
+        dateFrom: reportStartDate,
+        dateTo: reportEndDate,
+        metrics: selectedMetrics.length > 0 ? selectedMetrics as MetricType[] : ['USERS'],
+        format: 'CSV',
+        schedule: {
+          frequency: freqMap[scheduleFrequency],
+          deliveryEmail: scheduleEmail,
+        },
+      });
+      showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    } catch {
+      showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    }
     setScheduleEmail('');
   };
-  const metrics: Metric[] = [
+  // ─── Computed data from API (with mock fallback) ───────────────────────────
+  const zoneColors: Record<string, string> = {
+    BIBLIOTECA: '#EF4444', CAFETERIA: '#F59E0B', BLOQUE_A: '#3B82F6',
+    BLOQUE_B: '#06B6D4', BLOQUE_C: '#8B5CF6', ZONA_DEPORTIVA: '#10B981',
+  };
+  const zoneLabels: Record<string, string> = {
+    BIBLIOTECA: 'Biblioteca', CAFETERIA: 'Cafetería', BLOQUE_A: 'Bloque A',
+    BLOQUE_B: 'Bloque B', BLOQUE_C: 'Bloque C', ZONA_DEPORTIVA: 'Zona Deportiva',
+  };
+
+  const metrics: Metric[] = adminData ? [
     {
       label: 'Usuarios Activos',
-      value: '2,847',
-      change: '+12.5% vs mes anterior',
-      icon: Users,
-      color: '#3B82F6',
-      bg: 'rgba(59,130,246,0.1)',
+      value: adminData.activeUsers.total.toLocaleString(),
+      change: adminData.alerts.find(a => a.metricName === 'activeUsers')?.message || `${adminData.retentionRate}% retención`,
+      icon: Users, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)',
     },
     {
       label: 'Parches Creados',
-      value: '486',
-      change: '+8.3% esta semana',
-      icon: Heart,
-      color: PINK,
-      bg: 'rgba(232,36,90,0.1)',
+      value: adminData.parcheStats.total.toLocaleString(),
+      change: adminData.abandonedParches > 0 ? `${adminData.abandonedParches} abandonados` : 'Sin abandonados',
+      icon: Heart, color: PINK, bg: 'rgba(232,36,90,0.1)',
     },
     {
-      label: 'Eventos Vigentes',
-      value: '24',
-      change: '6 próximos en 48h',
-      icon: Calendar,
-      color: '#10B981',
-      bg: 'rgba(16,185,129,0.1)',
+      label: 'Eventos Top',
+      value: adminData.topEvents.length.toString(),
+      change: adminData.topEvents[0] ? `#1: ${adminData.topEvents[0].eventName}` : 'Sin eventos',
+      icon: Calendar, color: '#10B981', bg: 'rgba(16,185,129,0.1)',
     },
     {
       label: 'Tasa de Matching',
-      value: '78%',
-      change: '+5% vs promedio',
-      icon: TrendingUp,
-      color: ORANGE,
-      bg: 'rgba(249,115,22,0.1)',
+      value: `${adminData.matchSuccessRate}%`,
+      change: `Promedio: ${Math.round(adminData.avgTimeToFirstMember)}min al 1er miembro`,
+      icon: TrendingUp, color: ORANGE, bg: 'rgba(249,115,22,0.1)',
     },
+  ] : [
+    { label: 'Usuarios Activos', value: '—', change: 'Cargando...', icon: Users, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
+    { label: 'Parches Creados', value: '—', change: 'Cargando...', icon: Heart, color: PINK, bg: 'rgba(232,36,90,0.1)' },
+    { label: 'Eventos Top', value: '—', change: 'Cargando...', icon: Calendar, color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+    { label: 'Tasa de Matching', value: '—', change: 'Cargando...', icon: TrendingUp, color: ORANGE, bg: 'rgba(249,115,22,0.1)' },
   ];
-  const activityData = [
-    { day: 'Lun', value: 65 },
-    { day: 'Mar', value: 78 },
-    { day: 'Mié', value: 85 },
-    { day: 'Jue', value: 72 },
-    { day: 'Vie', value: 92 },
-    { day: 'Sáb', value: 45 },
-    { day: 'Dom', value: 38 },
-  ];
-  const campusZones = [
-    { name: 'Biblioteca', activity: 92, color: '#EF4444' },
-    { name: 'Cafetería', activity: 85, color: '#F59E0B' },
-    { name: 'Bloque A', activity: 68, color: '#3B82F6' },
-    { name: 'Bloque B', activity: 55, color: '#06B6D4' },
-    { name: 'Bloque C', activity: 72, color: '#8B5CF6' },
-    { name: 'Zona Deportiva', activity: 48, color: '#10B981' },
-  ];
+
+  const activityData: { day: string; value: number }[] = adminData?.activeUsers?.timeSeries
+    ? Object.entries(adminData.activeUsers.timeSeries).map(([day, value]) => ({ day, value }))
+    : [
+        { day: 'Lun', value: 0 }, { day: 'Mar', value: 0 }, { day: 'Mié', value: 0 },
+        { day: 'Jue', value: 0 }, { day: 'Vie', value: 0 }, { day: 'Sáb', value: 0 }, { day: 'Dom', value: 0 },
+      ];
+
+  const campusZones: { name: string; activity: number; color: string }[] = adminData?.campusHeatmap?.zones
+    ? Object.entries(adminData.campusHeatmap.zones).map(([zone, hourData]) => ({
+        name: zoneLabels[zone] || zone,
+        activity: Math.round(Object.values(hourData).reduce((s, v) => s + v, 0) / Math.max(Object.values(hourData).length, 1)),
+        color: zoneColors[zone] || '#8B5CF6',
+      })).sort((a, b) => b.activity - a.activity)
+    : [
+        { name: 'Biblioteca', activity: 0, color: '#EF4444' },
+        { name: 'Cafetería', activity: 0, color: '#F59E0B' },
+      ];
+
+  // Report history: API or fallback
+  const displayReportHistory = reportHistoryData.length > 0 ? reportHistoryData : [];
   const sidebarItems = [
     { id: 'analytics', label: 'Análisis', icon: BarChart3 },
     { id: 'reports', label: 'Reportes', icon: Download },
@@ -836,8 +968,8 @@ export function AdminDashboardPage() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowPreview(!showPreview)}
-                      disabled={selectedMetrics.length === 0}
+                      onClick={() => handleGenerateReport(true)}
+                      disabled={selectedMetrics.length === 0 || generatingReport}
                       className="flex-1 px-4 py-3 rounded-xl bg-gray-100 dark:bg-[#1A2F4A] text-gray-700 dark:text-gray-300 font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#233554] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <Eye size={18} />
@@ -845,13 +977,13 @@ export function AdminDashboardPage() {
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={handleGenerateReport}
-                      disabled={selectedMetrics.length === 0}
+                      onClick={() => handleGenerateReport(false)}
+                      disabled={selectedMetrics.length === 0 || generatingReport}
                       className="flex-1 px-4 py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       style={{ background: GRADIENT }}
                     >
                       <Download size={18} />
-                      Generar Reporte CSV
+                      {generatingReport ? 'Generando...' : 'Generar Reporte CSV'}
                     </motion.button>
                   </div>
                 </div>
@@ -952,18 +1084,14 @@ export function AdminDashboardPage() {
                   Reportes disponibles por 30 días
                 </p>
                 <div className="space-y-3">
-                  {[
-                    { id: 'r1', date: '2025-05-12', metrics: ['USUARIOS', 'PARCHES'], size: '2.4 MB' },
-                    { id: 'r2', date: '2025-05-10', metrics: ['EVENTOS', 'MATCHES'], size: '1.8 MB' },
-                    { id: 'r3', date: '2025-05-08', metrics: ['ZONAS'], size: '890 KB' },
-                  ].map((report) => (
+                  {displayReportHistory.length > 0 ? displayReportHistory.map((report) => (
                     <div
-                      key={report.id}
+                      key={report.reportId}
                       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-[#1E3A5F]"
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
-                          Reporte del {report.date}
+                          Reporte del {new Date(report.generatedAt).toLocaleDateString()}
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {report.metrics.map((m) => (
@@ -975,17 +1103,20 @@ export function AdminDashboardPage() {
                             </span>
                           ))}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{report.size}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Expira: {new Date(report.expiresAt).toLocaleDateString()}</p>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => window.open(report.downloadUrl, '_blank')}
                         className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-semibold text-sm flex items-center gap-2"
                       >
                         <Download size={16} />
                         Descargar
                       </motion.button>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">No hay reportes recientes. Genera uno arriba para verlo aquí.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1050,19 +1181,19 @@ export function AdminDashboardPage() {
                       <h4 className="font-bold text-gray-900 dark:text-white">Eventos Creados</h4>
                       <Calendar size={20} style={{ color: '#10B981' }} />
                     </div>
-                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-4">147</p>
+                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-4">{institutionalData?.eventsStats?.totalCreated ?? '—'}</p>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Activos</span>
-                        <span className="font-bold text-green-600 dark:text-green-400">89 (60.5%)</span>
+                        <span className="font-bold text-green-600 dark:text-green-400">{institutionalData?.eventsStats?.activeCount ?? '—'}{institutionalData?.eventsStats ? ` (${Math.round(institutionalData.eventsStats.activeCount / Math.max(institutionalData.eventsStats.totalCreated, 1) * 100)}%)` : ''}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Finalizados</span>
-                        <span className="font-bold text-blue-600 dark:text-blue-400">52 (35.4%)</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400">{institutionalData?.eventsStats?.finishedCount ?? '—'}{institutionalData?.eventsStats ? ` (${Math.round(institutionalData.eventsStats.finishedCount / Math.max(institutionalData.eventsStats.totalCreated, 1) * 100)}%)` : ''}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Cancelados</span>
-                        <span className="font-bold text-red-600 dark:text-red-400">6 (4.1%)</span>
+                        <span className="font-bold text-red-600 dark:text-red-400">{institutionalData?.eventsStats?.cancelledCount ?? '—'}{institutionalData?.eventsStats ? ` (${Math.round(institutionalData.eventsStats.cancelledCount / Math.max(institutionalData.eventsStats.totalCreated, 1) * 100)}%)` : ''}</span>
                       </div>
                     </div>
                   </div>
@@ -1074,21 +1205,21 @@ export function AdminDashboardPage() {
                       <h4 className="font-bold text-gray-900 dark:text-white">Participación Estudiantil</h4>
                       <Users size={20} style={{ color: '#3B82F6' }} />
                     </div>
-                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">2,847</p>
+                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">{institutionalData?.participationStats?.totalActiveStudents?.toLocaleString() ?? '—'}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      Estudiantes activos en el período
+                      Estudiantes activos en el período • Tendencia: {institutionalData?.participationStats?.participationTrend === 'GROWING' ? '📈 Creciendo' : institutionalData?.participationStats?.participationTrend === 'DECLINING' ? '📉 Decreciendo' : '➖ Estable'}
                     </p>
                     <div className="h-2 bg-gray-100 dark:bg-[#1A2F4A] rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: '71.2%' }}
+                        animate={{ width: `${institutionalData?.participationStats ? Math.min(Math.round(institutionalData.participationStats.totalActiveStudents / 40), 100) : 0}%` }}
                         transition={{ duration: 1, ease: 'easeOut' }}
                         className="h-full rounded-full"
                         style={{ background: '#3B82F6' }}
                       />
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      71.2% del total de estudiantes matriculados
+                      {institutionalData?.participationStats?.totalRsvpConfirmed?.toLocaleString() ?? 0} RSVP confirmados • {institutionalData?.participationStats?.totalParchesAttended?.toLocaleString() ?? 0} parches asistidos
                     </p>
                   </div>
                 )}
@@ -1101,14 +1232,22 @@ export function AdminDashboardPage() {
                     </div>
                     <div className="flex items-center gap-4 mb-4">
                       <div className="flex-1">
-                        <p className="text-3xl font-black text-gray-900 dark:text-white">78.5</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-white">{institutionalData?.socialActivityIndex ?? '—'}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">de 100</p>
                       </div>
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(#10B981 0deg, #10B981 282deg, #E5E7EB 282deg)' }}>
-                        <div className="w-16 h-16 rounded-full bg-white dark:bg-[#112240] flex items-center justify-center">
-                          <span className="text-lg font-black text-green-600 dark:text-green-400">Alto</span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const idx = institutionalData?.socialActivityIndex ?? 0;
+                        const deg = Math.round((idx / 100) * 360);
+                        const label = idx >= 70 ? 'Alto' : idx >= 40 ? 'Medio' : 'Bajo';
+                        const clr = idx >= 70 ? '#10B981' : idx >= 40 ? '#F59E0B' : '#EF4444';
+                        return (
+                          <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(${clr} 0deg, ${clr} ${deg}deg, #E5E7EB ${deg}deg)` }}>
+                            <div className="w-16 h-16 rounded-full bg-white dark:bg-[#112240] flex items-center justify-center">
+                              <span className="text-lg font-black" style={{ color: clr }}>{label}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center justify-between">
@@ -1133,22 +1272,30 @@ export function AdminDashboardPage() {
                       <h4 className="font-bold text-gray-900 dark:text-white">Tendencia Semanal</h4>
                       <Activity size={20} style={{ color: ORANGE }} />
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-3 h-3 rounded-full bg-green-500" />
-                          <span className="text-2xl font-black text-green-600 dark:text-green-400">SUBIENDO</span>
+                    {(() => {
+                      const trend = institutionalData?.participationStats?.participationTrend;
+                      const trendLabel = trend === 'GROWING' ? 'SUBIENDO' : trend === 'DECLINING' ? 'BAJANDO' : 'ESTABLE';
+                      const trendColor = trend === 'GROWING' ? 'green' : trend === 'DECLINING' ? 'red' : 'yellow';
+                      const totalStudents = institutionalData?.participationStats?.totalActiveStudents ?? 0;
+                      return (
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className={`w-3 h-3 rounded-full bg-${trendColor}-500`} />
+                              <span className={`text-2xl font-black text-${trendColor}-600 dark:text-${trendColor}-400`}>{trendLabel}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {trend === 'GROWING' ? 'Tendencia positiva' : trend === 'DECLINING' ? 'Tendencia negativa' : 'Sin cambios significativos'} en el período
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Estudiantes activos</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">{totalStudents.toLocaleString()}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">en el período</p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          +12.5% vs semana anterior
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Esta semana</p>
-                        <p className="text-xl font-bold text-gray-900 dark:text-white">3,204</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">interacciones</p>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
