@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
+import patyAdmin from '../assets/PATY_ADMIN.png';
+import patyAdmin2 from '../assets/PATY_ADMIN2.png';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
 interface Metric {
@@ -635,6 +637,9 @@ export function AdminDashboardPage() {
         </nav>
         {}
         <div className="p-3 border-t border-gray-200 dark:border-[#1E3A5F]">
+          <div className="flex items-center justify-center mb-3 px-2">
+            <img src={patyAdmin} alt="Paty" className="w-16 h-16 object-contain opacity-60 drop-shadow-md" />
+          </div>
           <button
             onClick={toggleTheme}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-all mb-2"
@@ -662,6 +667,34 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'analytics' && (
             <>
+              {/* Welcome banner with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden mb-6">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Admin"
+                    className="w-28 h-28 sm:w-36 sm:h-36 object-contain flex-shrink-0 drop-shadow-2xl"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">
+                      ¡Hola, Admin! 👋
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+                      Bienvenido al panel de control de <span className="font-bold text-blue-600 dark:text-blue-400">PATRICI.A</span>. Aquí puedes monitorear la actividad del campus, gestionar usuarios y mucho más.
+                    </p>
+                    {loadingAnalytics && (
+                      <div className="flex items-center gap-2 mt-3">
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs font-bold text-blue-500">Cargando datos del servidor...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               {}
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -873,41 +906,53 @@ export function AdminDashboardPage() {
             </motion.div>
           </div>
           {}
-          <div className="mt-4 sm:mt-6 bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-              Actividad Reciente
-            </h3>
-            <div className="space-y-3">
-              {[
-                { icon: Users, text: 'Nuevo usuario registrado: María González', time: 'Hace 5 min', color: '#3B82F6' },
-                { icon: Heart, text: 'Parche "Gaming Night" creado por Carlos M.', time: 'Hace 15 min', color: PINK },
-                { icon: Calendar, text: 'Evento "Hackathon ECI" alcanzó 100 registros', time: 'Hace 1 hora', color: '#10B981' },
-                { icon: MessageCircle, text: '24 nuevos mensajes en parches activos', time: 'Hace 2 horas', color: ORANGE },
-              ].map((activity, index) => {
-                const Icon = activity.icon;
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-colors"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${activity.color}15` }}
-                    >
-                      <Icon size={18} style={{ color: activity.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {activity.text}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{activity.time}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
+          <div className="mt-4 sm:mt-6 bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start gap-5">
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-lg">
+                  Actividad Reciente
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { icon: Users, text: 'Nuevo usuario registrado: María González', time: 'Hace 5 min', color: '#3B82F6' },
+                    { icon: Heart, text: 'Parche "Gaming Night" creado por Carlos M.', time: 'Hace 15 min', color: PINK },
+                    { icon: Calendar, text: 'Evento "Hackathon ECI" alcanzó 100 registros', time: 'Hace 1 hora', color: '#10B981' },
+                    { icon: MessageCircle, text: '24 nuevos mensajes en parches activos', time: 'Hace 2 horas', color: ORANGE },
+                  ].map((activity, index) => {
+                    const Icon = activity.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-colors"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: `${activity.color}15` }}
+                        >
+                          <Icon size={18} style={{ color: activity.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {activity.text}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">{activity.time}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+              <motion.img
+                src={patyAdmin2}
+                alt="Paty Admin"
+                className="w-32 h-40 sm:w-40 sm:h-48 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block self-center"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              />
             </div>
           </div>
             </>
@@ -915,6 +960,24 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'reports' && (
             <div className="space-y-6">
+              {/* Reports header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">Centro de Reportes 📊</h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-lg">Genera, programa y descarga reportes CSV con las métricas que necesites para el análisis institucional.</p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin2}
+                    alt="Paty Reportes"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 180 }}
+                  />
+                </div>
+              </div>
               {}
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
@@ -1115,7 +1178,11 @@ export function AdminDashboardPage() {
                       </motion.button>
                     </div>
                   )) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">No hay reportes recientes. Genera uno arriba para verlo aquí.</p>
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <img src={patyAdmin} alt="Paty" className="w-20 h-20 object-contain opacity-40 drop-shadow-md mb-3" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No hay reportes recientes.</p>
+                      <p className="text-xs text-gray-400 mt-1">Genera uno arriba para verlo aquí.</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1124,7 +1191,30 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'institutional-stats' && (
             <div className="space-y-6">
-              {}
+              {/* Header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center justify-center sm:justify-start gap-3">
+                      <TrendingUp size={28} className="text-blue-500" />
+                      Estadísticas Institucionales
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
+                      Visualiza datos anonimizados sobre la participación de los estudiantes, distribución por facultades y actividad social general en el campus.
+                    </p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Estadísticas"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                </div>
+              </div>
+
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Filtros de Estadísticas
@@ -1349,34 +1439,52 @@ export function AdminDashboardPage() {
                 </div>
               )}
               {}
-              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
-                <p className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
-                  <ShieldCheck size={18} className="flex-shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Datos anonimizados</strong> · No se expone información personal de estudiantes.
-                    Todos los datos se presentan de forma agregada para proteger la privacidad.
-                  </span>
-                </p>
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-5">
+                <div className="flex items-center gap-4">
+                  <img src={patyAdmin2} alt="Paty" className="w-14 h-16 object-contain flex-shrink-0 drop-shadow-md opacity-80" />
+                  <p className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
+                    <ShieldCheck size={18} className="flex-shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Datos anonimizados</strong> · No se expone información personal de estudiantes.
+                      Todos los datos se presentan de forma agregada para proteger la privacidad.
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
           )}
           {}
           {activeSection === 'users' && (
             <div className="space-y-8">
-              {/* Buscador de usuarios premium */}
+              {/* Buscador de usuarios premium con Paty */}
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <h3 className="font-bold text-gray-900 dark:text-white mb-6 text-xl flex items-center gap-3">
-                  <Users size={26} className="text-blue-500" />
-                  Directorio de Usuarios
-                </h3>
-                <div className="relative">
-                  <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-blue-500" />
-                  <input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar usuarios por nombre o email..."
-                    className="w-full pl-14 pr-6 py-4 rounded-2xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border-2 border-gray-200/50 dark:border-[#233554]/50 text-gray-900 dark:text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#112240] transition-all shadow-inner"
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="flex-1 text-center sm:text-left w-full">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-2xl flex items-center justify-center sm:justify-start gap-3">
+                      <Users size={28} className="text-blue-500" />
+                      Directorio de Usuarios
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 max-w-xl">
+                      Gestiona, verifica y modera a todos los usuarios de la comunidad de PATRICI.A.
+                    </p>
+                    <div className="relative w-full max-w-2xl">
+                      <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-blue-500" />
+                      <input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar usuarios por nombre o email..."
+                        className="w-full pl-14 pr-6 py-4 rounded-2xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border-2 border-gray-200/50 dark:border-[#233554]/50 text-gray-900 dark:text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#112240] transition-all shadow-inner"
+                      />
+                    </div>
+                  </div>
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Directorio"
+                    className="w-28 h-28 sm:w-36 sm:h-36 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
                   />
                 </div>
               </div>
@@ -1459,14 +1567,29 @@ export function AdminDashboardPage() {
             <div className="space-y-6">
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-                  <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-3">
-                    <MapPin size={26} className="text-red-500" />
-                    Parches Activos y Reportados
-                  </h3>
-                  <span className="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-sm font-black tracking-widest uppercase text-red-600 dark:text-red-400">
-                    {parches.length} Parches
-                  </span>
+                <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 mb-2">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-2xl flex items-center gap-3">
+                        <MapPin size={28} className="text-red-500" />
+                        Parches Activos y Reportados
+                      </h3>
+                      <span className="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-sm font-black tracking-widest uppercase text-red-600 dark:text-red-400">
+                        {parches.length} Parches
+                      </span>
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
+                      Supervisa los grupos sociales activos, atiende los reportes de la comunidad y asegura un ambiente seguro.
+                    </p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin2}
+                    alt="Paty Parches"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -1537,6 +1660,30 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'events' && (
             <div className="space-y-6">
+              {/* Eventos header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center justify-center sm:justify-start gap-3">
+                      <Calendar size={28} className="text-blue-500" />
+                      Gestión de Eventos
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
+                      Crea y administra eventos institucionales oficiales. También puedes configurar y asociar Monas (Patricias) exclusivas para los asistentes.
+                    </p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Eventos"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                </div>
+              </div>
+
               {/* Formulario de Creación de Eventos */}
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
@@ -1725,7 +1872,32 @@ export function AdminDashboardPage() {
           )}
           {}
           {activeSection === 'patricias' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Patricias header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center justify-center sm:justify-start gap-3">
+                      <Zap size={28} className="text-purple-500 fill-purple-500/20" />
+                      Inventario de Monas
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
+                      Administra la colección oficial de Patricias de la universidad, su nivel de rareza y puntos XP otorgados.
+                    </p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin2}
+                    alt="Paty Colección"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                   <h3 className="font-bold text-gray-900 dark:text-white">Gestión de Patricias</h3>
@@ -1840,6 +2012,7 @@ export function AdminDashboardPage() {
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Obtenidas</p>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
