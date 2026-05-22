@@ -47,6 +47,7 @@ import imgAlmaSocial from '../assets/AlmaSocial.png';
 import imgAnfitrion from '../assets/Anfitrion.png';
 import imgMascota from '../../MASCOTA-MONAS.png';
 import imgMascotaQr from '../../MASCOTA-QR.png';
+import imgLogoBloqueadas from '../assets/LOGO BLOQUEADAS.png';
 const R = {
   común: {
     stars: 1, label: 'Común',
@@ -210,37 +211,81 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
 }
 function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; onClick: () => void }) {
   const slotNumber = String(index + 1).padStart(2, '0');
+  const cfg = R[mona.rarity];
+  const isLegendary = mona.rarity === 'legendario';
   
   return (
     <motion.button
       onClick={onClick}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
-      className="relative w-full rounded-xl overflow-hidden group"
+      className="relative w-full group"
       style={{ aspectRatio: '3/4' }}
     >
-      <div 
-        className="absolute inset-0 border-[2.5px] border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex flex-col items-center justify-center transition-colors group-hover:border-blue-400 dark:group-hover:border-blue-500 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/20"
+      {/* Marco Exterior Metálico oscurecido */}
+      <div
+        className="absolute inset-0 rounded-xl transition-all"
+        style={{
+          background: CHROME[mona.rarity],
+          padding: '2px',
+          boxShadow: `0 4px 16px rgba(0,0,0,0.5)`,
+          filter: 'brightness(0.6) grayscale(0.4)',
+        }}
       >
-        {/* Silueta difuminada de la mona */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] grayscale">
-          <EmojiIcon emoji={mona.emoji} size={56} color="currentColor" strokeWidth={1} />
-        </div>
-        
-        {/* Número Central Prominente (Estilo Panini) */}
-        <span className="text-4xl sm:text-5xl font-black text-slate-300 dark:text-slate-700 select-none z-10 transition-colors group-hover:text-blue-300 dark:group-hover:text-blue-500/50">
-          {slotNumber}
-        </span>
-        
-        {/* Indicador de acción (+) sutil */}
-        <motion.div
-          className="absolute bottom-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-500"
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
+        <div
+          className="relative w-full h-full rounded-[9px] overflow-hidden flex flex-col"
+          style={{ background: cfg.cardBg }}
         >
-          <span className="text-sm font-bold leading-none mb-[1px]">+</span>
-        </motion.div>
+          {isLegendary && (
+            <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: CHROME.legendario }} />
+          )}
+
+          <div className="absolute top-1 left-1 right-1 flex justify-between items-center z-10 opacity-70">
+            <span className="text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm" style={{ background: cfg.tagBg, color: cfg.textColor }}>
+              {cfg.label.toUpperCase()}
+            </span>
+            <RarityStars count={cfg.stars} color={cfg.textColor} />
+          </div>
+
+          <div
+            className="flex-1 flex items-center justify-center relative z-10"
+            style={{ marginTop: '12px', marginBottom: '2px' }}
+          >
+            <div className="w-[85%] h-[85%] flex items-center justify-center relative">
+              {/* LOGO BLOQUEADAS superpuesto */}
+              <img 
+                src={imgLogoBloqueadas} 
+                alt="Bloqueada" 
+                className="absolute inset-0 w-full h-full object-contain opacity-90 drop-shadow-xl" 
+              />
+
+              {/* Candado / Cadenas encima */}
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <div className="bg-black/50 p-2.5 rounded-full backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.8)] group-hover:scale-110 transition-transform">
+                  <Lock size={20} className="text-white/70" strokeWidth={2} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Información inferior */}
+          <div className="w-full px-2 pb-2 pt-1.5 text-center z-10 opacity-80" style={{ background: 'rgba(0,0,0,0.6)' }}>
+            <p className="text-[10px] sm:text-[11px] font-black leading-tight line-clamp-2 drop-shadow-md text-white/50" style={{ minHeight: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {mona.name}
+            </p>
+            <p className="text-[9px] sm:text-[10px] font-bold mt-0.5 drop-shadow-sm text-white/40">Nº {slotNumber}</p>
+          </div>
+        </div>
       </div>
+      
+      {/* Indicador de acción (+) sutil */}
+      <motion.div
+        className="absolute bottom-2 right-2 w-6 h-6 rounded-full flex items-center justify-center z-30 bg-white/10 border border-white/20 text-white/60 opacity-0 group-hover:opacity-100 backdrop-blur-md"
+        animate={{ scale: [1, 1.15, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <span className="text-sm font-bold leading-none mb-[1px]">+</span>
+      </motion.div>
     </motion.button>
   );
 }
