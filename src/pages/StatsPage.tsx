@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { ArrowLeft, TrendingUp, Users, Calendar, MessageCircle, Zap, Star, Award } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from 'recharts';
 import { useApp } from '../store/AppContext';
-import { achievements, GRADIENT, PINK, ORANGE } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 const activityData = [
   { day: 'L', value: 3 },
@@ -198,30 +198,6 @@ export function StatsPage() {
           <div className="flex justify-between mt-2 text-[11px] text-gray-400">
             <span>Nivel {currentUser.level}</span>
             <span>{5000 - currentUser.xp} XP para nivel {currentUser.level + 1}</span>
-          </div>
-        </div>
-        {}
-        <div className="mb-5">
-          <h3 className="font-semibold text-gray-800 dark:text-white mb-3">🏅 Logros recientes</h3>
-          <div className="space-y-2">
-            {achievements.map((a, i) => (
-              <div
-                key={a.id}
-                className="bg-white dark:bg-[#151729] rounded-xl p-3.5 flex items-center gap-3 shadow-sm"
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: GRADIENT }}
-                >
-                  <EmojiIcon emoji={a.emoji} size={18} color="white" strokeWidth={2} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 dark:text-white">{a.title}</p>
-                  <p className="text-[11px] text-gray-400">{a.date}</p>
-                </div>
-                <span className="text-xs font-bold" style={{ color: ORANGE }}>+{a.xp} XP</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
