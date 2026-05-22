@@ -35,7 +35,10 @@ const LANDMARKS: Landmark[] = [
   { id: 'bloque-h', name: 'Bloque H',           shortName: 'H',       x: 34.2, y: 84.2, Icon: Zap,            color: '#F59E0B', type: 'building' },
   { id: 'bloque-i', name: 'Bloque I',           shortName: 'I',       x: 44.2, y: 79.6, Icon: Cpu,            color: '#10B981', type: 'building' },
   { id: 'bloque-l', name: 'Bloque L',           shortName: 'L',       x: 44.6, y: 25.9, Icon: Radio,          color: '#06B6D4', type: 'building' },
-  { id: 'coliseo',  name: 'Coliseo El Otoño',   shortName: 'Coliseo', x: 12.0, y: 37.4, Icon: Trophy,         color: '#EF4444', type: 'sport'    },
+  { id: 'coliseo',  name: 'Coliseo El Otoño',   shortName: 'C',       x: 9.2, y: 41.8, Icon: Trophy,         color: '#EF4444', type: 'building'    },
+  { id: 'diali',    name: 'Diali',              shortName: 'D',       x: 44.6, y: 37.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'reggio',   name: 'Reggio',             shortName: 'R',       x: 51.6, y: 46.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'harvies-b',name: 'Harvies',            shortName: 'H',       x: 24.1, y: 26.4, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'canchas',  name: 'Canchas Fútbol',      shortName: 'Canchas', x: 19, y: 44, Icon: Activity,       color: '#16A34A', type: 'sport'    },
   { id: 'lago',     name: 'El Lago',            shortName: 'Lago',    x: 33, y: 40, Icon: Droplets,       color: '#0284C7', type: 'nature'   },
   { id: 'nativos',  name: 'Nativos',            shortName: 'Nativos', x: 50, y: 58, Icon: Leaf,           color: '#15803D', type: 'nature'   },
@@ -201,6 +204,11 @@ export function CampusMapPage() {
     setEventsOpen(false);
   };
   const selectedEvents = selectedLandmark ? getEventsAt(selectedLandmark.id) : [];
+  const selectedHasEvents = selectedEvents.length > 0;
+  const selectedAccentColor = selectedHasEvents ? '#C27800' : '#1E40AF';
+  const selectedHeaderBg = selectedHasEvents ? 'rgba(194,120,0,0.14)' : 'rgba(30,64,175,0.14)';
+  const selectedHeaderBorder = selectedHasEvents ? 'rgba(194,120,0,0.22)' : 'rgba(30,64,175,0.22)';
+  const selectedIconBg = selectedHasEvents ? GOLD_GRADIENT : '#1E40AF';
   const popupLeft = selectedLandmark ? selectedLandmark.x < 55 : true;
   const USER_PIN_DEFAULT = { x: 87, y: 30 };
   const userPin = (geo.enabled && geo.onCampus && geo.mapX !== null && geo.mapY !== null)
@@ -341,16 +349,31 @@ export function CampusMapPage() {
           const evHere = getEventsAt(lm.id);
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
+          const isWideLabelPin = lm.id === 'coliseo' || lm.id === 'diali' || lm.id === 'reggio' || lm.id === 'harvies-b';
           
           // choose pin background based on whether building has active events
           // If has event -> orange (GOLD_GRADIENT). If no event -> blue.
           // darker colors for labels and pins
           const DEFAULT_BLUE = '#1E40AF'; // darker blue for better contrast
-          const EVENT_DARK = '#C27800'; // darker orange for event labels
           const pinBg = hasEv ? GOLD_GRADIENT : DEFAULT_BLUE;
           const pinBorder = isSel ? 'white' : 'rgba(255,255,255,0.8)';
-          // label color: darker orange for events, darker blue otherwise
-          const labelColor = hasEv ? EVENT_DARK : DEFAULT_BLUE;
+          // inner text: full word for wide-label pins, shortName for standard pins
+          const innerText = lm.id === 'coliseo'
+            ? 'Coliseo'
+            : lm.id === 'diali'
+            ? 'Diali'
+            : lm.id === 'reggio'
+            ? 'Reggio'
+            : lm.id === 'harvies-b'
+            ? 'Harvies'
+            : lm.shortName;
+          const baseFont = isSel ? 14 : (hasEv ? 12 : 10);
+          const textLen = innerText.length;
+          // approximate width based on text length and font size
+          const approxWidth = Math.max(24, Math.min(56, Math.round(textLen * (baseFont * 0.6) + 8)));
+          const pinSize = isSel ? Math.max(36, approxWidth) : (hasEv ? Math.max(30, approxWidth) : Math.max(24, approxWidth));
+          const widePinWidth = isSel ? Math.max(44, approxWidth) : Math.max(38, approxWidth - 4);
+          const widePinHeight = isSel ? 24 : 22;
 
           return (
             <button
@@ -382,17 +405,17 @@ export function CampusMapPage() {
                       style={{
                         position: 'absolute',
                         inset: -7,
-                        borderRadius: '50%',
+                        borderRadius: isWideLabelPin ? '10px' : '50%',
                         border: `2px solid ${GOLD_LIGHT}`,
                         zIndex: 0,
                       }}
                     />
                   )}
                   <div style={{
-                    width: isSel ? 36 : (hasEv ? 30 : 24),
-                    height: isSel ? 36 : (hasEv ? 30 : 24),
-                    borderRadius: '50% 50% 50% 0',
-                    transform: 'rotate(-45deg)',
+                    width: isWideLabelPin ? widePinWidth : pinSize,
+                    height: isWideLabelPin ? widePinHeight : pinSize,
+                    borderRadius: isWideLabelPin ? 8 : '50% 50% 50% 0',
+                    transform: isWideLabelPin ? 'none' : 'rotate(-45deg)',
                     background: pinBg,
                     border: `2.5px solid ${pinBorder}`,
                     boxShadow: hasEv ? `0 4px 14px rgba(217,119,6,0.65)` : '0 2px 8px rgba(0,0,0,0.08)',
@@ -400,13 +423,17 @@ export function CampusMapPage() {
                     transition: 'width .2s, height .2s',
                     position: 'relative', zIndex: 1,
                   }}>
-                    {/* counter-rotate so inner text stays upright and stacked vertically */}
-                    <div style={{ transform: 'rotate(45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: isSel ? 14 : (hasEv ? 12 : 10), lineHeight: 1 }}>
-                        {Array.from(String(lm.shortName)).map((ch, i) => (
-                          <span key={i} style={{ display: 'block', transform: 'rotate(0deg)' }}>{ch}</span>
-                        ))}
-                      </div>
+                    {/* counter-rotate so inner text stays upright */}
+                    <div style={{ transform: isWideLabelPin ? 'none' : 'rotate(45deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 2 }}>
+                      {isWideLabelPin ? (
+                        <span style={{ color: 'white', fontWeight: 900, fontSize: baseFont, lineHeight: 1, textAlign: 'center', whiteSpace: 'nowrap' }}>{innerText}</span>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900, fontSize: baseFont, lineHeight: 1 }}>
+                          {Array.from(String(lm.shortName)).map((ch, i) => (
+                            <span key={i} style={{ display: 'block', transform: 'rotate(0deg)' }}>{ch}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {hasEv && evHere.length > 1 && (
@@ -453,21 +480,21 @@ export function CampusMapPage() {
               <div
                 className="px-3 py-2.5 flex items-center gap-2"
                 style={{
-                  background: `${selectedLandmark.color}18`,
-                  borderBottom: `1px solid ${selectedLandmark.color}22`,
+                  background: selectedHeaderBg,
+                  borderBottom: `1px solid ${selectedHeaderBorder}`,
                 }}
               >
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: selectedLandmark.color }}
+                  style={{ background: selectedIconBg }}
                 >
-                  <selectedLandmark.Icon size={13} color="white" strokeWidth={2.2} />
+                  <Building2 size={13} color="white" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-black text-gray-900 dark:text-white truncate">
                     {selectedLandmark.name}
                   </p>
-                  <p className="text-[9px] capitalize font-medium" style={{ color: selectedLandmark.color }}>
+                  <p className="text-[9px] capitalize font-medium" style={{ color: selectedAccentColor }}>
                     {selectedLandmark.type}
                   </p>
                 </div>
