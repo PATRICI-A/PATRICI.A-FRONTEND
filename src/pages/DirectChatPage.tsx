@@ -130,23 +130,41 @@ export function DirectChatPage() {
     }, 3000);
   };
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden flex items-center justify-center py-6 px-4">
+    <div className="relative min-h-screen w-full flex flex-col pb-8">
       {/* Background wallpaper */}
       <DoodleBackground isDark={isDark} opacity={isDark ? 0.95 : 0.8} />
 
-      {/* Centered Dashboard Wrapper at exactly 4/6 width */}
-      <div 
-        className="relative z-10 w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-120px)] min-h-[560px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-row transition-all"
-        style={isDark ? {
-          background: 'rgba(6, 13, 26, 0.75)',
-          borderColor: 'rgba(30, 58, 95, 0.45)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
-        } : {
-          background: 'rgba(255, 255, 255, 0.85)',
-          borderColor: 'rgba(10, 25, 47, 0.08)',
-          boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
-        }}
-      >
+      {/* Independent Header (Sticky Sub-header) */}
+      <div className="sticky top-[57px] md:top-[73px] z-40 bg-white/95 dark:bg-[#0A192F]/95 backdrop-blur-lg border-b border-gray-200 dark:border-[#1E3A5F] w-full">
+        <div className="px-5 py-4 flex items-center justify-between">
+          <button
+            onClick={() => navigate('/home')}
+            className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#112240] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A2F4A] transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-gray-900 dark:text-white font-bold text-lg">
+            Chats
+          </h1>
+          <div className="w-9" /> {/* Spacer to center the title */}
+        </div>
+      </div>
+
+      {/* Centered Dashboard Content Container */}
+      <div className="relative z-10 w-full flex-1 flex items-center justify-center py-6 px-4">
+        {/* Centered Dashboard Wrapper at exactly 4/6 width */}
+        <div 
+          className="relative w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-180px)] min-h-[500px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-row transition-all"
+          style={isDark ? {
+            background: 'rgba(6, 13, 26, 0.75)',
+            borderColor: 'rgba(30, 58, 95, 0.45)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+          } : {
+            background: 'rgba(255, 255, 255, 0.85)',
+            borderColor: 'rgba(10, 25, 47, 0.08)',
+            boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
+          }}
+        >
         {/* Left Side: Shared ChatSidebar List (hidden on mobile, visible on md: and up) */}
         <div className="hidden md:block md:w-[340px] lg:w-[380px] h-full flex-shrink-0">
           <ChatSidebar activeId={chat.id} />
@@ -154,8 +172,7 @@ export function DirectChatPage() {
 
         {/* Right Side: Active direct chat conversation */}
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {}
-      <div
+        <div
         className="px-4 py-3 flex items-center gap-3 shadow-sm border-b backdrop-blur-md"
         style={{
           background: isDark ? 'rgba(13, 27, 46, 0.85)' : 'rgba(255, 255, 255, 0.85)',
@@ -218,7 +235,6 @@ export function DirectChatPage() {
             >
               <MoreVertical size={18} />
             </button>
-            {}
             {showContextMenu && createPortal(
               <>
                 <div
@@ -282,7 +298,6 @@ export function DirectChatPage() {
           </div>
         </div>
       </div>
-      {}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative" style={{ background: isDark ? 'rgba(6, 13, 26, 0.3)' : 'rgba(255, 255, 255, 0.35)', isolation: 'isolate' }}>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
@@ -317,7 +332,6 @@ export function DirectChatPage() {
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col relative`}>
-                    {}
                     {!isMe && msg.senderId !== 'u1' && hoveredMessageId === msg.id && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -376,7 +390,6 @@ export function DirectChatPage() {
           <div ref={messagesEndRef} />
         </div>
       </div>
-      {}
       <AnimatePresence>
         {showEmojis && (
           <motion.div
@@ -396,7 +409,6 @@ export function DirectChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      {}
       <AnimatePresence>
         {showAttachments && (
           <motion.div
@@ -426,7 +438,6 @@ export function DirectChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      {}
       <div
         className="px-4 py-3 border-t backdrop-blur-md"
         style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
@@ -461,8 +472,7 @@ export function DirectChatPage() {
           </button>
         </div>
       </div>
-      
-      {/* Close Right Side & Centered Dashboard Wrapper */}
+      </div>
       </div>
       </div>
 
@@ -520,7 +530,6 @@ export function DirectChatPage() {
                   </p>
                 </div>
               </div>
-              {}
               <div className="mb-4">
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                   ¿Por qué reportas este mensaje?
@@ -575,7 +584,6 @@ export function DirectChatPage() {
                     </button>
                   ))}
                 </div>
-                {}
                 {reportReason && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}

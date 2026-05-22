@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, Shield, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
 import patyImg from '../assets/patyProfile.png';
 import { useApp } from '../store/AppContext';
-import { monas, achievements, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
+import { monas, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 
 function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
@@ -67,6 +67,7 @@ function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
 
 const RARITY_CFG = {
   común:      { bg: 'linear-gradient(160deg, #0F2450 0%, #1D4ED8 100%)', border: '#3B82F6', glow: 'rgba(59,130,246,0.5)',   textColor: '#BFDBFE', stars: 1 },
+  'poco común': { bg: 'linear-gradient(160deg, #064E3B 0%, #059669 100%)', border: '#10B981', glow: 'rgba(16,185,129,0.45)', textColor: '#D1FAE5', stars: 1 },
   raro:       { bg: 'linear-gradient(160deg, #0C2340 0%, #0369A1 100%)', border: '#06B6D4', glow: 'rgba(6,182,212,0.55)',  textColor: '#A5F3FC', stars: 2 },
   épico:      { bg: 'linear-gradient(160deg, #1E1B4B 0%, #6D28D9 100%)', border: '#8B5CF6', glow: 'rgba(139,92,246,0.6)', textColor: '#DDD6FE', stars: 3 },
   legendario: { bg: 'linear-gradient(160deg, #1C1107 0%, #92400E 100%)', border: '#F59E0B', glow: 'rgba(245,158,11,0.7)', textColor: '#FDE68A', stars: 4 },
@@ -104,7 +105,7 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen pb-4">
-      <div className="max-w-2xl mx-auto w-full px-5 pt-5 pb-4 flex items-center justify-between">
+      <div className="w-full md:w-4/6 md:mx-auto px-5 pt-5 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
@@ -151,7 +152,7 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="w-full md:w-4/6 md:mx-auto">
       <div className="px-5 mb-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -328,15 +329,15 @@ export function ProfilePage() {
       <div className="px-5 mb-4">
         <div
           className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all"
-          style={{ background: GRADIENT }}
+          style={{ background: 'linear-gradient(135deg, #F9A8D4 0%, #EC4899 60%, #BE185D 100%)' }}
           onClick={() => navigate('/wellness')}
         >
           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
-            <Heart size={20} color="#EF4444" strokeWidth={2.5} />
+            <Heart size={20} color="#EC4899" strokeWidth={2.5} />
           </div>
           <div className="flex-1">
             <p className="text-white font-semibold text-sm">Soporte y Bienestar 24/7</p>
-            <p className="text-white/70 text-xs">Estamos aquí para escucharte siempre</p>
+            <p className="text-white/80 text-xs">Estamos aquí para escucharte siempre</p>
           </div>
           <ChevronRight size={18} color="white" />
         </div>
@@ -345,7 +346,7 @@ export function ProfilePage() {
       <div className="px-5 mb-4 hidden">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="font-semibold text-gray-800 dark:text-white">Patricias Album</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white">Álbum de Patricias</h3>
             <p className="text-xs text-gray-400">{unlockedMonas.length}/{monas.length} desbloqueadas</p>
           </div>
           <button

@@ -3,6 +3,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 const CHROME: Record<string, string> = {
   común:      'linear-gradient(135deg, #93C5FD 0%, #1E40AF 25%, #BFDBFE 50%, #3B82F6 75%, #93C5FD 100%)',
+  'poco común': 'linear-gradient(135deg, #A7F3D0 0%, #047857 25%, #D1FAE5 50%, #10B981 75%, #A7F3D0 100%)',
   raro:       'linear-gradient(135deg, #67E8F9 0%, #0E7490 25%, #A5F3FC 50%, #0891B2 75%, #67E8F9 100%)',
   épico:      'linear-gradient(135deg, #C4B5FD 0%, #5B21B6 25%, #DDD6FE 50%, #7C3AED 75%, #C4B5FD 100%)',
   legendario: 'linear-gradient(135deg, #FDE68A 0%, #92400E 15%, #FCD34D 40%, #B45309 60%, #FBBF24 80%, #78350F 100%)',
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react';
 import {
   monas as initialMonas, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD,
-  TEAL, QR_ENVELOPES, type Mona, type QREnvelope,
+  TEAL, EVENT_ENVELOPES, type Mona, type EventEnvelope, CAFETERIA_PRIZES
 } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
@@ -44,12 +45,21 @@ import imgLaLeyenda from '../assets/LaLeyendaPatric.ia-2.png';
 import imgNomada from '../assets/Nomada-1.png';
 import imgAlmaSocial from '../assets/AlmaSocial.png';
 import imgAnfitrion from '../assets/Anfitrion.png';
+import imgMascota from '../../MASCOTA-MONAS.png';
+import imgMascotaQr from '../../MASCOTA-QR.png';
+import imgLogoBloqueadas from '../assets/LOGO BLOQUEADAS.png';
 const R = {
   común: {
     stars: 1, label: 'Común',
     border: '#3B82F6', glow: 'rgba(59,130,246,0.45)',
     cardBg: 'linear-gradient(160deg, #0F2450 0%, #1D4ED8 100%)',
     shimmer: 'rgba(96,165,250,0.25)', textColor: '#BFDBFE', tagBg: 'rgba(59,130,246,0.2)',
+  },
+  'poco común': {
+    stars: 1, label: 'Poco Común',
+    border: '#10B981', glow: 'rgba(16,185,129,0.45)',
+    cardBg: 'linear-gradient(160deg, #064E3B 0%, #059669 100%)',
+    shimmer: 'rgba(52,211,153,0.25)', textColor: '#D1FAE5', tagBg: 'rgba(16,185,129,0.2)',
   },
   raro: {
     stars: 2, label: 'Raro',
@@ -78,165 +88,23 @@ const REWARDS = [
 ];
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '✨', color: '#3B82F6' },
-  { id: 'live-music', label: 'Live Music', emoji: '🎵', color: '#8B5CF6' },
-  { id: 'outdoor', label: 'Outdoor', emoji: '🌲', color: '#10B981' },
-  { id: 'study', label: 'Study', emoji: '📚', color: '#3B82F6' },
-  { id: 'foodie', label: 'Foodie', emoji: '🍕', color: '#F59E0B' },
-  { id: 'gaming', label: 'Gaming', emoji: '🎮', color: '#6366F1' },
-  { id: 'arte', label: 'Arte', emoji: '🎨', color: '#EC4899' },
+  { id: 'networking', label: 'Networking', emoji: '🤝', color: '#3B82F6' },
+  { id: 'cafeterias', label: 'Cafeterías', emoji: '☕', color: '#F59E0B' },
+  { id: 'edificios', label: 'Edificios', emoji: '🏛️', color: '#6366F1' },
+  { id: 'actividad', label: 'Zonas y Actividad', emoji: '🌿', color: '#10B981' },
+  { id: 'eventos', label: 'Eventos', emoji: '🎉', color: '#EC4899' },
+  { id: 'legendarias', label: 'Legendarias', emoji: '👑', color: '#F59E0B' },
 ];
-interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  Icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
-  color: string;
-  unlocked: boolean;
-  category: 'conexiones' | 'parches' | 'campus' | 'especiales';
-  rarity: 'común' | 'poco común' | 'raro' | 'épico' | 'legendario';
-  xp: number;
-  imgSrc?: string;
-}
-const BADGES: Badge[] = [
-  { id: 'primer-choque', name: 'Primer Choque', description: 'Realiza tu primera conexión con otro usuario', Icon: Handshake, color: '#9CA3AF', unlocked: true, category: 'conexiones', rarity: 'común', xp: 50, imgSrc: imgPrimerChoque },
-  { id: 'conocido-campus', name: 'Conocido del Campus', description: 'Acumula 5 conexiones activas', Icon: UsersIcon, color: '#10B981', unlocked: true, category: 'conexiones', rarity: 'poco común', xp: 150, imgSrc: imgConocidoDelCampus },
-  { id: 'alma-social', name: 'Alma Social', description: 'Acumula 10 conexiones activas', Icon: Network, color: '#3B82F6', unlocked: false, category: 'conexiones', rarity: 'raro', xp: 350, imgSrc: imgAlmaSocial },
-  { id: 'parche-iniciado', name: 'Parche Iniciado', description: 'Únete o crea tu primer parche', Icon: Zap, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 75, imgSrc: imgParcheIniciado },
-  { id: 'capitan-nato', name: 'Capitán Nato', description: 'Crea 2 parches como capitán', Icon: Award, color: '#10B981', unlocked: false, category: 'parches', rarity: 'poco común', xp: 200, imgSrc: imgCapitanNato },
-  { id: 'el-previsor', name: 'El Previsor', description: 'Crea un parche con más de 3 días de anticipación', Icon: Calendar, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 75, imgSrc: imgElPrevisor },
-  { id: 'rompe-hielos', name: 'El Rompe Hielos', description: 'Envía el primer mensaje en un parche recién creado', Icon: MessageCircle, color: '#9CA3AF', unlocked: true, category: 'parches', rarity: 'común', xp: 100, imgSrc: imgElRompeHielos },
-  { id: 'anfitrion', name: 'Anfitrión', description: 'Consigue que alguien se una a un parche que tú creaste', Icon: Home, color: '#9CA3AF', unlocked: false, category: 'parches', rarity: 'común', xp: 75, imgSrc: imgAnfitrion },
-  { id: 'explorador', name: 'Explorador', description: 'Visita 3 zonas distintas del campus', Icon: Map, color: '#9CA3AF', unlocked: true, category: 'campus', rarity: 'común', xp: 75, imgSrc: imgExplorador },
-  { id: 'nomada-eci', name: 'Nómada ECI', description: 'Visita 5 zonas distintas del campus', Icon: MapPin, color: '#10B981', unlocked: false, category: 'campus', rarity: 'poco común', xp: 175, imgSrc: imgNomada },
-  { id: 'espiritu-eci', name: 'Espíritu ECI', description: 'Asiste a un evento universitario institucional', Icon: Building2, color: '#3B82F6', unlocked: true, category: 'campus', rarity: 'raro', xp: 300, imgSrc: imgEspirituECI },
-  { id: 'viral-eci', name: 'Viral ECI', description: 'Pasa de 0 a 10 conexiones en menos de 30 días desde tu registro', Icon: Rocket, color: '#8B5CF6', unlocked: false, category: 'especiales', rarity: 'épico', xp: 850, imgSrc: imgViral },
-  { id: 'leyenda-patricia', name: 'La Leyenda Patrici.a', description: 'Desbloquea las 12 medallas anteriores', Icon: Crown, color: '#F59E0B', unlocked: false, category: 'especiales', rarity: 'legendario', xp: 1500, imgSrc: imgLaLeyenda },
-];
+// Removed BADGES array as per refactoring
 const DEMO_CODES = [
-  { code: 'PATRICIA-TECH-001', label: 'Tech', color: '#3B82F6', emoji: '⚡' },
-  { code: 'PATRICIA-SOCIAL-002', label: 'Social', color: '#06B6D4', emoji: '👑' },
-  { code: 'PATRICIA-CULTURA-003', label: 'Cultura', color: '#8B5CF6', emoji: '🎨' },
-  { code: 'PATRICIA-WELLNESS-004', label: 'Bienestar', color: '#10B981', emoji: '💚' },
-  { code: 'PATRICIA-ACADEMIA-005', label: 'Academia', color: '#6366F1', emoji: '🎓' },
+  { code: 'PATRICIA-TECH-001', label: 'Red Rápida', color: '#3B82F6', emoji: '⚡' },
+  { code: 'PATRICIA-SOCIAL-002', label: 'Conexiones Pro', color: '#06B6D4', emoji: '👥' },
+  { code: 'PATRICIA-CULTURA-003', label: 'Organizador', color: '#8B5CF6', emoji: '🔥' },
+  { code: 'PATRICIA-WELLNESS-004', label: 'Exploración', color: '#10B981', emoji: '🧘' },
+  { code: 'PATRICIA-ACADEMIA-005', label: 'Esfuerzo', color: '#6366F1', emoji: '🌅' },
   { code: 'PATRICIA-LEGEND-006', label: '★ Legendario', color: '#F59E0B', emoji: '🌟' },
 ];
-function BadgeCard({ badge, i, onClick, legendaryGlow, isDark }: {
-  badge: Badge;
-  i: number;
-  onClick: () => void;
-  legendaryGlow?: boolean;
-  isDark: boolean;
-}) {
-  const cardBg = isDark
-    ? badge.unlocked ? `linear-gradient(135deg, ${badge.color}22 0%, ${badge.color}0c 100%)` : 'rgba(255,255,255,0.05)'
-    : '#ffffff';
-  const cardBorder = isDark
-    ? `1.5px solid ${badge.unlocked ? `${badge.color}45` : 'rgba(255,255,255,0.1)'}`
-    : `1.5px solid ${badge.unlocked ? `${badge.color}55` : 'rgba(0,0,0,0.09)'}`;
-  const cardShadow = badge.unlocked
-    ? legendaryGlow
-      ? `0 0 22px ${badge.color}55, 0 0 8px ${badge.color}70`
-      : isDark ? `0 0 12px ${badge.color}30` : `0 2px 10px ${badge.color}22, 0 1px 4px rgba(0,0,0,0.06)`
-    : isDark ? 'none' : '0 1px 4px rgba(0,0,0,0.06)';
-  const imgFilter = !badge.unlocked
-    ? 'grayscale(100%) opacity(0.35)'
-    : isDark
-      ? 'none'
-      : 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))';
-  const nameColor = badge.unlocked
-    ? isDark ? 'rgba(255,255,255,0.92)' : '#1e293b'
-    : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
-  return (
-    <motion.button
-      key={badge.id}
-      onClick={onClick}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ delay: i * 0.05 }}
-      className="relative rounded-xl flex flex-col items-center"
-      style={{
-        aspectRatio: '3 / 4',
-        padding: '8px 6px 6px',
-        gap: 4,
-        background: cardBg,
-        border: cardBorder,
-        boxShadow: cardShadow,
-      }}
-    >
-      {legendaryGlow && badge.unlocked && (
-        <motion.div
-          className="absolute inset-0 rounded-xl pointer-events-none"
-          animate={{ opacity: [0.25, 0.55, 0.25] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{ background: `linear-gradient(135deg, transparent 30%, ${badge.color}22 50%, transparent 70%)` }}
-        />
-      )}
-      {}
-      <div className="relative flex-1 w-full flex items-center justify-center min-h-0">
-        {badge.imgSrc ? (
-          <>
-            <img
-              src={badge.imgSrc}
-              alt={badge.name}
-              style={{
-                maxWidth: '72%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                filter: imgFilter,
-                display: 'block',
-              }}
-            />
-            {}
-            {!badge.unlocked && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Lock size={16} style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)' }} />
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: badge.unlocked ? `${badge.color}20` : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}
-            >
-              <badge.Icon
-                size={22}
-                style={{
-                  color: badge.unlocked ? badge.color : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-                  filter: !badge.unlocked ? 'grayscale(100%)' : 'none',
-                }}
-              />
-            </div>
-            {!badge.unlocked && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Lock size={16} style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)' }} />
-              </div>
-            )}
-          </>
-        )}
-      </div>
-      {}
-      <p
-        style={{
-          fontSize: '8.5px',
-          fontWeight: 700,
-          lineHeight: 1.2,
-          textAlign: 'center',
-          width: '100%',
-          color: nameColor,
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-        }}
-      >
-        {badge.name}
-      </p>
-    </motion.button>
-  );
-}
+// Removed BadgeCard component
 function RarityStars({ count, color }: { count: number; color: string }) {
   return (
     <div className="flex gap-0.5">
@@ -310,8 +178,8 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
             <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: CHROME.legendario }} />
           )}
           {}
-          <div className="absolute top-0.5 left-0.5 right-0.5 flex justify-between items-center z-10">
-            <span className="text-[6px] font-black px-1 py-0.5 rounded-full" style={{ background: cfg.tagBg, color: cfg.textColor }}>
+          <div className="absolute top-1 left-1 right-1 flex justify-between items-center z-10">
+            <span className="text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm" style={{ background: cfg.tagBg, color: cfg.textColor }}>
               {cfg.label.toUpperCase()}
             </span>
             <RarityStars count={cfg.stars} color={cfg.textColor} />
@@ -319,16 +187,22 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
           {}
           <div
             className="flex-1 flex items-center justify-center relative z-10"
-            style={{ marginTop: '14px', marginBottom: '2px' }}
+            style={{ marginTop: '12px', marginBottom: '2px' }}
           >
-            <EmojiIcon emoji={mona.emoji} size={24} color="white" strokeWidth={1.8} />
+            {mona.image ? (
+              <div className="w-[85%] h-[85%] flex items-center justify-center relative">
+                <img src={mona.image} alt={mona.name} className="w-full h-full object-contain drop-shadow-lg" style={mona.imgScale ? { transform: `scale(${mona.imgScale})` } : {}} />
+              </div>
+            ) : (
+              <EmojiIcon emoji={mona.emoji} size={32} color="white" strokeWidth={1.8} />
+            )}
           </div>
           {}
-          <div className="w-full px-1 pb-1 pt-0.5 text-center z-10" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <p className="text-[7px] font-black leading-tight truncate" style={{ color: cfg.textColor }}>
+          <div className="w-full px-2 pb-2 pt-1.5 text-center z-10" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <p className="text-[10px] sm:text-[11px] font-black leading-tight line-clamp-2 drop-shadow-md" style={{ color: cfg.textColor, minHeight: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
               {mona.name}
             </p>
-            <p className="text-[6px] mt-0.5" style={{ color: `${cfg.textColor}99` }}>+{mona.xp} XP</p>
+            <p className="text-[9px] sm:text-[10px] font-bold mt-0.5 drop-shadow-sm" style={{ color: `${cfg.textColor}99` }}>+{mona.xp} XP</p>
           </div>
         </div>
       </div>
@@ -337,37 +211,81 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
 }
 function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; onClick: () => void }) {
   const slotNumber = String(index + 1).padStart(2, '0');
+  const cfg = R[mona.rarity];
+  const isLegendary = mona.rarity === 'legendario';
   
   return (
     <motion.button
       onClick={onClick}
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.96 }}
-      className="relative w-full rounded-xl overflow-hidden group"
+      className="relative w-full group"
       style={{ aspectRatio: '3/4' }}
     >
-      <div 
-        className="absolute inset-0 border-[2.5px] border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex flex-col items-center justify-center transition-colors group-hover:border-blue-400 dark:group-hover:border-blue-500 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/20"
+      {/* Marco Exterior Metálico oscurecido */}
+      <div
+        className="absolute inset-0 rounded-xl transition-all"
+        style={{
+          background: CHROME[mona.rarity],
+          padding: '2px',
+          boxShadow: `0 4px 16px rgba(0,0,0,0.5)`,
+          filter: 'brightness(0.6) grayscale(0.4)',
+        }}
       >
-        {/* Silueta difuminada de la mona */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] grayscale">
-          <EmojiIcon emoji={mona.emoji} size={56} color="currentColor" strokeWidth={1} />
-        </div>
-        
-        {/* Número Central Prominente (Estilo Panini) */}
-        <span className="text-4xl sm:text-5xl font-black text-slate-300 dark:text-slate-700 select-none z-10 transition-colors group-hover:text-blue-300 dark:group-hover:text-blue-500/50">
-          {slotNumber}
-        </span>
-        
-        {/* Indicador de acción (+) sutil */}
-        <motion.div
-          className="absolute bottom-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-500"
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
+        <div
+          className="relative w-full h-full rounded-[9px] overflow-hidden flex flex-col"
+          style={{ background: cfg.cardBg }}
         >
-          <span className="text-sm font-bold leading-none mb-[1px]">+</span>
-        </motion.div>
+          {isLegendary && (
+            <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: CHROME.legendario }} />
+          )}
+
+          <div className="absolute top-1 left-1 right-1 flex justify-between items-center z-10 opacity-70">
+            <span className="text-[7px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-sm" style={{ background: cfg.tagBg, color: cfg.textColor }}>
+              {cfg.label.toUpperCase()}
+            </span>
+            <RarityStars count={cfg.stars} color={cfg.textColor} />
+          </div>
+
+          <div
+            className="flex-1 flex items-center justify-center relative z-10"
+            style={{ marginTop: '12px', marginBottom: '2px' }}
+          >
+            <div className="w-[85%] h-[85%] flex items-center justify-center relative">
+              {/* LOGO BLOQUEADAS superpuesto */}
+              <img 
+                src={imgLogoBloqueadas} 
+                alt="Bloqueada" 
+                className="absolute inset-0 w-full h-full object-contain opacity-90 drop-shadow-xl" 
+              />
+
+              {/* Candado / Cadenas encima */}
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <div className="bg-black/50 p-2.5 rounded-full backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.8)] group-hover:scale-110 transition-transform">
+                  <Lock size={20} className="text-white/70" strokeWidth={2} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Información inferior */}
+          <div className="w-full px-2 pb-2 pt-1.5 text-center z-10 opacity-80" style={{ background: 'rgba(0,0,0,0.6)' }}>
+            <p className="text-[10px] sm:text-[11px] font-black leading-tight line-clamp-2 drop-shadow-md text-white/50" style={{ minHeight: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {mona.name}
+            </p>
+            <p className="text-[9px] sm:text-[10px] font-bold mt-0.5 drop-shadow-sm text-white/40">Nº {slotNumber}</p>
+          </div>
+        </div>
       </div>
+      
+      {/* Indicador de acción (+) sutil */}
+      <motion.div
+        className="absolute bottom-2 right-2 w-6 h-6 rounded-full flex items-center justify-center z-30 bg-white/10 border border-white/20 text-white/60 opacity-0 group-hover:opacity-100 backdrop-blur-md"
+        animate={{ scale: [1, 1.15, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <span className="text-sm font-bold leading-none mb-[1px]">+</span>
+      </motion.div>
     </motion.button>
   );
 }
@@ -424,34 +342,42 @@ function EmptySlotRender({ index }: { index: number }) {
     </div>
   );
 }
-function QRScannerModal({
+function EventCodeModal({
   onClose,
   onSuccess,
   usedCodes,
 }: {
   onClose: () => void;
-  onSuccess: (envelope: QREnvelope, monas: Mona[]) => void;
+  onSuccess: (envelope: EventEnvelope, monas: Mona[]) => void;
   usedCodes: string[];
 }) {
-  const [step, setStep] = useState<'scan' | 'validating' | 'success' | 'error'>('scan');
-  const [qrInput, setQrInput] = useState('');
+  const { isDark } = useApp();
+  const [step, setStep] = useState<'enter' | 'validating' | 'success' | 'error'>('enter');
+  const [codeInput, setCodeInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [foundEnvelope, setFoundEnvelope] = useState<QREnvelope | null>(null);
+  const [foundEnvelope, setFoundEnvelope] = useState<EventEnvelope | null>(null);
   const [collection] = useState<Mona[]>([...initialMonas]);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
   const handleValidate = (code: string) => {
     const normalized = code.trim().toUpperCase();
     if (!normalized) return;
     setStep('validating');
     setTimeout(() => {
-      const envelope = QR_ENVELOPES.find(e => e.code.toUpperCase() === normalized);
+      const envelope = EVENT_ENVELOPES.find(e => e.code.toUpperCase() === normalized);
       if (!envelope) {
-        setErrorMsg('Código QR inválido. Intenta con otro código.');
+        setErrorMsg('Código de evento inválido. Intenta con otro código.');
         setStep('error');
         return;
       }
       if (usedCodes.includes(normalized)) {
-        setErrorMsg('Este código ya fue escaneado anteriormente. Cada código es de un solo uso.');
+        setErrorMsg('Este código ya fue ingresado anteriormente. Cada código es de un solo uso.');
         setStep('error');
         return;
       }
@@ -463,202 +389,169 @@ function QRScannerModal({
       setTimeout(() => onSuccess(envelope, monas), 800);
     }, 1400);
   };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 pointer-events-none"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-[24px] pointer-events-auto transition-colors duration-300 ${
+        isDark ? 'bg-black/75' : 'bg-black/40'
+      }`}
     >
       <div 
-        className="sticky top-0 w-full h-[100dvh] flex flex-col items-center justify-start overflow-y-auto pointer-events-auto" 
-        style={{ background: 'rgba(2,8,20,0.97)' }}
+        className="relative w-full max-w-[420px] h-[50vh] max-h-[50vh] flex flex-col items-center p-6 rounded-[32px] shadow-2xl transition-all duration-300 overflow-y-auto custom-scrollbar"
+        style={{ 
+          background: isDark ? 'linear-gradient(160deg, #0A1628, #112240)' : 'linear-gradient(160deg, #FDFCF8, #EDE9E0)', 
+          border: isDark ? '2px solid rgba(59,130,246,0.4)' : '2px solid rgba(59,130,246,0.25)',
+          boxShadow: isDark ? '0 12px 48px rgba(59,130,246,0.2)' : '0 12px 48px rgba(59,130,246,0.12)'
+        }}
       >
-        <div className="w-[90%] max-w-[600px] mx-auto flex flex-col items-center pb-12">
-          {}
-        <div className="w-full flex items-center justify-between px-5 pt-12 pb-4">
-          <div>
-            <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
-            <h2 className="text-white font-black text-lg leading-none">Escanear QR</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.1)' }}
-          >
-            <X size={18} className="text-white" />
-          </button>
-        </div>
-      {}
-      <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
-        {}
-        <div className="absolute inset-0 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }} />
-        {}
-        {[
-          { top: 8, left: 8, rotate: 0 },
-          { top: 8, right: 8, rotate: 90 },
-          { bottom: 8, right: 8, rotate: 180 },
-          { bottom: 8, left: 8, rotate: 270 },
-        ].map((pos, i) => (
-          <div
-            key={i}
-            className="absolute"
-            style={{
-              ...pos,
-              width: 28, height: 28,
-              borderColor: step === 'success' ? '#10B981' : step === 'error' ? '#EF4444' : GOLD_LIGHT,
-              borderStyle: 'solid',
-              borderWidth: '3px 0 0 3px',
-              borderTopLeftRadius: 6,
-              transform: `rotate(${pos.rotate}deg)`,
-            }}
-          />
-        ))}
-        {}
-        {step === 'scan' && (
-          <motion.div
-            className="absolute left-3 right-3 h-0.5 rounded-full"
-            style={{ background: `linear-gradient(90deg, transparent, ${GOLD_LIGHT}, transparent)`, top: 12 }}
-            animate={{ top: [12, 220, 12] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-        {}
-        {step === 'scan' && (
-          <div className="flex flex-col items-center gap-3 z-10">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.06)' }}
-            >
-              <QrCode size={32} className="text-white/40" />
-            </div>
-            <p className="text-white/40 text-xs text-center px-4">Apunta la cámara a un<br />código QR de patrici.a</p>
-          </div>
-        )}
-        {step === 'validating' && (
-          <div className="flex flex-col items-center gap-3 z-10">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-16 h-16 rounded-full border-4 border-t-transparent"
-              style={{ borderColor: `${GOLD_LIGHT} transparent transparent transparent` }}
-            />
-            <p className="text-white/60 text-xs">Validando código...</p>
-          </div>
-        )}
-        {step === 'success' && foundEnvelope && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="flex flex-col items-center gap-2 z-10"
-          >
-            <motion.div
-              className="w-16 h-16 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(16,185,129,0.2)', border: '2px solid #10B981' }}
-              animate={{ boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 16px rgba(16,185,129,0)', '0 0 0 0 rgba(16,185,129,0)'] }}
-              transition={{ duration: 1, repeat: 2 }}
-            >
-              <CheckCircle size={28} className="text-green-400" />
-            </motion.div>
-            <p className="text-green-400 text-xs font-bold">¡Código válido!</p>
-          </motion.div>
-        )}
-        {step === 'error' && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="flex flex-col items-center gap-2 z-10"
-          >
-            <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)', border: '2px solid #EF4444' }}>
-              <AlertCircle size={28} className="text-red-400" />
-            </div>
-            <p className="text-red-400 text-xs font-bold">Código inválido</p>
-          </motion.div>
-        )}
-      </div>
-      {}
-      {step === 'error' && (
-        <motion.p
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-red-400 text-xs text-center px-8 mt-4"
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className={`absolute top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            isDark 
+              ? 'bg-white/10 hover:bg-white/20 text-white' 
+              : 'bg-black/5 hover:bg-black/10 text-gray-800'
+          }`}
         >
-          {errorMsg}
-        </motion.p>
-      )}
-      {}
-      <div className="w-full px-5 mt-6">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-white/30 text-xs">O ingresa el código</span>
-          <div className="flex-1 h-px bg-white/10" />
-        </div>
-        <div className="flex gap-2">
-          <input
-            ref={inputRef}
-            value={qrInput}
-            onChange={e => setQrInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleValidate(qrInput)}
-            placeholder="PATRICIA-XXXX-000"
-            className="flex-1 px-4 py-3 rounded-2xl text-sm text-white placeholder-white/25 focus:outline-none"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1.5px solid rgba(255,255,255,0.1)' }}
-          />
-          <motion.button
-            whileTap={{ scale: 0.94 }}
-            onClick={() => handleValidate(qrInput)}
-            disabled={!qrInput.trim() || step === 'validating'}
-            className="px-4 py-3 rounded-2xl text-white font-bold text-sm disabled:opacity-40 flex items-center gap-2"
-            style={{ background: GOLD_GRADIENT }}
-          >
-            <Scan size={16} />
-            Validar
-          </motion.button>
-        </div>
-        {step === 'error' && (
-          <button
-            onClick={() => { setStep('scan'); setQrInput(''); setErrorMsg(''); }}
-            className="w-full mt-3 py-2.5 rounded-xl text-white/70 text-sm border border-white/10 hover:border-white/20 transition-colors"
-          >
-            Intentar de nuevo
-          </button>
-        )}
-      </div>
-      {}
-      <div className="w-full px-5 mt-6 pb-8">
-        <p className="text-white/30 text-xs mb-3 text-center">✦ Códigos de demostración disponibles</p>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-          {DEMO_CODES.map(demo => {
-            const isUsed = usedCodes.includes(demo.code);
-            return (
+          <X size={20} />
+        </button>
+
+        <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 mt-2">
+          {/* Patricia branding */}
+          <div className="mb-2 text-center flex-shrink-0">
+            <h2 className={`font-black text-2xl tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Ingresar Código</h2>
+          </div>
+
+          {/* Mascot Image (MASCOTA-QR.png) */}
+          <div className="relative w-[180px] md:w-[220px] flex-1 min-h-0 flex items-center justify-center mb-4">
+            <img 
+              src={imgMascotaQr} 
+              alt="Mascota QR" 
+              className={`w-full h-full object-contain transition-all ${
+                isDark 
+                  ? 'drop-shadow-[0_15px_40px_rgba(59,130,246,0.25)]' 
+                  : 'drop-shadow-[0_15px_30px_rgba(59,130,246,0.12)]'
+              }`}
+            />
+            {/* Overlay indicators (validating, success, error) */}
+            {step === 'validating' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className={`p-4 rounded-[24px] border flex flex-col items-center gap-3 shadow-xl backdrop-blur-md ${
+                  isDark 
+                    ? 'bg-slate-950/90 border-white/10 text-white' 
+                    : 'bg-white/95 border-gray-200 text-gray-800'
+                }`}>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-8 h-8 rounded-full border-4 border-t-transparent"
+                    style={{ borderColor: `${GOLD_LIGHT} transparent transparent transparent` }}
+                  />
+                  <p className="text-[10px] font-black tracking-widest uppercase">Validando...</p>
+                </div>
+              </div>
+            )}
+            {step === 'success' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className={`p-4 rounded-[24px] border backdrop-blur-md flex flex-col items-center gap-2 shadow-xl ${
+                    isDark 
+                      ? 'bg-green-950/95 border-green-500/30 text-green-400' 
+                      : 'bg-green-50/95 border-green-200 text-green-700'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                    isDark 
+                      ? 'bg-green-500/20 border-green-400 text-green-400' 
+                      : 'bg-green-100 border-green-500 text-green-600'
+                  }`}>
+                    <CheckCircle size={24} />
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-widest">¡Código Válido!</p>
+                </motion.div>
+              </div>
+            )}
+            {step === 'error' && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <motion.div
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className={`p-4 rounded-[24px] border backdrop-blur-md flex flex-col items-center gap-2 shadow-xl ${
+                    isDark 
+                      ? 'bg-red-950/95 border-red-500/30 text-red-400' 
+                      : 'bg-red-50/95 border-red-200 text-red-700'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                    isDark 
+                      ? 'bg-red-500/20 border-red-400 text-red-400' 
+                      : 'bg-red-100 border-red-500 text-red-600'
+                  }`}>
+                    <AlertCircle size={24} />
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-widest">Código Inválido</p>
+                </motion.div>
+              </div>
+            )}
+          </div>
+
+          {/* Validation input & button */}
+          <div className="w-full flex-shrink-0">
+            <div className="flex gap-3">
+              <input
+                ref={inputRef}
+                value={codeInput}
+                onChange={e => setCodeInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleValidate(codeInput)}
+                placeholder="Ej: PATRICIA-XXXX-000"
+                className={`flex-1 px-4 py-3 rounded-xl text-sm focus:outline-none transition-all ${
+                  isDark 
+                    ? 'text-white placeholder-white/20' 
+                    : 'text-gray-900 placeholder-gray-400'
+                }`}
+                style={{ 
+                  background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', 
+                  border: isDark ? '2px solid rgba(255,255,255,0.08)' : '2px solid rgba(0,0,0,0.08)' 
+                }}
+              />
               <motion.button
-                key={demo.code}
-                whileHover={{ scale: isUsed ? 1 : 1.04 }}
-                whileTap={{ scale: isUsed ? 1 : 0.95 }}
-                onClick={() => {
-                  if (isUsed) return;
-                  setQrInput(demo.code);
-                  handleValidate(demo.code);
-                }}
-                disabled={isUsed}
-                className="flex flex-col items-center gap-1 py-3 px-2 rounded-2xl relative overflow-hidden"
-                style={{
-                  background: isUsed ? 'rgba(255,255,255,0.03)' : `${demo.color}18`,
-                  border: `1.5px solid ${isUsed ? 'rgba(255,255,255,0.06)' : `${demo.color}44`}`,
-                  opacity: isUsed ? 0.5 : 1,
-                }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => handleValidate(codeInput)}
+                disabled={!codeInput.trim() || step === 'validating'}
+                className="px-6 py-3 rounded-xl text-white font-black text-[11px] uppercase tracking-widest disabled:opacity-40 flex items-center gap-1.5 shadow-xl transition-all"
+                style={{ background: GOLD_GRADIENT }}
               >
-                {isUsed
-                  ? <CheckCircle size={20} color="rgba(255,255,255,0.3)" />
-                  : <EmojiIcon emoji={demo.emoji} size={20} color={demo.color} strokeWidth={2} />}
-                <span className="text-[10px] font-bold text-center leading-tight" style={{ color: isUsed ? 'rgba(255,255,255,0.3)' : demo.color }}>
-                  {demo.label}
-                </span>
-                {isUsed && (
-                  <span className="text-[8px] text-white/25">Usado</span>
-                )}
+                <Scan size={14} />
+                Validar
               </motion.button>
-            );
-          })}
+            </div>
+
+            {/* Error Message */}
+            {step === 'error' && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 text-center pb-2"
+              >
+                <p className={`text-xs px-2 leading-relaxed ${isDark ? 'text-red-400' : 'text-red-600'}`}>{errorMsg}</p>
+                <button
+                  onClick={() => { setStep('enter'); setCodeInput(''); setErrorMsg(''); }}
+                  className={`mt-3 text-[10px] uppercase tracking-widest font-bold border px-6 py-2 rounded-xl transition-all ${
+                    isDark 
+                      ? 'text-white/50 border-white/10 hover:bg-white/5' 
+                      : 'text-gray-500 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  Intentar de nuevo
+                </button>
+              </motion.div>
+            )}
+          </div>
         </div>
       </div>
       </div>
@@ -671,7 +564,7 @@ function EnvelopeModal({
   cards,
   onStick,
 }: {
-  envelope: QREnvelope;
+  envelope: EventEnvelope;
   cards: Mona[];
   onStick: () => void;
 }) {
@@ -844,7 +737,13 @@ function EnvelopeModal({
                         <RarityStars count={cfg.stars} color={cfg.textColor} />
                       </div>
                       <div className="flex-1 flex items-center justify-center mt-3">
-                        <EmojiIcon emoji={card.emoji} size={32} color="white" strokeWidth={1.8} />
+                        {card.image ? (
+                          <div className="w-24 h-24 flex items-center justify-center relative">
+                            <img src={card.image} alt={card.name} className="w-full h-full object-contain drop-shadow-xl" style={card.imgScale ? { transform: `scale(${card.imgScale})` } : {}} />
+                          </div>
+                        ) : (
+                          <EmojiIcon emoji={card.emoji} size={32} color="white" strokeWidth={1.8} />
+                        )}
                       </div>
                       <div className="w-full text-center mt-1 px-1">
                         <p className="text-sm font-black leading-tight line-clamp-2" style={{ color: cfg.textColor }}>{card.name}</p>
@@ -873,6 +772,79 @@ function EnvelopeModal({
     </>
   );
 }
+function RouletteModal({ onClose, prizes, onFinish }: { onClose: () => void, prizes: any[], onFinish: (prize: any) => void }) {
+  const [spinning, setSpinning] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !spinning) onClose(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose, spinning]);
+
+  const handleSpin = () => {
+    if (spinning) return;
+    setSpinning(true);
+    
+    const prizeIndex = Math.floor(Math.random() * prizes.length);
+    const segmentAngle = 360 / prizes.length;
+    const randomOffset = (Math.random() * 0.6 + 0.2) * segmentAngle;
+    const finalRotation = rotation + 360 * 6 + (360 - (prizeIndex * segmentAngle)) - randomOffset;
+    
+    setRotation(finalRotation);
+    
+    setTimeout(() => {
+      setSpinning(false);
+      onFinish(prizes[prizeIndex]);
+    }, 5500);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-lg">
+       <button onClick={onClose} disabled={spinning} className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center disabled:opacity-50"><X size={24} className="text-white" /></button>
+       
+       <h2 className="text-3xl md:text-5xl font-black text-white mb-8">Ruleta de Premios</h2>
+       
+       <div className="relative w-[300px] h-[300px] md:w-[500px] md:h-[500px] mb-12">
+         {/* Indicator */}
+         <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[35px] border-t-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+         
+         <motion.div 
+           className="w-full h-full rounded-full border-[10px] border-slate-800 overflow-hidden shadow-[0_0_80px_rgba(249,115,22,0.4)]"
+           animate={{ rotate: rotation }}
+           transition={{ duration: 5.5, ease: [0.15, 0.9, 0.1, 1] }}
+           style={{ transformOrigin: 'center' }}
+         >
+           <div className="w-full h-full rounded-full relative" style={{
+             background: `conic-gradient(${prizes.map((p, i) => `${i % 2 === 0 ? '#F97316' : '#EA580C'} ${i * (360/prizes.length)}deg ${(i+1) * (360/prizes.length)}deg`).join(', ')})`
+           }}>
+             {prizes.map((p, i) => (
+                <div key={i} className="absolute inset-0 flex justify-center" style={{ transform: `rotate(${i * (360/prizes.length) + (360/prizes.length)/2}deg)` }}>
+                   <div className="pt-8 text-white font-black text-xs md:text-xl drop-shadow-md" style={{ writingMode: 'vertical-rl' }}>{(p?.name || '').toUpperCase()}</div>
+                </div>
+             ))}
+           </div>
+         </motion.div>
+         {/* Center dot */}
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-slate-900 border-4 border-slate-700 rounded-full shadow-xl flex items-center justify-center">
+           <Star size={24} className="text-orange-500" />
+         </div>
+       </div>
+       
+       <motion.button 
+         onClick={handleSpin}
+         disabled={spinning}
+         whileHover={{ scale: 1.05 }}
+         whileTap={{ scale: 0.95 }}
+         className="px-12 py-5 rounded-full text-xl md:text-2xl font-black text-white disabled:opacity-50"
+         style={{ background: 'linear-gradient(135deg, #F59E0B, #EA580C)', boxShadow: '0 8px 30px rgba(245, 158, 11, 0.4)' }}
+       >
+         {spinning ? 'GIRANDO...' : '¡GIRAR AHORA!'}
+       </motion.button>
+    </motion.div>
+  );
+}
+
 export function MonasAlbumPage() {
   const navigate = useNavigate();
   const { isDark } = useApp();
@@ -880,16 +852,21 @@ export function MonasAlbumPage() {
   const [activeCategory, setActiveCategory] = useState('todas');
   const [selectedMona, setSelectedMona] = useState<Mona | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [pendingEnvelope, setPendingEnvelope] = useState<{ envelope: QREnvelope; cards: Mona[] } | null>(null);
-  const [usedQRCodes, setUsedQRCodes] = useState<string[]>([]);
-  const [showRewardModal, setShowRewardModal] = useState<typeof REWARDS[0] | null>(null);
-  const [claimedRewards, setClaimedRewards] = useState<string[]>([]);
-  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const [showEventCodeModal, setShowEventCodeModal] = useState(false);
+  const [pendingEnvelope, setPendingEnvelope] = useState<{ envelope: EventEnvelope; cards: Mona[] } | null>(null);
+  const [usedEventCodes, setUsedEventCodes] = useState<string[]>([]);
+  const [showRewardModal, setShowRewardModal] = useState<typeof CAFETERIA_PRIZES[0] | null>(null);
+  const [claimedRewards, setClaimedRewards] = useState<(typeof CAFETERIA_PRIZES[0])[]>([]);
   
   useEffect(() => {
-    if (selectedMona || selectedBadge) setIsFlipped(false);
-  }, [selectedMona, selectedBadge]);
+    if (selectedMona) setIsFlipped(false);
+    
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedMona(null);
+    };
+    if (selectedMona) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [selectedMona]);
 
   const [pastingMonaId, setPastingMonaId] = useState<string | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(true);
@@ -907,7 +884,11 @@ export function MonasAlbumPage() {
   const unlockedCount = unlockedMonas.length;
   const completionPct = Math.round((unlockedCount / totalMonas) * 100);
   const totalXP = unlockedMonas.reduce((sum, m) => sum + m.xp, 0);
-  const scannedCount = usedQRCodes.length;
+  const scannedCount = usedEventCodes.length;
+  
+  // Nivel calculation (1 nivel por cada 500 XP)
+  const currentLevel = Math.floor(totalXP / 500) + 1;
+  const availableSpins = currentLevel - 1 - claimedRewards.length;
   const swipeStartX = useRef(0);
   const swipeActive = useRef(false);
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -930,20 +911,9 @@ export function MonasAlbumPage() {
     duration: ((i * 11 + 3) % 3) + 2,
     delay: ((i * 7 + 2) % 20) * 0.1,
   })), []);
-  const categoryMap: Record<string, string[]> = {
-    'live-music': ['cultura'],
-    'outdoor': ['deporte'],
-    'study': ['academia'],
-    'foodie': ['social', 'especial'],
-    'gaming': ['tecnología'],
-    'arte': ['cultura'],
-  };
   const filteredMonas = activeCategory === 'todas'
     ? collection
-    : collection.filter(m => {
-        const mappedCategories = categoryMap[activeCategory];
-        return mappedCategories ? mappedCategories.includes(m.category) : false;
-      });
+    : collection.filter(m => m.category === activeCategory);
   const totalAlbumPages = Math.ceil(filteredMonas.length / monasPerPage);
   const pageMonas = filteredMonas.slice(albumPage * monasPerPage, (albumPage + 1) * monasPerPage);
   const goToPage = (dir: 1 | -1) => {
@@ -969,9 +939,9 @@ export function MonasAlbumPage() {
   };
   const RADIUS = 52;
   const CIRC = 2 * Math.PI * RADIUS;
-  const handleQRSuccess = (envelope: QREnvelope, monas: Mona[]) => {
-    setUsedQRCodes(prev => [...prev, envelope.code.toUpperCase()]);
-    setShowQRModal(false);
+  const handleEventCodeSuccess = (envelope: EventEnvelope, monas: Mona[]) => {
+    setUsedEventCodes(prev => [...prev, envelope.code.toUpperCase()]);
+    setShowEventCodeModal(false);
     setTimeout(() => {
       setPendingEnvelope({ envelope, cards: monas });
     }, 300);
@@ -987,9 +957,17 @@ export function MonasAlbumPage() {
     );
     setPendingEnvelope(null);
   };
-  const claimReward = (reward: typeof REWARDS[0]) => {
-    setClaimedRewards(prev => [...prev, reward.id]);
-    setShowRewardModal(null);
+  const claimReward = (reward: typeof CAFETERIA_PRIZES[0]) => {
+    setClaimedRewards(prev => [...prev, reward]);
+    setShowRewardModal(reward);
+  };
+  
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [showRouletteModal, setShowRouletteModal] = useState(false);
+
+  const handleSpinRoulette = () => {
+    if (availableSpins <= 0 || isSpinning) return;
+    setShowRouletteModal(true);
   };
   const handleCloseWelcome = () => {
     setShowWelcomeModal(false);
@@ -997,7 +975,7 @@ export function MonasAlbumPage() {
   const handleOpenWelcomeFromInfo = () => {
     setShowWelcomeModal(true);
   };
-  const availableQRCodes = QR_ENVELOPES.filter(e => !usedQRCodes.includes(e.code.toUpperCase())).length;
+  const availableEventCodes = EVENT_ENVELOPES.filter(e => !usedEventCodes.includes(e.code.toUpperCase())).length;
   return (
     <div className="min-h-screen pb-32 relative overflow-x-hidden">
       {}
@@ -1035,13 +1013,16 @@ export function MonasAlbumPage() {
         )}
       </div>
       <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto flex flex-col gap-6 relative z-10">
-            {/* ROW 1: Stats & QR */}
-            <div className="flex flex-col md:flex-row gap-6 w-full md:items-center">
-              <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2rem] p-6 grid grid-cols-3 gap-y-6 md:flex md:flex-row items-center justify-around shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
-                {/* Circular Progress */}
-                <div className="col-span-3 flex flex-col items-center justify-center w-full md:w-auto md:mb-0">
+            {/* ROW 1: Stats, Mascot & QR */}
+            <div className="flex flex-col md:flex-row w-full justify-between items-center gap-10 md:gap-6 xl:gap-12 relative z-20 mt-4 md:mt-12 mb-8 md:mb-12">
+              
+              {/* Bloque 1: Estadísticas (Cuadrado 2x2) */}
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 grid grid-cols-2 gap-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-white/5 w-full md:flex-1 md:max-w-[400px] aspect-square content-center justify-items-center relative z-20 order-2 md:order-1">
+                
+                {/* 1. Porcentaje */}
+                <div className="flex flex-col items-center justify-center w-full">
                   <div className="relative mx-auto flex justify-center" style={{ width: 130, height: 130 }}>
-                    <svg width={130} height={130} viewBox="0 0 130 130">
+                    <svg width={130} height={130} viewBox="0 0 130 130" className="drop-shadow-lg">
                       <circle cx={65} cy={65} r={RADIUS} fill="none" stroke={isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9"} strokeWidth={10} />
                       <motion.circle
                         cx={65} cy={65} r={RADIUS}
@@ -1073,213 +1054,116 @@ export function MonasAlbumPage() {
                       >
                         {completionPct}%
                       </motion.span>
-                      <span className="text-[10px] font-bold text-blue-500">completado</span>
-                      <Star size={12} className="text-blue-500 mt-1" />
+                      <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-0.5">completado</span>
                     </div>
                   </div>
                 </div>
-                
-                <div className="hidden md:block w-px h-16 bg-slate-100 dark:bg-white/10" />
 
-                {/* --- MOBILE STATS ROW (2x2 Grid) --- */}
-                <div className="md:hidden grid grid-cols-2 w-full mt-8 gap-y-8 self-stretch">
-                  <div className="flex flex-col items-center justify-center">
-                    <Library size={24} className="text-blue-500 mb-2" />
-                    <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">{unlockedCount}/{totalMonas}</span>
-                    <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Monas</span>
-                  </div>
-                  <div className="flex flex-col items-center justify-center">
-                    <Star size={24} className="text-blue-500 mb-2" />
-                    <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">{totalXP.toLocaleString()}</span>
-                    <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">XP Total</span>
-                  </div>
-                  <div className="col-span-2 flex flex-col items-center justify-center">
-                    <QrCode size={24} className="text-blue-500 mb-2" />
-                    <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">{scannedCount}</span>
-                    <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">QR Escan.</span>
-                  </div>
+                {/* 2. Monas */}
+                <div className="flex flex-col items-center justify-center w-full">
+                  <Library size={36} className="text-blue-500 mb-3" />
+                  <span className="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white leading-none">{unlockedCount}/{totalMonas}</span>
+                  <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-2">Monas</span>
                 </div>
 
-                {/* --- DESKTOP STATS (Flat structure via display: contents) --- */}
-                <div className="hidden md:contents">
-                  <div className="flex flex-col items-center justify-center">
-                    <Library size={24} className="text-blue-500 mb-2" />
-                    <span className="text-2xl font-black text-slate-800 dark:text-white">{unlockedCount}/{totalMonas}</span>
-                    <span className="text-xs sm:text-sm font-bold text-blue-500">Monas</span>
-                  </div>
+                {/* 3. XP Total */}
+                <div className="flex flex-col items-center justify-center w-full mt-2 md:mt-0">
+                  <Star size={36} className="text-blue-500 mb-3" />
+                  <span className="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white leading-none">{totalXP.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-2">XP Total</span>
+                </div>
 
-                  <div className="w-px h-16 bg-slate-100 dark:bg-white/10" />
-
-                  <div className="flex flex-col items-center justify-center">
-                    <Star size={24} className="text-blue-500 mb-2" />
-                    <span className="text-2xl font-black text-slate-800 dark:text-white">{totalXP.toLocaleString()}</span>
-                    <span className="text-xs sm:text-sm font-bold text-blue-500">XP Total</span>
-                  </div>
-
-                  <div className="w-px h-16 bg-slate-100 dark:bg-white/10" />
-
-                  <div className="flex flex-col items-center justify-center">
-                    <QrCode size={24} className="text-blue-500 mb-2" />
-                    <span className="text-2xl font-black text-slate-800 dark:text-white">{scannedCount}</span>
-                    <span className="text-xs sm:text-sm font-bold text-blue-500 whitespace-nowrap">QR Escan.</span>
-                  </div>
+                {/* 4. Códigos */}
+                <div className="flex flex-col items-center justify-center w-full mt-2 md:mt-0">
+                  <Gift size={36} className="text-blue-500 mb-3" />
+                  <span className="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white leading-none">{scannedCount}</span>
+                  <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-2">Códigos</span>
                 </div>
               </div>
 
-              {/* Floating QR Button */}
-              <div className="flex flex-col items-center shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                <motion.button
-                  onClick={() => setShowQRModal(true)}
+              {/* Bloque 2: Mascota (Centro) */}
+              <div className="flex w-full md:flex-1 items-center justify-center relative aspect-square order-1 md:order-2 mt-8 md:mt-0">
+                <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-400/10 rounded-full blur-3xl scale-[1.5] animate-pulse pointer-events-none" />
+                <img 
+                  src={imgMascota} 
+                  alt="Mascota Patricia" 
+                  className="w-full h-full object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)] scale-[1.3] md:scale-[1.6] lg:scale-[1.8] hover:scale-[1.4] md:hover:scale-[1.7] lg:hover:scale-[1.9] transition-transform duration-500 ease-out relative z-30 md:-translate-y-6 pointer-events-auto" 
+                />
+              </div>
+
+              {/* Bloque 3: Botón Flotante (Cuadrado igual al primero) */}
+              <div 
+                className="w-full md:flex-1 md:max-w-[400px] aspect-square flex flex-col items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.2)] border border-slate-200/50 dark:border-white/5 hover:bg-white dark:hover:bg-slate-900/80 transition-all duration-300 group cursor-pointer z-20 order-3"
+                onClick={() => setShowEventCodeModal(true)}
+              >
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full md:w-20 h-16 md:h-20 rounded-[1.5rem] flex items-center justify-center bg-orange-500 shadow-lg shadow-orange-500/30"
+                  className="w-28 h-28 md:w-32 md:h-32 rounded-[2rem] flex items-center justify-center bg-gradient-to-tr from-orange-600 to-orange-400 shadow-[0_8px_30px_rgba(249,115,22,0.4)] transition-shadow mb-6 group-hover:shadow-[0_12px_40px_rgba(249,115,22,0.6)]"
                 >
-                  <QrCode size={32} className="text-white" />
-                </motion.button>
-                <span className="hidden md:block text-sm font-bold text-orange-500 mt-2">QR</span>
+                  <Gift size={48} className="text-white" />
+                </motion.div>
+                <span className="text-xl md:text-2xl font-black text-orange-500 text-center leading-tight group-hover:scale-105 transition-transform">Ingresar<br/>Código</span>
               </div>
             </div>
 
-            {/* ROW 2: Recompensas */}
-            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-black flex items-center gap-2 text-slate-800 dark:text-white">
-                  <Trophy size={20} className="text-orange-500" /> Recompensas del Álbum
+            {/* ROW 2: Recompensas y Ruleta */}
+            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1">
+                <h3 className="text-xl font-black flex items-center gap-2 text-slate-800 dark:text-white mb-2">
+                  <Trophy size={24} className="text-orange-500" /> Ruleta de Recompensas
                 </h3>
-                <button className="text-sm font-bold text-blue-500 hover:text-blue-600 transition-colors">
-                  Ver todas las recompensas
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {REWARDS.map((reward, i) => {
-                  const reached = completionPct >= reward.pct;
-                  const claimed = claimedRewards.includes(reward.id);
-                  const isGold = reward.pct === 100;
-                  
-                  return (
-                    <button
-                      key={reward.id}
-                      onClick={() => reached && !claimed && setShowRewardModal(reward)}
-                      className={`relative rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all ${
-                        reached && !claimed 
-                          ? 'bg-[#F0FAFD] dark:bg-cyan-900/20 border-2 border-[#5CE1E6] cursor-pointer hover:shadow-lg' 
-                          : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 opacity-90'
-                      }`}
-                    >
-                      {reached && !claimed && (
-                        <motion.div
-                          className="absolute inset-0 pointer-events-none rounded-2xl"
-                          animate={{ opacity: [0.1, 0.3, 0.1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          style={{ background: 'linear-gradient(135deg, transparent, rgba(92,225,230,0.4), transparent)' }}
-                        />
-                      )}
-                      
-                      {claimed ? (
-                        <CheckCircle size={32} className="text-[#FFB13B]" />
-                      ) : (
-                        <div className={`p-3 rounded-full ${reached ? 'bg-[#E0F7FA] dark:bg-cyan-900/40' : 'bg-slate-100 dark:bg-slate-800'}`}>
-                           <EmojiIcon emoji={reward.emoji} size={28} color={reached ? '#00BCD4' : '#94a3b8'} strokeWidth={2} />
-                        </div>
-                      )}
-                      
-                      <div className="text-center z-10">
-                        <h4 className="text-sm font-black text-slate-800 dark:text-white">{reward.title}</h4>
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{reward.subtitle}</p>
-                      </div>
-                      
-                      {reached && !claimed ? (
-                        <div className="w-full mt-2 py-2 rounded-xl bg-[#E0F7FA] dark:bg-cyan-900/60 text-[#00BCD4] text-xs font-black z-10">
-                          ¡RECLAMAR!
-                        </div>
-                      ) : claimed ? (
-                        <div className="w-full mt-2 py-2 rounded-xl bg-orange-100 dark:bg-orange-900/40 text-orange-500 text-xs font-black z-10">
-                          ¡RECLAMADO!
-                        </div>
-                      ) : (
-                        <div className="w-full mt-2 flex items-center justify-center py-2 rounded-xl bg-slate-100 dark:bg-slate-800 z-10">
-                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                            <span className={isGold ? "text-[#FFB13B]" : "text-[#4ADE80]"}>{reward.pct}%</span> necesario
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ROW 3: Medallas (Conexiones, Parches, Campus) */}
-            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-white/10">
-              
-              {/* Conexiones */}
-              <div className="flex flex-col md:pr-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
-                    <Award size={18} className="text-blue-500" /> Medallas
-                  </h3>
-                  <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todas</button>
-                </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {BADGES.filter(b => b.category === 'conexiones').map((badge, i) => (
-                    <div key={badge.id} className="w-[85px] shrink-0">
-                      <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Parches */}
-              <div className="flex flex-col pt-6 md:pt-0 md:px-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
-                    <Shield size={18} className="text-blue-500" /> Parches
-                  </h3>
-                  <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todas</button>
-                </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {BADGES.filter(b => b.category === 'parches').map((badge, i) => (
-                    <div key={badge.id} className="w-[85px] shrink-0">
-                      <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Campus */}
-              <div className="flex flex-col pt-6 md:pt-0 md:pl-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
-                    <Building2 size={18} className="text-blue-500" /> Campus
-                  </h3>
-                  <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todas</button>
-                </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                  {BADGES.filter(b => b.category === 'campus').map((badge, i) => (
-                    <div key={badge.id} className="w-[85px] shrink-0">
-                      <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            {/* ROW 4: Especiales */}
-            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-black flex items-center gap-2 text-slate-800 dark:text-white">
-                  <Sparkles size={18} className="text-orange-500" /> Especiales
-                </h3>
-                <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600">Ver todos</button>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {BADGES.filter(b => b.category === 'especiales').map((badge, i) => (
-                  <div key={badge.id} className="w-[85px] shrink-0">
-                    <BadgeCard badge={badge} i={i} isDark={isDark} onClick={() => setSelectedBadge(badge)} legendaryGlow={badge.rarity === 'legendario'} />
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                  Sube de nivel obteniendo monas y gana recompensas en las cafeterías. <strong>Nivel actual: {currentLevel}</strong>
+                </p>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-orange-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((totalXP % 500) / 500) * 100}%` }}
+                    />
                   </div>
-                ))}
+                  <span className="text-xs font-bold text-slate-500">{totalXP % 500} / 500 XP</span>
+                </div>
+                {availableSpins > 0 ? (
+                  <motion.button
+                    onClick={handleSpinRoulette}
+                    disabled={isSpinning}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full md:w-auto px-8 py-4 bg-orange-500 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    <PartyPopper size={24} />
+                    {`¡Girar Ruleta! (${availableSpins} disp.)`}
+                  </motion.button>
+                ) : (
+                  <div className="w-full md:w-auto inline-block px-6 py-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-500 font-bold text-sm">
+                    Consigue {500 - (totalXP % 500)} XP más para el próximo giro.
+                  </div>
+                )}
+              </div>
+              <div className="w-full md:w-1/3 flex flex-col gap-3">
+                <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Tus premios</h4>
+                {claimedRewards.length === 0 ? (
+                  <div className="text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 dark:text-slate-600 text-sm font-medium">
+                    Aún no tienes premios.<br/>¡Sube al nivel 2 para tu primer giro!
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2">
+                    {claimedRewards.map((prize, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-white/5">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${prize.color}20` }}>
+                          <EmojiIcon emoji={prize.emoji} size={20} color={prize.color} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-slate-800 dark:text-white">{prize.name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Nivel {idx + 2}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1367,8 +1251,19 @@ export function MonasAlbumPage() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                className="w-full flex flex-col md:flex-row gap-8 md:gap-0"
+                className="w-full flex flex-col md:flex-row gap-8 md:gap-0 cursor-grab active:cursor-grabbing"
                 style={{ transformStyle: 'preserve-3d', transformOrigin: 'center' }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset }) => {
+                  const threshold = 50;
+                  if (offset.x < -threshold && albumPage < totalAlbumPages - 1) {
+                    goToPage(1);
+                  } else if (offset.x > threshold && albumPage > 0) {
+                    goToPage(-1);
+                  }
+                }}
               >
                 
                 {/* === MOBILE GRID (1 column wrapper) === */}
@@ -1386,11 +1281,11 @@ export function MonasAlbumPage() {
                 {/* === DESKTOP SPREAD (2 columns wrapper) === */}
                 {/* Left Page */}
                 <div className="hidden md:grid w-1/2 pr-12 grid-cols-3 gap-6 auto-rows-max">
-                  {pageMonas.slice(0, 6).map((mona, i) => (
+                  {pageMonas.slice(0, 9).map((mona, i) => (
                     <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
                   ))}
-                  {pageMonas.length < 6 && albumPage === totalAlbumPages - 1 &&
-                    Array.from({ length: 6 - pageMonas.length }).map((_, i) => (
+                  {pageMonas.length < 9 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 9 - pageMonas.length }).map((_, i) => (
                       <EmptySlotRender key={`el-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
                     ))
                   }
@@ -1398,17 +1293,17 @@ export function MonasAlbumPage() {
 
                 {/* Right Page */}
                 <div className="hidden md:grid w-1/2 pl-12 grid-cols-3 gap-6 auto-rows-max">
-                  {pageMonas.slice(6, 12).map((mona, i) => (
-                    <MonaSlotRender key={mona.id} mona={mona} i={i + 6} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                  {pageMonas.slice(9, 18).map((mona, i) => (
+                    <MonaSlotRender key={mona.id} mona={mona} i={i + 9} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
                   ))}
-                  {pageMonas.length >= 6 && pageMonas.length < 12 && albumPage === totalAlbumPages - 1 &&
-                    Array.from({ length: 12 - pageMonas.length }).map((_, i) => (
+                  {pageMonas.length >= 9 && pageMonas.length < 18 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 18 - pageMonas.length }).map((_, i) => (
                       <EmptySlotRender key={`er-${i}`} index={pageMonas.length + i + (albumPage * monasPerPage)} />
                     ))
                   }
-                  {pageMonas.length < 6 && albumPage === totalAlbumPages - 1 &&
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <EmptySlotRender key={`er-all-${i}`} index={6 + i + (albumPage * monasPerPage)} />
+                  {pageMonas.length < 9 && albumPage === totalAlbumPages - 1 &&
+                    Array.from({ length: 9 }).map((_, i) => (
+                      <EmptySlotRender key={`er-all-${i}`} index={9 + i + (albumPage * monasPerPage)} />
                     ))
                   }
                 </div>
@@ -1485,11 +1380,11 @@ export function MonasAlbumPage() {
       )}
       {}
       <AnimatePresence>
-        {showQRModal && (
-          <QRScannerModal
-            onClose={() => setShowQRModal(false)}
-            onSuccess={handleQRSuccess}
-            usedCodes={usedQRCodes}
+        {showEventCodeModal && (
+          <EventCodeModal
+            onClose={() => setShowEventCodeModal(false)}
+            onSuccess={handleEventCodeSuccess}
+            usedCodes={usedEventCodes}
           />
         )}
       </AnimatePresence>
@@ -1560,9 +1455,15 @@ export function MonasAlbumPage() {
                         <RarityStars count={R[selectedMona.rarity].stars} color={R[selectedMona.rarity].textColor} />
                       </div>
                       <div className="flex-1 flex items-center justify-center z-10 w-full">
-                        <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${R[selectedMona.rarity].glow}40` }}>
-                          <EmojiIcon emoji={selectedMona.emoji} size={80} color="white" strokeWidth={1.2} />
-                        </div>
+                        {selectedMona.image ? (
+                          <div className="w-48 h-48 flex items-center justify-center relative drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)]">
+                            <img src={selectedMona.image} alt={selectedMona.name} className="w-full h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${R[selectedMona.rarity].glow}40` }}>
+                            <EmojiIcon emoji={selectedMona.emoji} size={80} color="white" strokeWidth={1.2} />
+                          </div>
+                        )}
                       </div>
                       <div className="w-full text-center z-10 bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
                         <p className="text-xl font-black mb-1" style={{ color: R[selectedMona.rarity].textColor }}>{selectedMona.name}</p>
@@ -1617,24 +1518,19 @@ export function MonasAlbumPage() {
                         <p className="text-white/80 text-sm leading-relaxed text-center">"{selectedMona.description}"</p>
                       </div>
 
-                      <div className="mt-6 space-y-3">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2">
-                            <Zap size={14} style={{ color: R[selectedMona.rarity].textColor }} />
-                            <span className="text-xs font-bold text-white/60">Recompensa</span>
+                      <div className="mt-6 flex flex-col items-center justify-center">
+                        {selectedMona.unlockedAt ? (
+                          <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 w-full">
+                            <span className="text-[10px] uppercase tracking-widest text-white/40">Fecha de obtención</span>
+                            <div className="flex items-center gap-2">
+                              <CheckCircle size={16} className="text-green-400" />
+                              <span className="text-sm text-green-400 font-black tracking-wide">{selectedMona.unlockedAt}</span>
+                            </div>
                           </div>
-                          <span className="text-sm font-black" style={{ color: R[selectedMona.rarity].textColor }}>+{selectedMona.xp} XP</span>
-                        </div>
-                        
-                        <div className="flex flex-col gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10">
-                          <span className="text-[10px] uppercase tracking-widest text-white/40">Condición de desbloqueo</span>
-                          <p className="text-xs text-white/70">{selectedMona.condition}</p>
-                        </div>
-                        
-                        {selectedMona.unlockedAt && (
-                          <div className="flex items-center justify-center gap-1.5 pt-2">
-                            <CheckCircle size={12} className="text-green-400" />
-                            <span className="text-[10px] text-green-400 font-bold tracking-wide">Obtenida: {selectedMona.unlockedAt}</span>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 w-full">
+                            <span className="text-[10px] uppercase tracking-widest text-white/40">Fecha de obtención</span>
+                            <span className="text-sm text-white/70 font-black tracking-wide">Desconocida</span>
                           </div>
                         )}
                       </div>
@@ -1646,22 +1542,17 @@ export function MonasAlbumPage() {
                       </div>
                       <h3 className="text-white/70 font-black text-xl mb-2">Mona Bloqueada</h3>
                       <p className="text-white/40 text-sm leading-relaxed px-4 mb-8">
-                        Para revelar esta lámina, necesitas cumplir su condición o escanear un código QR válido.
+                        Para revelar esta lámina, necesitas ingresar un código de evento válido.
                       </p>
                       
-                      <div className="w-full flex flex-col gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 mb-8 text-left">
-                        <span className="text-[10px] uppercase tracking-widest text-white/40">Condición requerida</span>
-                        <p className="text-xs text-white/70">{selectedMona.condition}</p>
-                      </div>
-
                       <motion.button
                         whileTap={{ scale: 0.96 }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedMona(null); setTimeout(() => setShowQRModal(true), 200); }}
+                        onClick={(e) => { e.stopPropagation(); setSelectedMona(null); setTimeout(() => setShowEventCodeModal(true), 200); }}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-white text-sm font-bold shadow-lg"
                         style={{ background: GOLD_GRADIENT }}
                       >
-                        <QrCode size={16} />
-                        Escanear Código QR
+                        <Gift size={16} />
+                        Ingresar Código de Evento
                       </motion.button>
                     </div>
                   )}
@@ -1677,6 +1568,18 @@ export function MonasAlbumPage() {
         )}
       </AnimatePresence>
       {}
+      <AnimatePresence>
+        {showRouletteModal && (
+          <RouletteModal 
+            prizes={CAFETERIA_PRIZES} 
+            onClose={() => setShowRouletteModal(false)}
+            onFinish={(prize) => {
+              setShowRouletteModal(false);
+              claimReward(prize);
+            }}
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {showRewardModal && (
           <>
@@ -1728,195 +1631,24 @@ export function MonasAlbumPage() {
                   </div>
                   
                   <div className="w-full text-center bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
-                    <h3 className="text-xl font-black mb-1" style={{ color: showRewardModal.color }}>{showRewardModal.title}</h3>
-                    <p className="text-xs uppercase tracking-widest text-white/50">{showRewardModal.subtitle}</p>
-                    <p className="text-white/80 text-sm mt-3 leading-relaxed">"{showRewardModal.description}"</p>
+                    <h3 className="text-xl font-black mb-1" style={{ color: showRewardModal.color }}>{showRewardModal.name}</h3>
+                    <p className="text-xs uppercase tracking-widest text-white/50">¡Premio de la Ruleta!</p>
+                    <p className="text-white/80 text-sm mt-3 leading-relaxed">"Muestra esta pantalla en la caja de cualquier cafetería del campus para reclamar tu premio."</p>
                   </div>
                 </div>
 
                 <motion.button
                   whileTap={{ scale: 0.96 }}
-                  onClick={() => claimReward(showRewardModal)}
+                  onClick={() => setShowRewardModal(null)}
                   className="w-full mt-4 py-4 rounded-2xl text-white font-black text-sm uppercase tracking-widest z-10 flex items-center justify-center gap-2"
                   style={{
-                    background: showRewardModal.pct === 100 ? GOLD_GRADIENT : `linear-gradient(135deg, ${showRewardModal.color}, ${showRewardModal.color}CC)`,
+                    background: `linear-gradient(135deg, ${showRewardModal.color}, ${showRewardModal.color}CC)`,
                     boxShadow: `0 8px 24px ${showRewardModal.color}40`
                   }}
                 >
                   <Gift size={18} />
-                  ¡Reclamar!
+                  ¡Entendido!
                 </motion.button>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
-      {}
-      <AnimatePresence>
-        {selectedBadge && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-40"
-              onClick={() => setSelectedBadge(null)}
-            />
-            {/* Botón X fuera de la carta */}
-            <button
-              onClick={() => setSelectedBadge(null)}
-              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
-            >
-              <X size={20} className="text-white" />
-            </button>
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-              style={{ perspective: '1200px' }}
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                animate={{ scale: 1, opacity: 1, y: 0, rotateY: isFlipped ? 180 : 0 }}
-                exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                onClick={() => setIsFlipped(!isFlipped)}
-                className="relative w-[320px] sm:w-[360px] cursor-pointer pointer-events-auto"
-                style={{ aspectRatio: '3/4', transformStyle: 'preserve-3d' }}
-              >
-                {/* CARA FRONTAL (FRONT FACE) */}
-                <div
-                  className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col items-center justify-between py-8 px-6"
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    background: selectedBadge.unlocked ? `linear-gradient(135deg, ${selectedBadge.color}40 0%, ${selectedBadge.color}10 100%)` : 'linear-gradient(160deg, #0A1628, #112240)',
-                    border: `2px solid ${selectedBadge.unlocked ? selectedBadge.color : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: selectedBadge.unlocked ? `0 12px 48px ${selectedBadge.color}60` : '0 12px 48px rgba(0,0,0,0.5)',
-                  }}
-                >
-                  {selectedBadge.unlocked ? (
-                    <>
-                      {selectedBadge.rarity === 'legendario' && (
-                        <motion.div
-                          className="absolute inset-0"
-                          animate={{ opacity: [0.3, 0.7, 0.3] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                          style={{ background: `linear-gradient(135deg, transparent, ${selectedBadge.color}40, transparent)` }}
-                        />
-                      )}
-                      <div className="flex justify-between w-full z-10">
-                        <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: selectedBadge.color }}>
-                          {selectedBadge.rarity}
-                        </span>
-                        <selectedBadge.Icon size={16} style={{ color: selectedBadge.color }} />
-                      </div>
-                      <div className="flex-1 flex items-center justify-center z-10 w-full relative">
-                        {selectedBadge.imgSrc ? (
-                          <div className="w-48 h-48 flex items-center justify-center">
-                            <img src={selectedBadge.imgSrc} alt={selectedBadge.name} className="w-full h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.5)]" />
-                          </div>
-                        ) : (
-                          <div className="w-40 h-40 flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${selectedBadge.color}40` }}>
-                            <selectedBadge.Icon size={80} color={selectedBadge.color} strokeWidth={1.2} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="w-full text-center z-10 bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
-                        <p className="text-xl font-black mb-1" style={{ color: selectedBadge.color }}>{selectedBadge.name}</p>
-                        <p className="text-xs uppercase tracking-widest text-white/50">
-                          Medalla de {selectedBadge.category}
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between w-full z-10 opacity-30">
-                        <span className="text-[10px] font-black tracking-widest text-white">BLOQUEADA</span>
-                        <Lock size={14} className="text-white" />
-                      </div>
-                      <div className="flex-1 flex items-center justify-center z-10 relative">
-                        {selectedBadge.imgSrc ? (
-                          <div className="w-40 h-40 flex items-center justify-center opacity-20 grayscale brightness-50">
-                            <img src={selectedBadge.imgSrc} alt="Locked" className="w-full h-full object-contain" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Lock size={48} className="text-white drop-shadow-lg" />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-32 h-32 flex items-center justify-center rounded-full bg-white/5">
-                            <Lock size={48} className="text-white/20" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="w-full text-center z-10 bg-black/40 rounded-2xl py-4 px-3 border border-white/5">
-                        <p className="text-xl font-black mb-1 text-white/40">???</p>
-                        <p className="text-xs uppercase tracking-widest text-white/20">Medalla Oculta</p>
-                      </div>
-                    </>
-                  )}
-                  {/* Hint to flip */}
-                  <div className="absolute bottom-3 left-0 right-0 text-center z-10">
-                    <p className="text-[9px] text-white/30 uppercase tracking-widest animate-pulse">Toca para girar</p>
-                  </div>
-                </div>
-
-                {/* CARA TRASERA (BACK FACE) */}
-                <div
-                  className="absolute inset-0 rounded-3xl overflow-hidden flex flex-col px-6 py-8"
-                  style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)',
-                    background: '#0A1628',
-                    border: `2px solid ${selectedBadge.unlocked ? selectedBadge.color : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: selectedBadge.unlocked ? `0 12px 48px ${selectedBadge.color}60` : '0 12px 48px rgba(0,0,0,0.5)',
-                  }}
-                >
-                  {selectedBadge.unlocked ? (
-                    <div className="flex flex-col h-full">
-                      <div className="text-center mb-6">
-                        <h3 className="text-white font-black text-2xl leading-tight">{selectedBadge.name}</h3>
-                        <p className="text-blue-400 text-xs uppercase tracking-widest mt-1" style={{ color: selectedBadge.color }}>{selectedBadge.category}</p>
-                      </div>
-                      
-                      <div className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/10 overflow-y-auto custom-scrollbar">
-                        <p className="text-white/80 text-sm leading-relaxed text-center">"{selectedBadge.description}"</p>
-                      </div>
-
-                      <div className="mt-6 space-y-3">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2">
-                            <Zap size={14} style={{ color: selectedBadge.color }} />
-                            <span className="text-xs font-bold text-white/60">Recompensa</span>
-                          </div>
-                          <span className="text-sm font-black" style={{ color: selectedBadge.color }}>+{selectedBadge.xp} XP</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-center gap-1.5 pt-2">
-                          <CheckCircle size={14} className="text-green-400" />
-                          <span className="text-[11px] text-green-400 font-bold tracking-wide">Medalla Desbloqueada</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col h-full items-center justify-center text-center">
-                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                        <Lock size={24} className="text-white/30" />
-                      </div>
-                      <h3 className="text-white/70 font-black text-xl mb-2">Medalla Bloqueada</h3>
-                      <p className="text-white/40 text-sm leading-relaxed px-4 mb-8">
-                        Para revelar esta medalla, necesitas completar su desafío correspondiente en la aplicación.
-                      </p>
-                      
-                      <div className="w-full flex flex-col gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 mb-8 text-left">
-                        <span className="text-[10px] uppercase tracking-widest text-white/40">Recompensa esperada</span>
-                        <p className="text-xs font-bold" style={{ color: selectedBadge.color }}>+{selectedBadge.xp} XP</p>
-                      </div>
-                    </div>
-                  )}
-                  {/* Hint to flip back */}
-                  <div className="absolute bottom-3 left-0 right-0 text-center z-10 pointer-events-none">
-                    <p className="text-[9px] text-white/30 uppercase tracking-widest">Toca para regresar</p>
-                  </div>
-                </div>
-
               </motion.div>
             </div>
           </>
@@ -1928,82 +1660,78 @@ export function MonasAlbumPage() {
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/85 backdrop-blur-md z-40"
+              className={`fixed inset-0 backdrop-blur-[24px] z-40 transition-colors duration-300 ${
+                isDark ? 'bg-black/75' : 'bg-black/40'
+              }`}
             />
             {/* Botón X fuera de la carta */}
             <button
               onClick={handleCloseWelcome}
-              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
+              className={`fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md border ${
+                isDark 
+                  ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white' 
+                  : 'bg-black/5 hover:bg-black/10 border-black/10 text-gray-800'
+              }`}
             >
-              <X size={20} className="text-white" />
+              <X size={20} />
             </button>
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-5">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-              className="relative w-full max-w-[400px] rounded-3xl p-6 max-h-[85vh] overflow-y-auto pointer-events-auto custom-scrollbar"
-              style={{ 
-                background: 'linear-gradient(160deg, #0A1628, #112240)', 
-                border: '2px solid rgba(59,130,246,0.4)',
-                boxShadow: '0 12px 48px rgba(59,130,246,0.2)'
-              }}
-            >
-              <div className="text-center mb-5">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: GOLD_GRADIENT }}>
-                  <Library size={32} className="text-white" />
-                </div>
-                <h2 className="text-white font-black text-2xl">¡Bienvenido al Álbum!</h2>
-                <p className="text-blue-400 text-sm mt-1">Colecciona Patricias y gana recompensas</p>
-              </div>
-              <div className="space-y-4 mb-6">
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59,130,246,0.15)' }}>
-                    <Library size={20} className="text-blue-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">Patricias (Láminas)</h3>
-                    <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Son coleccionables que obtienes al asistir a parches o escaneando códigos QR ocultos en el campus.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)' }}>
-                    <Award size={20} className="text-purple-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">Medallas</h3>
-                    <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Reconocimientos especiales que desbloqueas al alcanzar grandes hitos (conectar con gente, asistir a eventos y liderar parches).
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)' }}>
-                    <Trophy size={20} className="text-amber-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm">El Gran Objetivo</h3>
-                    <p className="text-white/70 text-xs mt-1 leading-relaxed">
-                      Coleccionar patricias y medallas suma <strong className="text-white font-black">XP</strong>. Al alcanzar metas de XP, ¡desbloquearás recompensas académicas como décimas y puntos reales para tus materias!
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {}
-              <motion.button
-                whileTap={{ scale: 0.96 }}
-                onClick={handleCloseWelcome}
-                className="w-full py-3.5 rounded-2xl text-white font-black text-sm"
-                style={{ background: GRADIENT }}
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+                className="relative w-full max-w-[420px] rounded-[32px] p-6 h-[62.5vh] max-h-[62.5vh] flex flex-col justify-between pointer-events-auto custom-scrollbar transition-all duration-300 overflow-y-auto"
+                style={{ 
+                  background: isDark ? 'linear-gradient(160deg, #0A1628, #112240)' : 'linear-gradient(160deg, #FDFCF8, #EDE9E0)', 
+                  border: isDark ? '2px solid rgba(59,130,246,0.4)' : '2px solid rgba(59,130,246,0.25)',
+                  boxShadow: isDark ? '0 12px 48px rgba(59,130,246,0.2)' : '0 12px 48px rgba(59,130,246,0.12)'
+                }}
               >
-                ¡Entendido!
-              </motion.button>
-            </motion.div>
+                <div>
+                  <div className="text-center mb-5">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 animate-bounce" style={{ background: GOLD_GRADIENT, animationDuration: '3s' }}>
+                      <Library size={28} className="text-white" />
+                    </div>
+                    <h2 className={`font-black text-2xl tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>¡Bienvenido al Álbum!</h2>
+                    <p className={`text-sm mt-1 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Colecciona Patricias y gana recompensas</p>
+                  </div>
+                  <div className="space-y-4 mb-6">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)' }}>
+                        <Library size={20} className={isDark ? "text-blue-400" : "text-blue-600"} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-bold text-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>Patricias (Láminas)</h3>
+                        <p className={`text-xs mt-1 leading-relaxed transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                          Son coleccionables que obtienes al asistir a parches o escaneando códigos QR ocultos en el campus.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: isDark ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.1)' }}>
+                        <Trophy size={20} className={isDark ? "text-amber-400" : "text-amber-600"} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-bold text-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>El Gran Objetivo</h3>
+                        <p className={`text-xs mt-1 leading-relaxed transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                          Coleccionar patricias suma <strong className={isDark ? "text-white font-black" : "text-gray-900 font-black"}>XP</strong>. Por cada 500 XP, subirás de nivel y obtendrás giros en la ruleta para ganar premios reales en las cafeterías.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <motion.button
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleCloseWelcome}
+                  className="w-full py-3 rounded-xl text-white font-black text-xs uppercase tracking-widest shadow-lg"
+                  style={{ background: GRADIENT }}
+                >
+                  ¡Entendido!
+                </motion.button>
+              </motion.div>
             </div>
           </>
         )}
