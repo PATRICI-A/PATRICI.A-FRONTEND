@@ -6,10 +6,9 @@ import patyImg from '../assets/patyProfile.png';
 import { useApp } from '../store/AppContext';
 import { monas, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { profileService } from '../profileService';
-import type { UserProfileData } from '../profileService';
+import { profileService } from '../services/profileService';
+import type { UserProfileData } from '../services/profileService';
 
-// (La función de MockQRCode sigue igual para tu diseño)
 function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
   const N = 21;
   const cell = size / N;
@@ -68,15 +67,11 @@ export function ProfilePage() {
   const [apiUser, setApiUser] = useState<UserProfileData | null>(null);
 
   useEffect(() => {
-    // 1. Pedimos los datos del perfil principal
     profileService.getMyProfile().then((data) => {
       if (data) {
         setApiUser(data);
-
-        // 2. INMEDIATAMENTE DESPUÉS pedimos la imagen al endpoint
         profileService.getProfileImage().then((imgUrl) => {
           if (imgUrl) {
-            // Actualiza el estado agregándole la imagen de verdad
             setApiUser((prev) => prev ? { ...prev, avatar: imgUrl } : null);
           }
         });
@@ -86,7 +81,6 @@ export function ProfilePage() {
 
   if (!currentUser) return null;
 
-  // Lógica segura: Si la API mandó una imagen, usa esa. Si no, usa el mock para que no quede vacía
   const activeAvatar = apiUser?.avatar && apiUser.avatar !== '' ? apiUser.avatar : currentUser.avatar;
 
   const activeUser = {

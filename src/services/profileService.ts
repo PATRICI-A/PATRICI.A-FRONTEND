@@ -1,8 +1,11 @@
-
 export interface UserProfileData {
+    career: string;
+    privacyLevel: string;
+    gender: string;
+    biography: string;
     id: string;
     name: string;
-    avatar?: string; // Aquí guardaremos la URL de la imagen descargada
+    avatar?: string;
     faculty: string;
     semester: number;
     xp: number;
@@ -10,6 +13,18 @@ export interface UserProfileData {
     streak: number;
     rankFaculty: number;
     interests: string[];
+    isAvailable?: boolean;
+}
+
+export interface UpdateProfileData {
+    name?: string;
+    biography?: string;      // API espera 'biography'
+    career?: string;         // API espera 'career'
+    secondaryCareer?: string;
+    semester?: number;
+    gender?: string;
+    privacyLevel?: string;
+    interests?: string[];
 }
 
 const API_BASE_URL = 'https://patricia-api-gateway-qa.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/api/v1';
@@ -26,30 +41,32 @@ export const profileService = {
             const response = await fetch(`${API_BASE_URL}/users/${USER_ID}`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${HARDCODED_TOKEN}`
                 },
             });
-
-            if (!response.ok) throw new Error("Error del API");
-
-            const data = await response.json();
-
-            return {
-                id: data.id || USER_ID,
-                name: data.name || 'Jeimmy Torres',
-                avatar: '', // Arranca vacío hasta que descarguemos la imagen real
-                faculty: data.faculty || 'Ingeniería de Sistemas',
-                semester: Number(data.semester) || 1,
-                xp: Number(data.xp) || 0,
-                activeParches: Number(data.activeParches || data.active_parches) || 0,
-                streak: Number(data.streak) || 0,
-                rankFaculty: Number(data.rankFaculty || data.rank_faculty) || 1,
-                interests: Array.isArray(data.interests) ? data.interests : [],
-            };
+            if (!response.ok) throw new Error("Error al obtener perfil");
+            return await response.json();
         } catch (error) {
-            console.error("Fallo al conectar con QA:", error);
+            console.error("Fallo:", error);
             return null;
+        }
+    },
+
+    updateProfile: async (data: UpdateProfileData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${USER_ID}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${HARDCODED_TOKEN}`
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error("Error al actualizar");
+            return await response.json();
+        } catch (error) {
+            console.error("Fallo al actualizar:", error);
+            throw error;
         }
     },
 
@@ -63,19 +80,17 @@ export const profileService = {
                 },
             });
 
-            if (!response.ok) return null; // Si no tiene foto, no rompe nada
+            if (!response.ok) return null;
 
-            // La imagen viaja como archivo binario (Blob)
             const blob = await response.blob();
-            return URL.createObjectURL(blob); // Esto crea una URL local para que React la pueda pintar
+            return URL.createObjectURL(blob);
         } catch (error) {
             console.error("Error al descargar la imagen:", error);
             return null;
         }
     },
 
-
-    // 3. OBTENER CATÁLOGO DE TAGS (Listo para tu página de Editar Perfil)
+    // 3. OBTENER CATÁLOGO DE TAGS
     getTagsCatalog: async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/users/tags/catalog`, {
@@ -91,5 +106,4 @@ export const profileService = {
             return [];
         }
     }
-
 };
