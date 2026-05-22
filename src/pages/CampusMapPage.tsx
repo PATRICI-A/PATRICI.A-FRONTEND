@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, MapPin, X, ChevronUp, ChevronDown, ChevronRight, Calendar,
   Building2, GraduationCap, Monitor, FlaskConical, Zap, Wrench, Radio,
-  Trophy, Activity, Droplets, Leaf, Coffee, UtensilsCrossed,
+  Trophy, Activity, Droplets, Leaf, UtensilsCrossed,
   Navigation, Car, Map, Cpu,
   LocateFixed, Locate, AlertTriangle, CheckCircle2, Loader2, AlertCircle,
 } from 'lucide-react';
@@ -71,7 +71,7 @@ const FILTERS = [
   { key: 'edificios', label: 'Edificios', Icon: Building2 },
   { key: 'zonas', label: 'Zonas', Icon: Leaf },
   { key: 'deporte', label: 'Deporte', Icon: Activity },
-  { key: 'alimento', label: 'Alimento', Icon: Coffee },
+  { key: 'alimento', label: 'Alimento', Icon: UtensilsCrossed },
   { key: 'bienestar', label: 'Bienestar', Icon: CheckCircle2 },
 ] as const;
 
@@ -614,7 +614,7 @@ export function CampusMapPage() {
                     className="w-full text-center text-[9px] font-black py-1.5 rounded-lg mt-1 flex items-center justify-center gap-1"
                     style={{ background: GOLD_GRADIENT, color: 'white' }}
                   >
-                    Ver evento <ChevronRight size={9} />
+                    Ver eventos <ChevronRight size={9} />
                   </button>
                 </div>
               ) : (
@@ -883,7 +883,7 @@ export function CampusMapPage() {
                         {lm && (
                           <p className="text-[9px] mt-1 font-medium flex items-center gap-1" style={{ color: lm.color }}>
                             <MapPin size={7} />
-                            {lm.shortName}
+                            {lm.id.startsWith('bloque-') ? `Edificio ${lm.id.replace('bloque-', '').toUpperCase()}` : lm.name}
                           </p>
                         )}
                       </div>
