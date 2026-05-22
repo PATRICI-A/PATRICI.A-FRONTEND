@@ -173,6 +173,23 @@ export function CampusMapPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
   const watchIdRef = useRef<number | null>(null);
+
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const highlightId = params.get('highlight');
+    if (highlightId) {
+      const lm = LANDMARKS.find(l => l.id === highlightId);
+      if (lm) {
+        setSelectedLandmark(lm);
+        setHighlightedId(highlightId);
+        // Clear highlight glow after 4s
+        setTimeout(() => setHighlightedId(null), 4000);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -400,6 +417,7 @@ export function CampusMapPage() {
           const evHere = getEventsAt(lm.id);
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
+          const isHighlighted = highlightedId === lm.id;
           const { Icon } = lm;
           return (
             <button
@@ -410,7 +428,7 @@ export function CampusMapPage() {
                 left: `${lm.x}%`,
                 top:  `${lm.y}%`,
                 transform: 'translate(-50%, -100%)',
-                zIndex: isSel ? 20 : hasEv ? 10 : 3,
+                zIndex: isHighlighted ? 25 : isSel ? 20 : hasEv ? 10 : 3,
                 background: 'transparent',
                 border: 'none',
                 padding: 0,
@@ -421,8 +439,42 @@ export function CampusMapPage() {
               <motion.div
                 whileHover={{ scale: 1.18, y: -2 }}
                 whileTap={{ scale: 0.9 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, position: 'relative' }}
               >
+                {/* Highlight glow ring from external navigation */}
+                {isHighlighted && (
+                  <>
+                    <motion.div
+                      animate={{ scale: [1, 2.2, 1], opacity: [0.8, 0, 0.8] }}
+                      transition={{ duration: 1.1, repeat: 3, ease: 'easeOut' }}
+                      style={{
+                        position: 'absolute',
+                        inset: -14,
+                        borderRadius: '50%',
+                        background: 'rgba(16,185,129,0.25)',
+                        border: '2.5px solid #10B981',
+                        zIndex: -1,
+                        transform: 'translate(-50%, -50%)',
+                        top: '50%',
+                        left: '50%',
+                      }}
+                    />
+                    <motion.div
+                      animate={{ scale: [1, 1.7, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: 1.1, repeat: 3, ease: 'easeOut', delay: 0.2 }}
+                      style={{
+                        position: 'absolute',
+                        inset: -22,
+                        borderRadius: '50%',
+                        border: '2px solid rgba(16,185,129,0.5)',
+                        zIndex: -1,
+                        transform: 'translate(-50%, -50%)',
+                        top: '50%',
+                        left: '50%',
+                      }}
+                    />
+                  </>
+                )}
                 {hasEv ? (
                   <div style={{ position: 'relative' }}>
                     <motion.div
@@ -466,25 +518,27 @@ export function CampusMapPage() {
                   </div>
                 ) : (
                   <div style={{
-                    width: isSel ? 26 : 21,
-                    height: isSel ? 26 : 21,
+                    width: isHighlighted ? 32 : isSel ? 26 : 21,
+                    height: isHighlighted ? 32 : isSel ? 26 : 21,
                     borderRadius: '50% 50% 50% 0',
                     transform: 'rotate(-45deg)',
-                    background: lm.color,
-                    border: `2px solid ${isSel ? 'white' : 'rgba(255,255,255,0.65)'}`,
-                    boxShadow: `0 2px 8px ${lm.color}66`,
+                    background: isHighlighted ? '#10B981' : lm.color,
+                    border: `2px solid ${isSel || isHighlighted ? 'white' : 'rgba(255,255,255,0.65)'}`,
+                    boxShadow: isHighlighted
+                      ? '0 0 0 3px rgba(16,185,129,0.4), 0 4px 16px rgba(16,185,129,0.6)'
+                      : `0 2px 8px ${lm.color}66`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'width .2s, height .2s',
+                    transition: 'width .2s, height .2s, background .3s, box-shadow .3s',
                     opacity: activeFilter === 'event' ? 0.38 : 1,
                   }}>
                     <div style={{ transform: 'rotate(45deg)' }}>
-                      <Icon size={isSel ? 11 : 9} color="white" strokeWidth={2.4} />
+                      <Icon size={isHighlighted ? 14 : isSel ? 11 : 9} color="white" strokeWidth={2.4} />
                     </div>
                   </div>
                 )}
                 <span style={{
                   fontSize: 8, fontWeight: 900,
-                  color: hasEv ? GOLD_LIGHT : (isDark ? '#E2E8F0' : '#1E293B'),
+                  color: isHighlighted ? '#10B981' : hasEv ? GOLD_LIGHT : (isDark ? '#E2E8F0' : '#1E293B'),
                   textShadow: isDark
                     ? '0 1px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.8)'
                     : '0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)',
@@ -498,6 +552,7 @@ export function CampusMapPage() {
             </button>
           );
         })}
+
         {}
         <AnimatePresence>
           {selectedLandmark && (

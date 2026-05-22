@@ -10,6 +10,8 @@ import {
 import { events, GRADIENT } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import type { Event } from '../types/mockData';
+import patoMascota from '../assets/pato_mascota.png';
+import { Flame, ArrowRight, Star, LayoutGrid } from 'lucide-react';
 
 const CATEGORIES = ['Todos', 'ACADEMIC', 'CULTURAL', 'SPORTS', 'WELLNESS'];
 const DATE_MONTHS = ['Todos', 'Abril', 'Mayo'];
@@ -217,55 +219,59 @@ export function EventsPage() {
         transition={{ delay: index * 0.05, type: "spring" }}
         onClick={() => setSelectedEvent(event)}
         className={`group relative overflow-hidden rounded-[2rem] cursor-pointer active:scale-[0.98] transition-all duration-300 ${
-          isDark ? 'bg-white/5 hover:bg-white/10 border border-white/5' : 'bg-white hover:shadow-xl shadow-sm border border-gray-100'
+            isDark ? 'bg-[#112240]/80 hover:bg-[#1A2F50] border border-white/5' : 'bg-white hover:shadow-2xl shadow-md border border-gray-100'
         }`}
         style={{ opacity: past ? 0.6 : 1 }}
       >
-        <div className="flex p-4 gap-4 items-center">
-            {/* Left Box (Icon) */}
-            <div className="w-20 h-24 rounded-2xl flex flex-col items-center justify-center flex-shrink-0 relative overflow-hidden shadow-inner" style={{ background: event.coverGradient }}>
-                <EmojiIcon emoji={event.emoji} size={32} color="white" />
+        <div className="flex flex-col sm:flex-row">
+            {/* Cover section */}
+            <div className="h-36 sm:h-auto sm:w-48 sm:min-h-[160px] relative flex flex-col items-center justify-center overflow-hidden shrink-0" style={{ background: event.coverGradient }}>
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                <EmojiIcon emoji={event.emoji} size={54} color="white" />
                 {registered && !past && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 backdrop-blur-md py-1 flex justify-center border-t border-white/10">
-                        <CheckCircle2 size={12} className="text-emerald-400" />
+                    <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-white/20">
+                        <CheckCircle2 size={14} className="text-emerald-400" />
+                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">Confirmado</span>
                     </div>
                 )}
             </div>
 
-            {/* Right Content */}
-            <div className="flex-1 min-w-0 py-1">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>{event.category}</span>
-                    {past && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pasado</span>}
-                </div>
-                <h3 className={`font-black text-base truncate mb-1.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>{event.title}</h3>
-                
-                <div className="flex items-center gap-3 text-xs font-semibold mb-3">
-                    <div className={`flex items-center gap-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        <Calendar size={14} className={isDark ? 'text-blue-400' : 'text-blue-500'} /> 
-                        {event.date.split('-').reverse().join('/')}
+            {/* Content Section */}
+            <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${isDark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}>{event.category}</span>
+                        {past && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pasado</span>}
                     </div>
-                    <div className={`flex items-center gap-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        <Clock size={14} className={isDark ? 'text-amber-400' : 'text-amber-500'} /> 
-                        {event.time}
+                    <h3 className={`font-black text-xl leading-tight mb-2.5 line-clamp-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{event.title}</h3>
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-xs font-semibold mb-5">
+                        <div className={`flex items-center gap-1.5 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            <Calendar size={14} className={isDark ? 'text-blue-400' : 'text-blue-500'} /> 
+                            {event.date.split('-').reverse().join('/')}
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            <Clock size={14} className={isDark ? 'text-amber-400' : 'text-amber-500'} /> 
+                            {event.time}
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <div className="flex -space-x-1.5">
-                        {[...Array(Math.min(3, count))].map((_, i) => (
-                            <div key={i} className={`w-6 h-6 rounded-full border-2 ${isDark ? 'border-[#0A192F] bg-gray-700' : 'border-white bg-gray-200'} overflow-hidden shadow-sm`}>
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/5">
+                    <div className="flex -space-x-2">
+                        {[...Array(Math.min(4, count))].map((_, i) => (
+                            <div key={i} className={`w-8 h-8 rounded-full border-2 ${isDark ? 'border-[#112240] bg-gray-700' : 'border-white bg-gray-200'} overflow-hidden shadow-sm relative`} style={{ zIndex: 10 - i }}>
                                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${event.id}${i}`} alt="user" className="w-full h-full object-cover" />
                             </div>
                         ))}
-                        {count > 3 && (
-                            <div className={`w-6 h-6 rounded-full border-2 ${isDark ? 'border-[#0A192F] bg-[#112240]' : 'border-white bg-gray-100'} flex items-center justify-center shadow-sm`}>
-                                <span className={`text-[8px] font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>+{count - 3}</span>
+                        {count > 4 && (
+                            <div className={`w-8 h-8 rounded-full border-2 ${isDark ? 'border-[#112240] bg-[#1A2F50]' : 'border-white bg-gray-100'} flex items-center justify-center shadow-sm relative z-0`}>
+                                <span className={`text-[10px] font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>+{count - 4}</span>
                             </div>
                         )}
                     </div>
                     {event.maxAttendees && (
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${
+                        <span className={`text-[11px] font-bold px-3 py-1.5 rounded-xl ${
                             spots === 0 ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' 
                             : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400'
                         }`}>
@@ -396,10 +402,69 @@ export function EventsPage() {
 
       {/* Main Content Area */}
       <div>
+        {/* Gamification Hero Banner */}
+        {viewMode === 'ALL' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-5 mb-8 relative"
+          >
+            <div className={`relative overflow-hidden rounded-[2.5rem] shadow-xl ${
+              isDark 
+                ? 'bg-gradient-to-br from-[#1A1070] via-indigo-900/90 to-[#0A192F]' 
+                : 'bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700'
+            }`}>
+                {/* Glow effects */}
+                <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute top-1/2 left-1/3 w-32 h-32 bg-violet-400/10 rounded-full blur-xl pointer-events-none" />
+
+                {/* Content layout: responsive */}
+                <div className="relative z-10 flex items-end justify-between">
+                    {/* Text */}
+                    <div className="flex-1 p-6 pr-2">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black tracking-widest uppercase mb-4 shadow-sm">
+                            <Flame size={12} className="text-orange-300" /> Racha Activa: 3 Eventos
+                        </div>
+                        <h2 className="text-white text-xl sm:text-2xl font-black leading-tight tracking-tight mb-2">
+                            ¡Sigue participando!
+                        </h2>
+                        <p className="text-white/80 text-xs font-medium mb-5 leading-relaxed max-w-[220px] sm:max-w-none">
+                            Asiste a 2 eventos más este mes y desbloquea tu medalla de oro.
+                        </p>
+                        <a
+                          href="#featured-events"
+                          className="inline-flex items-center gap-2 text-xs font-black bg-white text-indigo-600 px-5 py-3 rounded-2xl shadow-lg active:scale-95 transition-all"
+                        >
+                            Ver Eventos Destacados <ArrowRight size={14} />
+                        </a>
+                    </div>
+
+                    {/* Mascot */}
+                    <div className="relative flex-shrink-0 w-36 sm:w-48 h-44 sm:h-52 mr-1">
+                        <img 
+                          src={patoMascota} 
+                          alt="Mascota Eventos" 
+                          className="absolute bottom-0 right-0 h-full object-contain drop-shadow-[0_10px_30px_rgba(99,102,241,0.5)] pointer-events-none"
+                        />
+                    </div>
+                </div>
+            </div>
+          </motion.div>
+        )}
+
         {viewMode === 'ALL' && featuredEvents.length > 0 && (
-            <div className="mb-8">
+            <div className="mb-8" id="featured-events">
                 <div className="px-5 flex items-center justify-between mb-4">
-                    <h2 className={`font-black text-xl tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>Destacados 🔥</h2>
+                    <div>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>No te los pierdas</p>
+                        <h2 className={`font-black text-xl tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            Eventos Destacados <span className="text-lg">🔥</span>
+                        </h2>
+                    </div>
+                    <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full ${
+                        isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'
+                    }`}>{featuredEvents.length} eventos</span>
                 </div>
                 <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-5 pb-4 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
                     {featuredEvents.map((event, i) => renderFeaturedCard(event, i))}
@@ -711,114 +776,136 @@ export function EventsPage() {
                     <p className={`text-center max-w-[250px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Tu evento ha sido enviado para revisión por moderación.</p>
                   </div>
                 ) : (
-                  <div className="space-y-5 pb-8">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Título del Evento *</label>
-                        <CharCounter value={createForm.title} max={100} />
-                      </div>
-                      <input
-                        value={createForm.title}
-                        onChange={e => e.target.value.length <= 100 && setCreateForm({ ...createForm, title: e.target.value })}
-                        placeholder="Ej: Torneo de Ajedrez..."
-                        className={`w-full px-4 py-4 rounded-[1.25rem] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                          isDark ? 'bg-white/5 text-white placeholder-gray-500' : 'bg-gray-100 text-gray-900 border-none placeholder-gray-400'
-                        } ${createErrors.title ? 'ring-2 ring-red-500/50' : ''}`}
-                      />
-                      {createErrors.title && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.title}</p>}
-                    </div>
+                  <div className="space-y-6 pb-12">
+                      <div className={`p-5 rounded-[1.5rem] ${isDark ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}>
+                          <div className="flex items-center gap-3 mb-4">
+                              <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-500">
+                                  <Star size={16} />
+                              </div>
+                              <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Información Principal</h4>
+                          </div>
+                          
+                          <div className="space-y-4">
+                              <div>
+                                  <div className="flex items-center justify-between mb-1.5">
+                                      <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Título del Evento *</label>
+                                      <CharCounter value={createForm.title} max={100} />
+                                  </div>
+                                  <input
+                                      value={createForm.title}
+                                      onChange={e => e.target.value.length <= 100 && setCreateForm({ ...createForm, title: e.target.value })}
+                                      placeholder="Ej: Torneo de Ajedrez..."
+                                      className={`w-full px-4 py-3.5 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm ${
+                                      isDark ? 'bg-[#0A192F] text-white placeholder-gray-600 border-none' : 'bg-white text-gray-900 border border-gray-200 placeholder-gray-400'
+                                      } ${createErrors.title ? 'ring-2 ring-red-500/50' : ''}`}
+                                  />
+                                  {createErrors.title && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.title}</p>}
+                              </div>
 
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Descripción *</label>
-                        <CharCounter value={createForm.description} max={500} />
+                              <div>
+                                  <div className="flex items-center justify-between mb-1.5">
+                                      <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Descripción *</label>
+                                      <CharCounter value={createForm.description} max={500} />
+                                  </div>
+                                  <textarea
+                                      value={createForm.description}
+                                      onChange={e => e.target.value.length <= 500 && setCreateForm({ ...createForm, description: e.target.value })}
+                                      placeholder="Cuenta de qué trata tu evento..."
+                                      rows={3}
+                                      className={`w-full px-4 py-3.5 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none shadow-sm ${
+                                      isDark ? 'bg-[#0A192F] text-white placeholder-gray-600 border-none' : 'bg-white text-gray-900 border border-gray-200 placeholder-gray-400'
+                                      } ${createErrors.description ? 'ring-2 ring-red-500/50' : ''}`}
+                                  />
+                                  {createErrors.description && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.description}</p>}
+                              </div>
+                          </div>
                       </div>
-                      <textarea
-                        value={createForm.description}
-                        onChange={e => e.target.value.length <= 500 && setCreateForm({ ...createForm, description: e.target.value })}
-                        placeholder="Cuenta de qué trata tu evento..."
-                        rows={4}
-                        className={`w-full px-4 py-4 rounded-[1.25rem] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all resize-none ${
-                          isDark ? 'bg-white/5 text-white placeholder-gray-500' : 'bg-gray-100 text-gray-900 border-none placeholder-gray-400'
-                        } ${createErrors.description ? 'ring-2 ring-red-500/50' : ''}`}
-                      />
-                      {createErrors.description && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.description}</p>}
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Fecha *</label>
-                        <input type="date" value={createForm.date}
-                          onChange={e => setCreateForm({ ...createForm, date: e.target.value })}
-                          className={`w-full px-4 py-4 rounded-[1.25rem] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                            isDark ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-900 border-none'
-                          } ${createErrors.date ? 'ring-2 ring-red-500/50' : ''}`}
-                        />
-                        {createErrors.date && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.date}</p>}
+                      <div className={`p-5 rounded-[1.5rem] ${isDark ? 'bg-white/5 border border-white/5' : 'bg-gray-50 border border-gray-100'}`}>
+                          <div className="flex items-center gap-3 mb-4">
+                              <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                  <LayoutGrid size={16} />
+                              </div>
+                              <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Detalles Logísticos</h4>
+                          </div>
+
+                          <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                      <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Fecha *</label>
+                                      <input type="date" value={createForm.date}
+                                      onChange={e => setCreateForm({ ...createForm, date: e.target.value })}
+                                      className={`w-full px-4 py-3.5 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm ${
+                                          isDark ? 'bg-[#0A192F] text-white border-none' : 'bg-white text-gray-900 border border-gray-200'
+                                      } ${createErrors.date ? 'ring-2 ring-red-500/50' : ''}`}
+                                      />
+                                      {createErrors.date && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.date}</p>}
+                                  </div>
+                                  <div>
+                                      <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Hora</label>
+                                      <input type="time" value={createForm.time}
+                                      onChange={e => setCreateForm({ ...createForm, time: e.target.value })}
+                                      className={`w-full px-4 py-3.5 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm ${
+                                          isDark ? 'bg-[#0A192F] text-white border-none' : 'bg-white text-gray-900 border border-gray-200'
+                                      }`}
+                                      />
+                                  </div>
+                              </div>
+
+                              <div>
+                                  <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Ubicación *</label>
+                                  <input value={createForm.location}
+                                      onChange={e => setCreateForm({ ...createForm, location: e.target.value })}
+                                      placeholder="Ej: Auditorio Principal..."
+                                      className={`w-full px-4 py-3.5 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm ${
+                                      isDark ? 'bg-[#0A192F] text-white placeholder-gray-600 border-none' : 'bg-white text-gray-900 border border-gray-200 placeholder-gray-400'
+                                      } ${createErrors.location ? 'ring-2 ring-red-500/50' : ''}`}
+                                  />
+                                  {createErrors.location && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.location}</p>}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                      <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Modalidad *</label>
+                                      <div className="relative">
+                                          <select
+                                              value={createForm.type}
+                                              onChange={e => setCreateForm({ ...createForm, type: e.target.value as 'OPEN' | 'WITH_CAPACITY' })}
+                                              className={`w-full pl-4 pr-10 py-3.5 rounded-2xl font-medium text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm ${
+                                                  isDark ? 'bg-[#0A192F] text-white border-none' : 'bg-white text-gray-900 border border-gray-200'
+                                              }`}
+                                          >
+                                              <option value="OPEN">Abierto</option>
+                                              <option value="WITH_CAPACITY">Limitado</option>
+                                          </select>
+                                          <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
+                                      </div>
+                                  </div>
+                                  
+                                  <AnimatePresence>
+                                      {createForm.type === 'WITH_CAPACITY' && (
+                                      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
+                                          <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Capacidad *</label>
+                                          <input value={createForm.capacity} inputMode="numeric"
+                                              onChange={e => setCreateForm({ ...createForm, capacity: e.target.value.replace(/\D/, '') })}
+                                              placeholder="N° cupos"
+                                              className={`w-full px-4 py-3.5 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-sm ${
+                                                  isDark ? 'bg-[#0A192F] text-white placeholder-gray-600 border-none' : 'bg-white text-gray-900 border border-gray-200 placeholder-gray-400'
+                                              } ${createErrors.capacity ? 'ring-2 ring-red-500/50' : ''}`}
+                                          />
+                                          {createErrors.capacity && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.capacity}</p>}
+                                      </motion.div>
+                                      )}
+                                  </AnimatePresence>
+                              </div>
+                          </div>
                       </div>
-                      <div>
-                        <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Hora</label>
-                        <input type="time" value={createForm.time}
-                          onChange={e => setCreateForm({ ...createForm, time: e.target.value })}
-                          className={`w-full px-4 py-4 rounded-[1.25rem] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                            isDark ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-900 border-none'
-                          }`}
-                        />
-                      </div>
-                    </div>
 
-                    <div>
-                      <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Ubicación *</label>
-                      <input value={createForm.location}
-                        onChange={e => setCreateForm({ ...createForm, location: e.target.value })}
-                        placeholder="Ej: Auditorio Principal..."
-                        className={`w-full px-4 py-4 rounded-[1.25rem] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                          isDark ? 'bg-white/5 text-white placeholder-gray-500' : 'bg-gray-100 text-gray-900 border-none placeholder-gray-400'
-                        } ${createErrors.location ? 'ring-2 ring-red-500/50' : ''}`}
-                      />
-                      {createErrors.location && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.location}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Modalidad *</label>
-                        <div className="relative">
-                          <select
-                            value={createForm.type}
-                            onChange={e => setCreateForm({ ...createForm, type: e.target.value as 'OPEN' | 'WITH_CAPACITY' })}
-                            className={`w-full pl-4 pr-10 py-4 rounded-[1.25rem] font-medium text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                              isDark ? 'bg-white/5 text-white' : 'bg-gray-100 text-gray-900 border-none'
-                            }`}
-                          >
-                            <option value="OPEN">Abierto</option>
-                            <option value="WITH_CAPACITY">Cupos limitados</option>
-                          </select>
-                          <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400 pointer-events-none" />
-                        </div>
-                      </div>
-                      
-                      <AnimatePresence>
-                        {createForm.type === 'WITH_CAPACITY' && (
-                          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
-                            <label className={`block text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>Capacidad *</label>
-                            <input value={createForm.capacity} inputMode="numeric"
-                              onChange={e => setCreateForm({ ...createForm, capacity: e.target.value.replace(/\D/, '') })}
-                              placeholder="N° cupos"
-                              className={`w-full px-4 py-4 rounded-[1.25rem] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                                isDark ? 'bg-white/5 text-white placeholder-gray-500' : 'bg-gray-100 text-gray-900 border-none placeholder-gray-400'
-                              } ${createErrors.capacity ? 'ring-2 ring-red-500/50' : ''}`}
-                            />
-                            {createErrors.capacity && <p className="text-[10px] font-bold text-red-500 mt-1.5 uppercase tracking-wider">{createErrors.capacity}</p>}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    <button onClick={handleCreateSubmit}
-                      className="w-full mt-4 py-4 rounded-2xl text-white font-black text-base flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-500/30"
-                      style={{ background: GRADIENT }}>
-                      Publicar Evento <Navigation size={18} />
-                    </button>
+                      <button onClick={handleCreateSubmit}
+                          className="w-full mt-2 py-4 rounded-[1.25rem] text-white font-black text-base flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-xl shadow-indigo-500/30"
+                          style={{ background: GRADIENT }}>
+                          Publicar Evento <Navigation size={18} />
+                      </button>
                   </div>
                 )}
               </div>
