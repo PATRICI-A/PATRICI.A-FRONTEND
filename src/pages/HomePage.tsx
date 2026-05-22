@@ -20,55 +20,6 @@ export function HomePage() {
   const { currentUser, isDark, geo } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
-  useEffect(() => {
-    const invitedParche = parches[2];
-    const dismissedKey = `invite-dismissed-${invitedParche.id}`;
-    if (localStorage.getItem(dismissedKey)) return;
-    const timer = setTimeout(() => {
-      let toastId: string | number;
-      toastId = toast.custom(() => (
-        <div
-          className="flex flex-col gap-2.5 px-4 py-3 rounded-2xl shadow-xl"
-          style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)',
-            border: '1px solid rgba(6,182,212,0.3)',
-            minWidth: '320px',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
-              style={{ background: invitedParche.coverColor }}
-            >
-              {invitedParche.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-semibold opacity-70 mb-0.5">🎉 Fuiste invitado a un parche</p>
-              <p className="text-white font-bold text-sm truncate">{invitedParche.name}</p>
-              <p className="text-white/60 text-xs truncate">{invitedParche.description.slice(0, 40)}...</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => { localStorage.setItem(dismissedKey, '1'); toast.dismiss(toastId); }}
-              className="flex-1 py-2 rounded-xl text-white text-xs font-semibold transition-colors"
-              style={{ background: 'linear-gradient(135deg, #DC2626, #EF4444)' }}
-            >
-              Rechazar
-            </button>
-            <button
-              onClick={() => { toast.dismiss(toastId); navigate(`/parches/${invitedParche.id}`); }}
-              className="flex-1 py-2 rounded-xl text-white text-xs font-bold transition-colors"
-              style={{ background: 'linear-gradient(135deg, #16A34A, #22C55E)' }}
-            >
-              Aceptar
-            </button>
-          </div>
-        </div>
-      ), { duration: 8000 });
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const autoplayTimerRef = useRef<any>(null);
