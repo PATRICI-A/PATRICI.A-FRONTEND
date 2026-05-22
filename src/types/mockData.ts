@@ -1460,7 +1460,7 @@ export const notifications: Notification[] = [
     color: '#3B82F6',
     timestamp: 'Hace 5 min',
     read: false,
-    actionUrl: '/chats/chat1',
+    actionUrl: '/direct-chat/dc1',
   },
   {
     id: 'notif2',
@@ -1515,7 +1515,7 @@ export const notifications: Notification[] = [
     color: '#3B82F6',
     timestamp: 'Hace 5 horas',
     read: true,
-    actionUrl: '/chats',
+    actionUrl: '/chat',
   },
   {
     id: 'notif7',
@@ -1548,7 +1548,7 @@ export const notifications: Notification[] = [
     color: '#F59E0B',
     timestamp: 'Hace 10 min',
     read: false,
-    actionUrl: '/matches',
+    actionUrl: '/user/u2',
   },
   {
     id: 'notif10',
@@ -1559,7 +1559,7 @@ export const notifications: Notification[] = [
     color: '#F59E0B',
     timestamp: 'Hace 30 min',
     read: false,
-    actionUrl: '/matches',
+    actionUrl: '/user/u12',
   },
   {
     id: 'notif11',
@@ -1570,6 +1570,6 @@ export const notifications: Notification[] = [
     color: '#F59E0B',
     timestamp: 'Hace 1 hora',
     read: false,
-    actionUrl: '/matches',
+    actionUrl: '/user/u6',
   },
 ];

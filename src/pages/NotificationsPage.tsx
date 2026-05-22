@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Bell, Check, Trash2, MessageCircle, Users, Calendar, PartyPopper, AlertCircle, Zap, Shield } from 'lucide-react';
-import { notifications as initialNotifications, type Notification } from '../types/mockData';
+import { ArrowLeft, Bell, Check, Trash2, MessageCircle, Users, Calendar, PartyPopper, AlertCircle, Zap } from 'lucide-react';
+import { type Notification } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 
 // Mascot Assets
-import mascotaChateando from '../assets/mascota_chateando.png';
 import mascotaDurmiendo from '../assets/mascota_durmiendo.png';
 
 // Categories Types
@@ -83,16 +82,6 @@ const SECTION_BADGES: Record<string, { label: string; color: string; bg: string 
   parche_invitation: { label: 'Parches', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
 };
 
-// Fun mascot speech bubble quotes
-const SPEECH_BUBBLES = [
-  "¡Hola! Estoy buscando nuevos parches y chismes en el campus...",
-  "Chateando con el servidor... ¡Todo en orden por aquí!",
-  "Parece que no tienes notificaciones en esta categoría.",
-  "¡Pssst! Si pulsas la tecla 'X' de tu teclado te enviaré una sorpresa...",
-  "¡Escríbele a alguien! Estaeré aquí cuidando tu buzón de entrada.",
-  "¡Me encantan las pantallas táctiles! Chatear con amigos del campus es lo mejor."
-];
-
 const SLEEPY_SPEECH_BUBBLES: Record<CategoryType, string> = {
   all: "Zzz... Qué paz... No tienes ninguna notificación. ¡Déjame dormir un ratito más! 😴",
   chat: "Zzz... Por ahora no hay chismes ni mensajes. Qué silencio tan arrullador... 💤",
@@ -101,78 +90,10 @@ const SLEEPY_SPEECH_BUBBLES: Record<CategoryType, string> = {
   parches: "Zzz... Los parches están en pausa por hoy... Esperando invitaciones de tus amigos. 🍻"
 };
 
-// Generator template lists
-const DEMO_NOTIFICATIONS = [
-  {
-    type: 'chat' as const,
-    title: 'Nuevo mensaje de Mariana 💬',
-    message: 'Oye, ¿vamos a almorzar hoy en el bloque G? Confírmame por fa!',
-    color: '#3B82F6',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    actionUrl: '/chat',
-  },
-  {
-    type: 'match' as const,
-    title: '¡Nuevo Match Encontrado! 🔥',
-    message: '¡Tienes un 92% de compatibilidad con Santiago de Ingeniería de Sistemas!',
-    color: '#EC4899',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    actionUrl: '/matches',
-  },
-  {
-    type: 'high_match' as const,
-    title: '¡Compatibilidad del 98%! ⚡',
-    message: '¡Atención! Alguien de tu misma carrera acaba de unirse y es súper compatible contigo.',
-    color: '#F59E0B',
-    icon: '⚡',
-    actionUrl: '/matches',
-  },
-  {
-    type: 'parche_invitation' as const,
-    title: 'Invitación a "Polas & Codificación" 🍻',
-    message: 'Mateo te ha invitado a unirte a su parche para estudiar este viernes.',
-    color: '#8B5CF6',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    actionUrl: '/parches',
-  },
-  {
-    type: 'event' as const,
-    title: 'Torneo de Ultimate Frisbee 🥏',
-    message: 'El torneo inter-bloques inicia mañana a las 2:00 PM. ¡Inscríbete hoy!',
-    color: '#F59E0B',
-    icon: '🥏',
-    actionUrl: '/eventos',
-  }
-];
-
 export function NotificationsPage() {
   const navigate = useNavigate();
   const { isDark, notificationsList: notifications, setNotificationsList: setNotifications } = useApp();
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
-  const [bubbleText, setBubbleText] = useState(SPEECH_BUBBLES[0]);
-
-  // Handle Dynamic Speech Bubble quotes on category switch
-  useEffect(() => {
-    let text = "";
-    switch (activeCategory) {
-      case 'all':
-        text = "¡Aquí controlo todo! Si te llega algún parche o mensaje, te avisaré de inmediato.";
-        break;
-      case 'chat':
-        text = "¡Esperando chismes! En cuanto te envíen un mensaje, aparecerá justo aquí.";
-        break;
-      case 'match':
-        text = "Buscando tu media naranja... ¡O a tu próximo mejor amigo en el campus! ♥";
-        break;
-      case 'event':
-        text = "¡No te quedes por fuera! Agenda los mejores planes, parches y talleres.";
-        break;
-      case 'parches':
-        text = "¡Los parches más locos se cocinan aquí! Esperando invitaciones de tus amigos.";
-        break;
-    }
-    setBubbleText(text);
-  }, [activeCategory]);
 
   // Total unread notifications count (global badge)
   const totalUnreadCount = notifications.filter(n => !n.read).length;
@@ -215,54 +136,6 @@ export function NotificationsPage() {
     }
   };
 
-  // Simulate pushing a new mock notification
-  const triggerDemoNotification = () => {
-    const randomIndex = Math.floor(Math.random() * DEMO_NOTIFICATIONS.length);
-    const template = DEMO_NOTIFICATIONS[randomIndex];
-    const newNotif: Notification = {
-      id: `demo_${Date.now()}`,
-      type: template.type,
-      title: template.title,
-      message: template.message,
-      color: template.color,
-      avatar: template.avatar,
-      icon: template.icon,
-      timestamp: 'Hace un momento',
-      read: false,
-      actionUrl: template.actionUrl,
-    };
-    
-    setNotifications(prev => [newNotif, ...prev]);
-
-    // Show temporary feedback in mascot speech bubble
-    setBubbleText("¡Bip bip! Te acabo de mandar una notificación de prueba en tiempo real 🚀");
-    setTimeout(() => {
-      // Re-trigger category-based quote
-      let text = "¡Alerta recibida! Mira cómo brilla y se posiciona al principio de tu lista.";
-      setBubbleText(text);
-    }, 4500);
-  };
-
-  // Listen to the keyboard key 'X' to generate mockup notifications
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'x' || e.key === 'X') {
-        const activeEl = document.activeElement;
-        if (
-          activeEl && 
-          (activeEl.tagName === 'INPUT' || 
-           activeEl.tagName === 'TEXTAREA' || 
-           activeEl.getAttribute('contenteditable') === 'true')
-        ) {
-          return;
-        }
-        triggerDemoNotification();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   // Filter notifications belonging to the selected category
   const filteredNotifications = notifications.filter(n => {
     if (activeCategory === 'all') return true;
@@ -290,94 +163,87 @@ export function NotificationsPage() {
   const currentCategoryUnreadCount = getUnreadCountForCategory(activeCategory);
 
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden flex items-center justify-center py-6 px-4">
+    <div className="relative min-h-screen w-full flex flex-col pb-8">
       {/* Background wallpaper */}
       <DoodleBackground isDark={isDark} opacity={isDark ? 0.95 : 0.8} />
 
-      {/* Centered Dashboard Wrapper at exactly 4/6 width on Desktop */}
-      <div 
-        className="relative z-10 w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-120px)] min-h-[580px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-col transition-all"
-        style={isDark ? {
-          background: 'rgba(6, 13, 26, 0.75)',
-          borderColor: 'rgba(30, 58, 95, 0.45)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
-        } : {
-          background: 'rgba(255, 255, 255, 0.85)',
-          borderColor: 'rgba(10, 25, 47, 0.08)',
-          boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
-        }}
-      >
-        {/* Header bar */}
-        <div
-          className="px-5 py-4 border-b flex flex-row items-center justify-between flex-shrink-0"
+      {/* Independent Header (Sticky Sub-header) */}
+      <div className="sticky top-[57px] md:top-[73px] z-40 bg-white/95 dark:bg-[#0A192F]/95 backdrop-blur-lg border-b border-gray-200 dark:border-[#1E3A5F] w-full">
+        <div className="px-5 py-4 flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#112240] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A2F4A] transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-gray-900 dark:text-white font-bold text-lg flex items-center gap-2">
+            Notificaciones
+            {totalUnreadCount > 0 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500 text-white animate-pulse">
+                {totalUnreadCount}
+              </span>
+            )}
+          </h1>
+          <div className="w-9" /> {/* Spacer to align title centered */}
+        </div>
+      </div>
+
+      {/* Centered Dashboard Content Container */}
+      <div className="relative z-10 w-full flex-1 flex items-center justify-center py-6 px-4">
+        {/* Centered Dashboard Wrapper at exactly 4/6 width on Desktop */}
+        <div 
+          className="relative w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-180px)] min-h-[500px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-col transition-all"
           style={isDark ? {
-            background: 'rgba(13, 27, 46, 0.98)',
+            background: 'rgba(6, 13, 26, 0.75)',
             borderColor: 'rgba(30, 58, 95, 0.45)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
           } : {
-            background: 'rgba(253, 252, 248, 0.97)',
+            background: 'rgba(255, 255, 255, 0.85)',
             borderColor: 'rgba(10, 25, 47, 0.08)',
+            boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
           }}
         >
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#112240] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A2F4A] transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
+          {/* Header bar */}
+          <div
+            className="px-5 py-4 border-b flex flex-row items-center justify-between flex-shrink-0"
+            style={isDark ? {
+              background: 'rgba(13, 27, 46, 0.98)',
+              borderColor: 'rgba(30, 58, 95, 0.45)',
+            } : {
+              background: 'rgba(253, 252, 248, 0.97)',
+              borderColor: 'rgba(10, 25, 47, 0.08)',
+            }}
+          >
             <div>
-              <h1 className="text-gray-900 dark:text-white font-extrabold text-base m-0 leading-tight tracking-tight flex items-center gap-2">
-                Notificaciones 
-                {totalUnreadCount > 0 && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500 text-white animate-pulse">
-                    {totalUnreadCount}
-                  </span>
-                )}
-              </h1>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 m-0 mt-0.5 leading-none">
+              <p className="text-xs font-bold text-gray-700 dark:text-gray-300 m-0 leading-tight">
                 Buzón Inteligente de Paty • {notifications.length} totales
               </p>
             </div>
+
+            <div className="flex items-center gap-2">
+              {currentCategoryUnreadCount > 0 && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleMarkAllAsRead}
+                  className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-colors"
+                >
+                  Marcar leídas
+                </motion.button>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Quick Simulation Trigger */}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={triggerDemoNotification}
-              className="hidden sm:flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border border-blue-500/20 bg-blue-500/5 text-blue-500 hover:bg-blue-500/10 transition-colors"
-            >
-              <Zap size={12} />
-              Simular [X]
-            </motion.button>
-
-            {currentCategoryUnreadCount > 0 && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleMarkAllAsRead}
-                className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-colors"
-              >
-                Marcar leídas
-              </motion.button>
-            )}
-          </div>
-        </div>
-
-        {/* Dashboard Split-pane Container */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+        {/* Dashboard Content Container */}
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           
-          {/* LEFT SIDEBAR - Desktop Filter Categories */}
+          {/* TOP FILTER BAR - Horizontal scrollable tab pills for all screens */}
           <div 
-            className="hidden md:flex flex-col w-[260px] border-r flex-shrink-0 py-4 px-3 space-y-1.5"
+            className="flex items-center gap-2 overflow-x-auto px-5 py-3 flex-shrink-0 border-b custom-scrollbar scrollbar-none"
             style={{
               borderColor: isDark ? 'rgba(30, 58, 95, 0.45)' : 'rgba(10, 25, 47, 0.08)',
               background: isDark ? 'rgba(9, 20, 36, 0.45)' : 'rgba(247, 248, 250, 0.45)',
             }}
           >
-            <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-3 mb-2">
-              Categorías
-            </div>
-            
             {CATEGORIES.map(cat => {
               const Icon = cat.icon;
               const isActive = activeCategory === cat.id;
@@ -387,74 +253,31 @@ export function NotificationsPage() {
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all relative overflow-hidden group`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 relative overflow-hidden group border`}
                   style={{
+                    borderColor: isActive ? cat.color : (isDark ? 'rgba(30, 58, 95, 0.3)' : 'rgba(10, 25, 47, 0.08)'),
+                    background: isActive ? cat.activeBg : (isDark ? 'rgba(17, 34, 64, 0.3)' : 'rgba(255, 255, 255, 0.6)'),
                     color: isActive ? undefined : (isDark ? '#94A3B8' : '#475569'),
-                    background: isActive ? cat.activeBg : 'transparent',
-                    borderLeft: isActive ? `3px solid ${cat.color}` : '3px solid transparent',
                   }}
                 >
-                  <div className="flex items-center gap-3.5 z-10">
-                    <Icon 
-                      size={16} 
-                      style={{ 
-                        color: isActive ? cat.color : (isDark ? '#64748B' : '#64748B') 
-                      }}
-                      className="group-hover:scale-110 transition-transform"
-                    />
-                    <span className={isActive ? cat.activeText : ''}>{cat.label}</span>
-                  </div>
-
+                  <Icon 
+                    size={14} 
+                    style={{ color: isActive ? cat.color : (isDark ? '#64748B' : '#64748B') }}
+                    className="transition-transform duration-200 group-hover:scale-110"
+                  />
+                  <span className={isActive ? cat.activeText : ''}>{cat.label}</span>
+                  
                   {unread > 0 && (
                     <span 
-                      className="z-10 text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shadow-sm flex items-center justify-center min-w-5 h-5"
+                      className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md text-white shadow-sm flex items-center justify-center min-w-4 h-4 ml-0.5"
                       style={{ background: cat.color }}
                     >
                       {unread}
                     </span>
                   )}
-
+                  
                   {/* Glassmorphic hover overlay */}
                   <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/5 dark:group-hover:bg-white/5 transition-colors pointer-events-none" />
-                </button>
-              );
-            })}
-          </div>
-
-          {/* MOBILE NAVIGATION - Horizontal Tab Pills */}
-          <div 
-            className="flex md:hidden items-center gap-2 overflow-x-auto px-4 py-3 flex-shrink-0 border-b custom-scrollbar scrollbar-none"
-            style={{
-              borderColor: isDark ? 'rgba(30, 58, 95, 0.45)' : 'rgba(10, 25, 47, 0.08)',
-              background: isDark ? 'rgba(9, 20, 36, 0.2)' : 'rgba(247, 248, 250, 0.2)',
-            }}
-          >
-            {CATEGORIES.map(cat => {
-              const isActive = activeCategory === cat.id;
-              const unread = getUnreadCountForCategory(cat.id);
-              
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex-shrink-0`}
-                  style={{
-                    background: isActive ? cat.color : (isDark ? 'rgba(17, 34, 64, 0.7)' : 'rgba(241, 245, 249, 0.9)'),
-                    color: isActive ? '#FFFFFF' : (isDark ? '#94A3B8' : '#475569'),
-                    border: isActive ? `1px solid ${cat.color}` : `1px solid ${isDark ? 'rgba(30, 58, 95, 0.4)' : 'rgba(10, 25, 47, 0.08)'}`,
-                  }}
-                >
-                  <span>{cat.label}</span>
-                  {unread > 0 && (
-                    <span 
-                      className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full ${
-                        isActive ? 'bg-white text-gray-900' : 'text-white'
-                      }`}
-                      style={{ background: isActive ? undefined : cat.color }}
-                    >
-                      {unread}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -497,7 +320,7 @@ export function NotificationsPage() {
                       
                       {/* Premium Speech Bubble */}
                       <motion.div
-                        key={activeCategory + (bubbleText.includes("¡Bip bip!") || bubbleText.includes("¡Alerta recibida!") ? "_feedback" : "_sleep")}
+                        key={activeCategory + "_sleep"}
                         initial={{ opacity: 0, y: 12, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -12, scale: 0.9 }}
@@ -515,10 +338,7 @@ export function NotificationsPage() {
                         }}
                       >
                         <span className="relative z-10">
-                          {bubbleText.includes("¡Bip bip!") || bubbleText.includes("¡Alerta recibida!")
-                            ? bubbleText
-                            : (SLEEPY_SPEECH_BUBBLES[activeCategory] || SLEEPY_SPEECH_BUBBLES.all)
-                          }
+                          {SLEEPY_SPEECH_BUBBLES[activeCategory] || SLEEPY_SPEECH_BUBBLES.all}
                         </span>
                         {/* Triangle arrow */}
                         <div 
@@ -559,31 +379,9 @@ export function NotificationsPage() {
                         : `Sin notificaciones en "${CATEGORIES.find(c => c.id === activeCategory)?.label}"`}
                     </h3>
                     
-                    <p className="text-gray-500 dark:text-gray-400 text-[11px] text-center max-w-xs mb-6 leading-relaxed">
-                      Parece que todo está al día. ¡Prueba a simular alertas pulsando la tecla <kbd className="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-[10px] font-bold font-mono border dark:border-white/10 mx-0.5">X</kbd> de tu teclado!
+                    <p className="text-gray-500 dark:text-gray-400 text-[11px] text-center max-w-xs leading-relaxed">
+                      Parece que todo está al día. Te avisaremos cuando ocurra algo interesante.
                     </p>
-
-                    {/* Simulation trigger button */}
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={triggerDemoNotification}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all border"
-                      style={isDark ? {
-                        background: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
-                        borderColor: 'rgba(59, 130, 246, 0.4)',
-                        color: '#FFFFFF',
-                        boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
-                      } : {
-                        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                        borderColor: 'rgba(37, 99, 235, 0.2)',
-                        color: '#FFFFFF',
-                        boxShadow: '0 4px 15px rgba(37, 99, 235, 0.2)'
-                      }}
-                    >
-                      <Zap size={14} className="animate-bounce" />
-                      Simular Notificación [X]
-                    </motion.button>
                   </motion.div>
                 ) : (
                   filteredNotifications.map((notification, index) => {
@@ -617,7 +415,7 @@ export function NotificationsPage() {
                             style={{
                               background: notification.avatar
                                 ? 'transparent'
-                                : `${notification.color}20`,
+                               : `${notification.color}20`,
                             }}
                           >
                             {notification.avatar ? (
@@ -711,5 +509,6 @@ export function NotificationsPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
