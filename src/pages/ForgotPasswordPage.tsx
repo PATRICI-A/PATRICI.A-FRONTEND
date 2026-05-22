@@ -10,6 +10,7 @@ import {
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
+import patiLoginImg from '../assets/pati-login.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -143,7 +144,7 @@ export function ForgotPasswordPage() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
       </div>
       {}
-      <div className="relative w-full md:max-w-md md:my-10 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300">
+      <div className="relative w-full max-w-6xl mx-auto my-10 rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300">
         {}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
           <button
@@ -164,9 +165,12 @@ export function ForgotPasswordPage() {
         {}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
-            <AnimatePresence mode="wait">
-              {}
-              {phase === 'email' && (
+            <motion.div className="grid gap-8 lg:grid-cols-[1fr_1fr] items-center w-full">
+              <div className="order-1 lg:order-2">
+                <div className="rounded-[2rem] bg-white/90 dark:bg-[#0f172a]/90 shadow-2xl border border-gray-200 dark:border-[#1E3A5F] p-8">
+                  <AnimatePresence mode="wait">
+                {}
+                {phase === 'email' && (
                 <motion.div
                   key="email"
                   initial={{ opacity: 0, x: 30 }}
@@ -573,6 +577,16 @@ export function ForgotPasswordPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+                </div>
+              </div>
+              <div className="order-2 lg:order-1 flex justify-center">
+                <img
+                  src={patiLoginImg}
+                  alt="Patricia Login"
+                  className="w-full max-w-md rounded-[2rem] object-cover bg-transparent"
+                />
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
