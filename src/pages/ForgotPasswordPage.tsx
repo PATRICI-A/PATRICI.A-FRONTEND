@@ -13,6 +13,7 @@ import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 import patiContrasena from '../assets/Pati-Contrasena.png';
 import patiRestablecer from '../assets/Pati-restablecer.png';
+import llaveOlvidarContrasena from '../assets/Llave-OlvidarContrasena.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -188,6 +189,9 @@ export function ForgotPasswordPage() {
                   <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain block" />
                 </div>
                 <div className="text-center">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden bg-transparent">
+                    <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
+                  </div>
                   <h1 className="text-gray-900 dark:text-white" style={phase === 'reset' ? { color: '#000' } : undefined}>{phase === 'reset' ? 'Restablecer contraseña' : 'Olvidé mi contraseña'}</h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed" style={phase === 'reset' ? { color: '#000' } : undefined}>
                     {phase === 'reset'
@@ -213,6 +217,9 @@ export function ForgotPasswordPage() {
                 </>
               ) : (
                 <>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden bg-transparent">
+                    <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
+                  </div>
                   <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md">
                     Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
