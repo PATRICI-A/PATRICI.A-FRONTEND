@@ -115,97 +115,98 @@ export function LoginPage() {
           transition={{ duration: 0.4 }}
         >
           {}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 bg-white shadow-lg">
-              <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
+          <div className="rounded-[2rem] bg-white/90 dark:bg-[#0f172a]/90 shadow-2xl border border-gray-200 dark:border-[#1E3A5F] p-8">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 bg-white shadow-lg">
+                <img src={logoImg} alt="patrici.a" className="w-full h-full object-cover" />
+              </div>
+              <h1 className="text-gray-900 dark:text-white mb-1">Bienvenido de vuelta</h1>
+              <p className="text-sm text-gray-800 dark:text-white">Conecta con tu comunidad universitaria</p>
             </div>
-            <h1 className="text-gray-900 dark:text-white mb-1">Bienvenido de vuelta</h1>
-            <p className="text-sm text-gray-800 dark:text-white">Conecta con tu comunidad universitaria</p>
-          </div>
-          {}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                Correo Institucional
-              </label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  onBlur={() => setEmailTouched(true)}
-                  placeholder="nombre@mail.escuelaing.edu.co"
-                  className={`w-full pl-11 pr-4 py-3.5 rounded-xl bg-white dark:bg-[#112240] border text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
-                    emailTouched && email.length > 0
-                      ? emailValid
-                        ? 'border-green-400 focus:border-green-500'
-                        : 'border-red-400 focus:border-red-500'
-                      : 'border-gray-200 dark:border-[#233554]'
-                  }`}
-                  style={{ '--tw-ring-color': PINK } as any}
-                />
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  Correo Institucional
+                </label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onBlur={() => setEmailTouched(true)}
+                    placeholder="nombre@mail.escuelaing.edu.co"
+                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl bg-white dark:bg-[#112240] border text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                      emailTouched && email.length > 0
+                        ? emailValid
+                          ? 'border-green-400 focus:border-green-500'
+                          : 'border-red-400 focus:border-red-500'
+                        : 'border-gray-200 dark:border-[#233554]'
+                    }`}
+                    style={{ '--tw-ring-color': PINK } as any}
+                  />
+                </div>
+                <p className={`text-xs mt-1.5 transition-colors ${emailHintColor}`}>
+                  {emailTouched && email.length > 0 ? (emailValid ? '✓ ' : '✗ ') : ''}
+                  Debe terminar en{' '}
+                  <span className="font-medium">@mail.escuelaing.edu.co</span>
+                </p>
               </div>
-              <p className={`text-xs mt-1.5 transition-colors ${emailHintColor}`}>
-                {emailTouched && email.length > 0 ? (emailValid ? '✓ ' : '✗ ') : ''}
-                Debe terminar en{' '}
-                <span className="font-medium">@mail.escuelaing.edu.co</span>
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                Contraseña
-              </label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Mínimo 8 caracteres"
+                    className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <div className="text-right mt-1">
+                  <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-medium" style={{ color: isDark ? '#F59E0B' : PINK }}>
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
               </div>
-              <div className="text-right mt-1">
-                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-medium" style={{ color: isDark ? '#F59E0B' : PINK }}>
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
-            </div>
-            {error && (
-              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg mt-2"
-              style={{ background: GRADIENT }}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Iniciando...
-                </>
-              ) : (
-                'Iniciar Sesión'
+              {error && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                  <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+                </div>
               )}
-            </button>
-          </form>
-          <p className="text-center text-sm text-gray-800 dark:text-white mt-8">
-            ¿Aún no tienes una cuenta?{' '}
-            <button onClick={() => navigate('/register')} className="font-semibold" style={{ color: isDark ? '#F59E0B' : PINK }}>
-              Regístrate aquí
-            </button>
-          </p>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg mt-2"
+                style={{ background: GRADIENT }}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Iniciando...
+                  </>
+                ) : (
+                  'Iniciar Sesión'
+                )}
+              </button>
+            </form>
+            <p className="text-center text-sm text-gray-800 dark:text-white mt-8">
+              ¿Aún no tienes una cuenta?{' '}
+              <button onClick={() => navigate('/register')} className="font-semibold" style={{ color: isDark ? '#F59E0B' : PINK }}>
+                Regístrate aquí
+              </button>
+            </p>
+          </div>
           {}
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#1E3A5F] space-y-2">
             <button
