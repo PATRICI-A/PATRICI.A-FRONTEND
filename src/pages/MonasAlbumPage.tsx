@@ -554,6 +554,8 @@ function EventCodeModal({
           </div>
         </div>
       </div>
+      </div>
+      </div>
     </motion.div>
   );
 }
