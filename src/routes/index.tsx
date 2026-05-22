@@ -7,6 +7,7 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { HomePage } from '../pages/HomePage';
 import { ParchesPage } from '../pages/ParchesPage';
 import { CreateParchePage } from '../pages/CreateParchePage';
+import { EditParchePage } from '../pages/EditParchePage';
 import { ParchemDetailPage } from '../pages/ParchemDetailPage';
 import { ChatListPage } from '../pages/ChatListPage';
 import { ChatPage } from '../pages/ChatPage';
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
   { path: '/student/activity', Component: StudentActivityPage },
   { path: '/student/interaction', Component: StudentInteractionPage },
   { path: '/wellness/stats', Component: WellnessStatsPage },
+
   {
     path: '/',
     Component: Layout,
@@ -57,6 +59,7 @@ export const router = createBrowserRouter([
       { path: 'home', Component: HomePage },
       { path: 'parches', Component: ParchesPage },
       { path: 'parches/create', Component: CreateParchePage },
+      { path: 'parches/:id/edit', Component: EditParchePage },
       { path: 'parches/:id', Component: ParchemDetailPage },
       { path: 'chat', Component: ChatListPage },
       { path: 'chat/:id', Component: ChatPage },
