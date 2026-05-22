@@ -58,7 +58,7 @@ export function ParchesPage() {
     return matchesCategory && matchesSearch;
   });
   return (
-    <div className="flex flex-col min-h-screen pb-4">
+    <div className="w-full md:w-4/6 md:mx-auto flex flex-col min-h-screen pb-4">
       {}
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">

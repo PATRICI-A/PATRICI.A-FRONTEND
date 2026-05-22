@@ -566,7 +566,6 @@ export function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               onClick={() => navigate(`/user/${user.id}`)}
-              onClick={() => navigate(`/user/${user.id}`)}
               className="rounded-2xl overflow-hidden flex flex-row cursor-pointer active:scale-[0.98] transition-all"
               style={{
                 background: isDark ? '#112240' : 'rgba(253,252,248,0.95)',
