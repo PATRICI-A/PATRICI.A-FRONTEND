@@ -9,6 +9,10 @@ import {
   Truck, Navigation, Car, Map, Cpu,
   LocateFixed, Locate, AlertTriangle, CheckCircle2, Loader2, AlertCircle,
 } from 'lucide-react';
+import SportsBasketball from '@mui/icons-material/SportsBasketball';
+import SportsTennis from '@mui/icons-material/SportsTennis';
+import SportsVolleyball from '@mui/icons-material/SportsVolleyball';
+import SportsSoccer from '@mui/icons-material/SportsSoccer';
 import { useApp } from '../store/AppContext';
 import { events, GOLD_GRADIENT, GOLD_LIGHT, GRADIENT } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
@@ -222,10 +226,27 @@ export function CampusMapPage() {
   };
   const selectedEvents = selectedLandmark ? getEventsAt(selectedLandmark.id) : [];
   const selectedHasEvents = selectedEvents.length > 0;
-  const selectedAccentColor = selectedHasEvents ? '#C27800' : '#1E40AF';
   const selectedHeaderBg = selectedHasEvents ? 'rgba(194,120,0,0.14)' : 'rgba(30,64,175,0.14)';
   const selectedHeaderBorder = selectedHasEvents ? 'rgba(194,120,0,0.22)' : 'rgba(30,64,175,0.22)';
   const selectedIconBg = selectedHasEvents ? GOLD_GRADIENT : '#1E40AF';
+  const selectedBlockLabel = selectedLandmark?.id.startsWith('bloque-')
+    ? `Edificio ${selectedLandmark.id.replace('bloque-', '').toUpperCase()}`
+    : selectedLandmark?.name ?? '';
+  const selectedLandmarkTitle = selectedLandmark?.id === 'z1'
+    ? 'Zona 1'
+    : selectedLandmark?.id === 'z2'
+    ? 'Zona 2'
+    : selectedLandmark?.id === 'z3'
+    ? 'Zona 3'
+    : selectedLandmark?.id === 'basket'
+    ? 'Cancha de Basket'
+    : selectedLandmark?.id === 'tennis'
+    ? 'Cancha de Tenis'
+    : selectedLandmark?.id === 'volley'
+    ? 'Cancha de Volley'
+    : selectedLandmark?.id === 'futbol'
+    ? 'Cancha de Fútbol'
+    : selectedBlockLabel;
   const popupLeft = selectedLandmark ? selectedLandmark.x < 55 : true;
   const USER_PIN_DEFAULT = { x: 87, y: 30 };
   const userPin = (geo.enabled && geo.onCampus && geo.mapX !== null && geo.mapY !== null)
@@ -521,14 +542,27 @@ export function CampusMapPage() {
                   className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: selectedIconBg }}
                 >
-                  <Building2 size={13} color="white" strokeWidth={2.2} />
+                  {selectedLandmark?.id === 'z1' || selectedLandmark?.id === 'z2' || selectedLandmark?.id === 'z3' ? (
+                    <Leaf size={13} color="white" strokeWidth={2.2} />
+                  ) : selectedLandmark?.id === 'harvies-b' || selectedLandmark?.id === 'diali' || selectedLandmark?.id === 'reggio' ? (
+                    <UtensilsCrossed size={13} color="white" strokeWidth={2.2} />
+                  ) : selectedLandmark?.id === 'coliseo' ? (
+                    <Trophy size={13} color="white" strokeWidth={2.2} />
+                  ) : selectedLandmark?.id === 'basket' ? (
+                    <SportsBasketball sx={{ fontSize: 14, color: 'white' }} />
+                  ) : selectedLandmark?.id === 'tennis' ? (
+                    <SportsTennis sx={{ fontSize: 14, color: 'white' }} />
+                  ) : selectedLandmark?.id === 'volley' ? (
+                    <SportsVolleyball sx={{ fontSize: 14, color: 'white' }} />
+                  ) : selectedLandmark?.id === 'futbol' ? (
+                    <SportsSoccer sx={{ fontSize: 14, color: 'white' }} />
+                  ) : (
+                    <Building2 size={13} color="white" strokeWidth={2.2} />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-black text-gray-900 dark:text-white truncate">
-                    {selectedLandmark.name}
-                  </p>
-                  <p className="text-[9px] capitalize font-medium" style={{ color: selectedAccentColor }}>
-                    {selectedLandmark.type}
+                    {selectedLandmarkTitle}
                   </p>
                 </div>
                 <button
