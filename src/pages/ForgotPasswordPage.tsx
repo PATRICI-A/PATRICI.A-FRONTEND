@@ -226,19 +226,19 @@ export function ForgotPasswordPage() {
                       )}
                     </div>
                     {}
-                    <p className="mt-1.5 text-[11px] transition-colors duration-200"
-                      style={{
-                        color: email.length === 0
-                          ? (isDark ? '#6B7280' : '#9CA3AF')
-                          : emailValid
-                          ? '#10B981'
-                          : '#EF4444',
-                      }}
-                    >
-                      {emailValid ? '✓ ' : email.length > 0 ? '✗ ' : ''}
-                      Debe terminar en{' '}
-                      <span className="font-medium">@mail.escuelaing.edu.co</span>
-                    </p>
+                    {!emailValid && (
+                      <p className="mt-1.5 text-[11px] transition-colors duration-200"
+                        style={{
+                          color: email.length === 0
+                            ? (isDark ? '#6B7280' : '#9CA3AF')
+                            : '#EF4444',
+                        }}
+                      >
+                        {email.length > 0 ? '✗ ' : ''}
+                        Debe terminar en{' '}
+                        <span className="font-medium">@mail.escuelaing.edu.co</span>
+                      </p>
+                    )}
                   </div>
                   {}
                   {sendAttempts >= 2 && sendAttempts < MAX_SEND_ATTEMPTS && blockCooldown === 0 && (
