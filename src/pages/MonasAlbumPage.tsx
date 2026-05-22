@@ -190,7 +190,7 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
           >
             {mona.image ? (
               <div className="w-[85%] h-[85%] flex items-center justify-center relative">
-                <img src={mona.image} alt={mona.name} className="w-full h-full object-contain drop-shadow-lg" />
+                <img src={mona.image} alt={mona.name} className="w-full h-full object-contain drop-shadow-lg" style={mona.imgScale ? { transform: `scale(${mona.imgScale})` } : {}} />
               </div>
             ) : (
               <EmojiIcon emoji={mona.emoji} size={32} color="white" strokeWidth={1.8} />
@@ -692,7 +692,7 @@ function EnvelopeModal({
                       <div className="flex-1 flex items-center justify-center mt-3">
                         {card.image ? (
                           <div className="w-24 h-24 flex items-center justify-center relative">
-                            <img src={card.image} alt={card.name} className="w-full h-full object-contain drop-shadow-xl" />
+                            <img src={card.image} alt={card.name} className="w-full h-full object-contain drop-shadow-xl" style={card.imgScale ? { transform: `scale(${card.imgScale})` } : {}} />
                           </div>
                         ) : (
                           <EmojiIcon emoji={card.emoji} size={32} color="white" strokeWidth={1.8} />
