@@ -747,7 +747,6 @@ export function EventsPage() {
                         onClick={() => setSelectedEvent(event)}
                         className="absolute inset-0 cursor-pointer select-none"
                       >
-                        {/* Contenedor interno de la tarjeta para aplicar overflow-hidden, borde y sombra sin cortar al pato rockstar */}
                         <div 
                           className="absolute inset-x-0 top-3 h-[220px] rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
                           style={{ border: '1px solid rgba(255,255,255,0.08)' }}
@@ -795,7 +794,6 @@ export function EventsPage() {
                           </div>
                         </div>
 
-                        {/* Pato rockstar animado e interactivo dentro del motion.div para desplazarse con el carrusel */}
                         <div 
                           className="hidden md:block absolute right-32 -bottom-2 h-[250px] w-[250px] z-30 pointer-events-auto"
                           onClick={e => e.stopPropagation()}
