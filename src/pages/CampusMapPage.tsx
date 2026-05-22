@@ -66,7 +66,7 @@ function detectZone(mapX: number, mapY: number, landmarks: Landmark[]): string {
 const LANDMARKS: Landmark[] = [
   { id: 'bloque-a', name: 'Bloque A',           shortName: 'A',       x: 75, y: 46, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-b', name: 'Bloque B',           shortName: 'B',       x: 70, y: 36, Icon: Building2,      color: '#3B82F6', type: 'building' },
-  { id: 'bloque-c', name: 'Bloque C',           shortName: 'C',       x: 72, y: 54, Icon: Building2,      color: '#3B82F6', type: 'building' },
+  { id: 'bloque-c', name: 'Bloque C',           shortName: 'C',       x: 76.9, y: 68.7, Icon: Building2,      color: '#3B82F6', type: 'building' },
   { id: 'bloque-d', name: 'Bloque D',           shortName: 'D',       x: 52, y: 28, Icon: GraduationCap,  color: '#6366F1', type: 'building' },
   { id: 'bloque-e', name: 'Bloque E',           shortName: 'E',       x: 56, y: 46, Icon: Wrench,         color: '#0EA5E9', type: 'building' },
   { id: 'bloque-f', name: 'Bloque F',           shortName: 'F',       x: 63, y: 18, Icon: Monitor,        color: '#8B5CF6', type: 'building' },
@@ -248,13 +248,8 @@ export function CampusMapPage() {
   const getEventsAt = useCallback((lmId: string) =>
     mappedEvents.filter(e => EVENT_LOCATION[e.id] === lmId), [mappedEvents]);
   const hasEvent = (lmId: string) => getEventsAt(lmId).length > 0;
-  const isVisible = (lm: Landmark) => {
-    if (activeFilter === 'all')   return true;
-    if (activeFilter === 'food')  return lm.type === 'food';
-    if (activeFilter === 'sport') return lm.type === 'sport';
-    if (activeFilter === 'event') return hasEvent(lm.id);
-    return true;
-  };
+  // Show only buildings on the map; color indicates active events
+  const isVisible = (lm: Landmark) => lm.type === 'building';
   const handlePin = (lm: Landmark) => {
     setSelectedLandmark(prev => prev?.id === lm.id ? null : lm);
     setEventsOpen(false);
@@ -401,6 +396,13 @@ export function CampusMapPage() {
           const hasEv  = evHere.length > 0;
           const isSel  = selectedLandmark?.id === lm.id;
           const { Icon } = lm;
+          // choose pin background based on whether building has active events
+          // If has event -> orange (GOLD_GRADIENT). If no event -> blue.
+          const DEFAULT_BLUE = '#3B82F6';
+          const pinBg = hasEv ? GOLD_GRADIENT : DEFAULT_BLUE;
+          const pinBorder = isSel ? 'white' : 'rgba(255,255,255,0.8)';
+          const labelColor = hasEv ? GOLD_LIGHT : DEFAULT_BLUE;
+
           return (
             <button
               key={lm.id}
@@ -423,8 +425,8 @@ export function CampusMapPage() {
                 whileTap={{ scale: 0.9 }}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
               >
-                {hasEv ? (
-                  <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative' }}>
+                  {hasEv && (
                     <motion.div
                       animate={{ scale: [1, 1.55, 1], opacity: [0.55, 0, 0.55] }}
                       transition={{ duration: 2.2, repeat: Infinity }}
@@ -436,55 +438,38 @@ export function CampusMapPage() {
                         zIndex: 0,
                       }}
                     />
-                    <div style={{
-                      width: isSel ? 36 : 30,
-                      height: isSel ? 36 : 30,
-                      borderRadius: '50% 50% 50% 0',
-                      transform: 'rotate(-45deg)',
-                      background: GOLD_GRADIENT,
-                      border: `2.5px solid ${isSel ? 'white' : 'rgba(255,255,255,0.8)'}`,
-                      boxShadow: `0 4px 14px rgba(217,119,6,0.65)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'width .2s, height .2s',
-                      position: 'relative', zIndex: 1,
-                    }}>
-                      <div style={{ transform: 'rotate(45deg)' }}>
-                        <Icon size={isSel ? 15 : 12} color="white" strokeWidth={2.2} />
-                      </div>
-                    </div>
-                    {evHere.length > 1 && (
-                      <div style={{
-                        position: 'absolute', top: -7, right: -7, zIndex: 2,
-                        width: 16, height: 16, borderRadius: '50%',
-                        background: '#EF4444', border: '1.5px solid white',
-                        color: 'white', fontSize: 9, fontWeight: 900,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        {evHere.length}
-                      </div>
-                    )}
-                  </div>
-                ) : (
+                  )}
                   <div style={{
-                    width: isSel ? 26 : 21,
-                    height: isSel ? 26 : 21,
+                    width: isSel ? 36 : (hasEv ? 30 : 24),
+                    height: isSel ? 36 : (hasEv ? 30 : 24),
                     borderRadius: '50% 50% 50% 0',
                     transform: 'rotate(-45deg)',
-                    background: lm.color,
-                    border: `2px solid ${isSel ? 'white' : 'rgba(255,255,255,0.65)'}`,
-                    boxShadow: `0 2px 8px ${lm.color}66`,
+                    background: pinBg,
+                    border: `2.5px solid ${pinBorder}`,
+                    boxShadow: hasEv ? `0 4px 14px rgba(217,119,6,0.65)` : '0 2px 8px rgba(0,0,0,0.08)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'width .2s, height .2s',
-                    opacity: activeFilter === 'event' ? 0.38 : 1,
+                    position: 'relative', zIndex: 1,
                   }}>
                     <div style={{ transform: 'rotate(45deg)' }}>
-                      <Icon size={isSel ? 11 : 9} color="white" strokeWidth={2.4} />
+                      <Icon size={isSel ? 15 : (hasEv ? 12 : 10)} color="white" strokeWidth={2.2} />
                     </div>
                   </div>
-                )}
+                  {hasEv && evHere.length > 1 && (
+                    <div style={{
+                      position: 'absolute', top: -7, right: -7, zIndex: 2,
+                      width: 16, height: 16, borderRadius: '50%',
+                      background: '#EF4444', border: '1.5px solid white',
+                      color: 'white', fontSize: 9, fontWeight: 900,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {evHere.length}
+                    </div>
+                  )}
+                </div>
                 <span style={{
                   fontSize: 8, fontWeight: 900,
-                  color: hasEv ? GOLD_LIGHT : (isDark ? '#E2E8F0' : '#1E293B'),
+                  color: labelColor,
                   textShadow: isDark
                     ? '0 1px 4px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.8)'
                     : '0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)',
