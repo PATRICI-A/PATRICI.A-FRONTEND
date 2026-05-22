@@ -4,12 +4,16 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Mail, Lock, Eye, EyeOff, Check, AlertCircle,
-  Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle, KeyRound,
+  Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle,
   CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
-import logoImg from '../assets/logo_nuevo_patricia.png';
+import fondoClaro from '../assets/fondoClaroPATRICIA.png';
+import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
+import patiContrasena from '../assets/Pati-Contrasena.png';
+import patiRestablecer from '../assets/Pati-restablecer.png';
+import llaveOlvidarContrasena from '../assets/Llave-OlvidarContrasena.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -33,7 +37,6 @@ export function ForgotPasswordPage() {
   const { isDark, toggleTheme } = useApp();
   const [phase, setPhase] = useState<'email' | 'reset' | 'success'>('email');
   const [email, setEmail]       = useState('');
-  const [emailTouched, setEmailTouched] = useState(false);
   const [sendLoading, setSendLoading]   = useState(false);
   const [sendAttempts, setSendAttempts] = useState(0);
   const [blockCooldown, setBlockCooldown] = useState(0);
@@ -50,7 +53,6 @@ export function ForgotPasswordPage() {
   const [resetLoading, setResetLoading]     = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
   const emailValid = email.toLowerCase().endsWith('@mail.escuelaing.edu.co') && email.includes('@');
-  const emailError = emailTouched && !emailValid ? 'Introduce un correo válido de la institución.' : '';
   const strength   = getStrength(newPassword);
   const codeStr    = code.join('');
   const codeValid  = /^\d{6}$/.test(codeStr);
@@ -136,34 +138,107 @@ export function ForgotPasswordPage() {
   };
   const inputBase = `w-full py-3.5 rounded-xl border transition-all focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 bg-white dark:bg-[#112240]`;
   return (
-    <div className="min-h-screen transition-colors duration-300 flex flex-col md:items-center md:justify-center relative overflow-hidden">
+    <div className="min-h-screen transition-colors duration-300 flex flex-col relative md:justify-center">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("${isDark ? fondoOscuro : fondoClaro}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          zIndex: 0,
+        }}
+      />
       {}
-      <div className="hidden md:block pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.07]" style={{ background: GRADIENT }} />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
-      </div>
-      {}
-      <div className="relative w-full md:max-w-md md:my-10 md:rounded-3xl md:shadow-2xl md:overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-[#0D1F3C] md:bg-white/80 md:backdrop-blur-sm md:dark:bg-[#112240] transition-colors duration-300">
-        {}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0">
+      <div className="mx-auto w-full max-w-6xl relative px-4 sm:px-6" style={{ zIndex: 1 }}>
+        <div className="flex items-center justify-between p-4 sm:p-6 lg:p-8">
           <button
             onClick={handleBack}
             aria-label="Volver"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
           >
             <ArrowLeft size={18} />
           </button>
           <button
             onClick={toggleTheme}
             aria-label="Cambiar tema"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-sm text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
-        {}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
+        <div className="grid md:grid-cols-2 items-center gap-8">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+            className="hidden md:flex justify-center md:justify-start"
+          >
+            <div className="w-full max-w-[460px] lg:max-w-[820px] xl:max-w-[920px] bg-transparent" style={{ aspectRatio: '3 / 4' }}>
+              <img
+                src={phase === 'reset' ? patiRestablecer : patiContrasena}
+                alt="Patricia ilustración de contraseña"
+                className="w-full h-full object-contain bg-transparent drop-shadow-none"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          </motion.div>
+          <div className="flex flex-col w-full">
+            <div className="md:hidden w-full mb-4 px-6 sm:px-8">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-44 overflow-hidden bg-transparent flex-shrink-0 relative z-20" style={{ aspectRatio: '3 / 4' }}>
+                  <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain block" />
+                </div>
+                <div className="text-center">
+                  {phase === 'reset' ? (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden" style={{ background: GRADIENT }}>
+                      <ShieldCheck size={28} color="white" strokeWidth={2} />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden bg-transparent">
+                      <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
+                    </div>
+                  )}
+                  <h1 className="text-gray-900 dark:text-white" style={phase === 'reset' ? { color: '#000' } : undefined}>{phase === 'reset' ? 'Restablecer contraseña' : 'Olvidé mi contraseña'}</h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed" style={phase === 'reset' ? { color: '#000' } : undefined}>
+                    {phase === 'reset'
+                      ? (statusMsg || 'Introduce el código enviado y crea una nueva contraseña.')
+                      : 'Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.'}
+                </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden md:flex flex-col items-center mb-6 text-center">
+              {phase === 'reset' ? (
+                <>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: GRADIENT }}>
+                    <ShieldCheck size={28} color="white" strokeWidth={2} />
+                  </div>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-white" style={{ color: '#000' }}>Restablecer contraseña</h1>
+                  {statusMsg && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md" style={{ color: '#000' }} aria-live="polite">
+                      {statusMsg}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden bg-transparent">
+                    <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
+                  </div>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md">
+                    Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="relative w-full max-w-md mx-auto my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
+              {}
+              <div className="flex-1 overflow-y-auto">
+                <div className="px-6 sm:px-8 py-8 w-full">
             <AnimatePresence mode="wait">
               {}
               {phase === 'email' && (
@@ -175,15 +250,7 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="text-center mb-8 mt-2">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
-                      <KeyRound size={28} color="white" strokeWidth={2} />
-                    </div>
-                    <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
-                      Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
-                    </p>
-                  </div>
+                  <div className="mb-8 mt-2" />
                   {}
                   <div className="mb-5">
                     <label htmlFor="fp-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -198,28 +265,18 @@ export function ForgotPasswordPage() {
                         autoComplete="email"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        onBlur={() => setEmailTouched(true)}
                         placeholder="tu.nombre@mail.escuelaing.edu.co"
                         className={`${inputBase} pl-10 pr-10 ${
-                          emailTouched && emailError
+                          email.length > 0 && !emailValid
                             ? 'border-red-400 focus:border-red-500'
-                            : emailTouched && emailValid
+                            : email.length > 0 && emailValid
                             ? 'border-emerald-400 focus:border-emerald-500'
                             : 'border-gray-200 dark:border-[#233554] focus:border-[#06B6D4]'
                         }`}
                         aria-describedby="fp-email-error"
                       />
-                      {emailTouched && emailValid && (
-                        <Check size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />
-                      )}
                     </div>
-                    <div id="fp-email-error" aria-live="polite" className="mt-1 min-h-[18px]">
-                      {emailError && (
-                        <p className="text-xs text-red-500 flex items-center gap-1">
-                          <AlertCircle size={11} />{emailError}
-                        </p>
-                      )}
-                    </div>
+                    <div id="fp-email-error" aria-live="polite" className="mt-1 min-h-[18px]" />
                     {}
                     <p className="mt-1.5 text-[11px] transition-colors duration-200"
                       style={{
@@ -230,9 +287,12 @@ export function ForgotPasswordPage() {
                           : '#EF4444',
                       }}
                     >
-                      {emailValid ? '✓ ' : email.length > 0 ? '✗ ' : ''}
-                      Debe terminar en{' '}
-                      <span className="font-medium">@mail.escuelaing.edu.co</span>
+                      {email.length > 0 && !emailValid ? '✗ ' : ''}
+                      {email.length > 0 && !emailValid ? (
+                        <>
+                          Debe terminar en <span className="font-medium">@mail.escuelaing.edu.co</span>
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   {}
@@ -307,24 +367,7 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="text-center mb-6 mt-2">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ background: GRADIENT }}>
-                      <ShieldCheck size={28} color="white" strokeWidth={2} />
-                    </div>
-                    <h1 className="text-gray-900 dark:text-white">Restablecer contraseña</h1>
-                    {}
-                    {statusMsg && (
-                      <motion.p
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-xs mt-2 px-4 leading-relaxed"
-                        style={{ color: TEAL }}
-                        aria-live="polite"
-                      >
-                        {statusMsg}
-                      </motion.p>
-                    )}
-                  </div>
+                  <div className="mb-6 mt-2" />
                   {}
                   <div className="flex justify-center mb-5">
                     <div
@@ -573,6 +616,9 @@ export function ForgotPasswordPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

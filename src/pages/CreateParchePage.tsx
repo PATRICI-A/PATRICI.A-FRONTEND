@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
+<<<<<<< HEAD
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
 import { GRADIENT, PINK, ORANGE, events, ECI_LOCATIONS } from '../types/mockData';
+=======
+import { Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles } from 'lucide-react';
+import { usePageHeader } from '../store/PageHeaderContext';
+import { GRADIENT, PINK, ORANGE } from '../types/mockData';
+>>>>>>> bc6c74bd34434fa52008df45c616336c7ee27734
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
@@ -24,6 +30,11 @@ const friends = [
 ];
 export function CreateParchePage() {
   const navigate = useNavigate();
+  const { setHeader } = usePageHeader();
+  useEffect(() => {
+    setHeader({ title: 'Crear Parche', subtitle: 'Arma tu plan perfecto', showBack: true });
+    return () => setHeader(null);
+  }, []);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -81,7 +92,6 @@ export function CreateParchePage() {
   }
   return (
     <div className="min-h-screen pb-8">
-      {}
       <div className="bg-white dark:bg-[#112240] px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 md:top-0 z-10">
         <div className="flex items-center gap-3">
           <button
@@ -97,7 +107,7 @@ export function CreateParchePage() {
         </div>
         <img src={patyBalonesImg} alt="Paty" className="w-12 h-12 object-contain drop-shadow-sm -my-1" />
       </div>
-      <div className="px-5 pt-6 max-w-lg mx-auto">
+      <div className="px-5 pt-6 w-full md:w-4/6 md:mx-auto">
         {}
         {(name || selectedCategory) && (
           <motion.div

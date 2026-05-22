@@ -1,230 +1,168 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Search, ScanLine, MessageSquare, Users, User, ArrowLeft } from 'lucide-react';
-import { parches, directChats, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, TEAL } from '../types/mockData';
-import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { Avatar } from '../components/ui/Avatar';
+import { Users, UserPlus, MessageSquarePlus, ChevronRight } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-const groupChatList = parches.filter(p => p.joined).map((p, i) => ({
-  ...p,
-  chatType: 'group' as const,
-  lastMessage: [
-    '¡Ya estoy en la mesa del fondo! 🔌',
-    'Coffee & Python esta noche? ☕',
-    'Alguien ya terminó los ejercicios?',
-  ][i % 3],
-  lastTime: ['Ahora', '15 min', '1h'][i % 3],
-  unread: [3, 0, 1][i % 3],
-  online: [true, false, true][i % 3],
-}));
-const directChatList = directChats.map(dc => ({
-  ...dc,
-  chatType: 'direct' as const,
-}));
-const allChats = [...directChatList, ...groupChatList].sort((a, b) => {
-  const timeOrder = { 'Ahora': 0, '10 min': 1, '15 min': 2, '1h': 3, '2h': 4, '1d': 5 };
-  return (timeOrder[a.lastTime as keyof typeof timeOrder] ?? 999) - (timeOrder[b.lastTime as keyof typeof timeOrder] ?? 999);
-});
+import { DoodleBackground } from '../components/ui/DoodleBackground';
+import { ChatSidebar } from '../components/chat/ChatSidebar';
+import mascotSticker from '../assets/mascota_sticker.png';
+
 export function ChatListPage() {
   const navigate = useNavigate();
-  const { currentUser, isDark } = useApp();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'direct' | 'groups'>('all');
-  const baseFiltered = allChats.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const filtered = baseFiltered.filter(c => {
-    if (activeTab === 'direct') return c.chatType === 'direct';
-    if (activeTab === 'groups') return c.chatType === 'group';
-    return true;
-  });
+  const { isDark } = useApp();
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {}
-      <div className="px-5 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3 flex-1">
-            <button
-              onClick={() => navigate(-1)}
-              className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-[#112240] flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#1A2F4A] transition-colors active:scale-95"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-gray-900 dark:text-white">💬 Chats</h1>
-              <p className="text-sm text-gray-400">{allChats.length} conversaciones activas</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {}
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              onClick={() => navigate('/monas')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-bold"
-              style={{ background: GOLD_GRADIENT }}
-            >
-              <ScanLine size={13} />
-              QR Patricias
-            </motion.button>
-            {}
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#1E3A5F] shadow-sm active:scale-95 transition-transform"
-            >
-              <img
-                src={currentUser?.avatar}
-                alt={currentUser?.name}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          </div>
+    <div className="relative min-h-[calc(100vh-64px)] w-full overflow-hidden flex items-center justify-center py-6 px-4">
+      {/* Background wallpaper */}
+      <DoodleBackground isDark={isDark} opacity={isDark ? 0.95 : 0.8} />
+
+      {/* Centered Dashboard Wrapper at exactly 4/6 width (approx. 66.6%) */}
+      <div 
+        className="relative z-10 w-full md:w-4/6 lg:w-4/6 xl:w-4/6 h-[calc(100vh-120px)] min-h-[560px] rounded-3xl overflow-hidden shadow-2xl border backdrop-blur-md flex flex-row transition-all"
+        style={isDark ? {
+          background: 'rgba(6, 13, 26, 0.75)',
+          borderColor: 'rgba(30, 58, 95, 0.45)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)',
+        } : {
+          background: 'rgba(255, 255, 255, 0.85)',
+          borderColor: 'rgba(10, 25, 47, 0.08)',
+          boxShadow: '0 20px 50px rgba(10, 25, 47, 0.1)',
+        }}
+      >
+        {/* Left Side: Chats Sidebar List (w-full on mobile when no active chat, but here since it's /chat it takes full width on mobile) */}
+        <div className="w-full md:w-[340px] lg:w-[380px] h-full flex-shrink-0">
+          <ChatSidebar />
         </div>
-        <div className="relative mb-4">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Buscar chats..."
-            className="w-full pl-10 pr-4 py-3 rounded-2xl placeholder-gray-400 focus:outline-none text-sm"
-            style={isDark ? {
-              background: '#0D1B2E',
-              color: '#E2E8F0',
-              border: '1px solid rgba(30,58,95,0.6)',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-            } : {
-              background: 'rgba(253,252,248,0.95)',
-              color: '#1F2937',
-              boxShadow: '0 2px 10px rgba(10,25,47,0.07)',
-              border: '1px solid rgba(10,25,47,0.07)',
-            }}
+
+        {/* Right Side: Welcome Placeholder (hidden on mobile, visible from md:) */}
+        <div className="hidden md:flex flex-1 flex-col h-full items-center justify-center p-8 bg-gray-50/20 dark:bg-black/10 relative overflow-hidden">
+          {/* Subtle gradient background glow */}
+          <div 
+            className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-[120px] pointer-events-none opacity-20"
+            style={{ background: 'radial-gradient(circle, #06B6D4 0%, transparent 70%)' }}
           />
-        </div>
-        {}
-        <div className="flex gap-2">
-          {[
-            { id: 'all', label: 'Todos', icon: MessageSquare },
-            { id: 'direct', label: 'Directos', icon: User },
-            { id: 'groups', label: 'Parches', icon: Users },
-          ].map(tab => {
-            const isActive = activeTab === tab.id;
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
-                style={{
-                  background: isActive ? TEAL : 'transparent',
-                  color: isActive ? 'white' : 'inherit',
-                  border: isActive ? 'none' : '1px solid rgba(156, 163, 175, 0.2)',
+          <div 
+            className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-[120px] pointer-events-none opacity-25"
+            style={{ background: 'radial-gradient(circle, #3B82F6 0%, transparent 70%)' }}
+          />
+
+          <div className="max-w-md w-full text-center relative z-10 flex flex-col items-center">
+            {/* Mascot Image & Speech bubble */}
+            <div className="relative mb-6 group">
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-44 h-44 drop-shadow-xl select-none"
+              >
+                <img 
+                  src={mascotSticker} 
+                  alt="Patricia Mascot" 
+                  className="w-full h-full object-contain filter hover:brightness-105 transition-all"
+                />
+              </motion.div>
+
+              {/* mascot speech bubble */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+                className="absolute -top-8 -right-12 px-4 py-2 rounded-2xl text-[11px] font-bold shadow-md border flex items-center justify-center max-w-[150px] leading-snug rotate-[6deg]"
+                style={isDark ? {
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                  borderColor: 'rgba(30,58,95,0.6)',
+                  color: '#38BDF8',
+                } : {
+                  background: 'white',
+                  borderColor: 'rgba(10,25,47,0.1)',
+                  color: '#0284C7',
                 }}
               >
-                <Icon size={14} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      {}
-      <div className="flex-1 px-5">
-        {filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-[#172A45] flex items-center justify-center mb-3 mx-auto">
-              <MessageSquare size={32} className="text-gray-300 dark:text-gray-600" />
+                ¡Hola! Selecciona un chat para comenzar... 💬
+              </motion.div>
             </div>
-            <p className="text-gray-500 dark:text-gray-400">No tienes chats activos</p>
-            <button
-              onClick={() => navigate('/parches')}
-              className="mt-4 px-6 py-2 rounded-full text-white text-sm font-medium"
-              style={{ background: GRADIENT }}
-            >
-              Únete a un Parche
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filtered.map((chat, i) => {
-              const isDirect = chat.chatType === 'direct';
-              const accentColor = isDirect
-                ? chat.accentColor
-                : (chat.coverColor.match(/#[0-9A-Fa-f]{6}/g) || ['#06B6D4']).slice(-1)[0];
-              return (
-                <motion.button
-                  key={chat.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => navigate(isDirect ? `/direct-chat/${chat.id}` : `/chat/${chat.id}`)}
-                  className="w-full flex items-center gap-3 rounded-2xl p-4 text-left active:scale-[0.98] transition-all"
-                  style={isDark ? {
-                    background: '#0D1B2E',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
-                    border: '1px solid rgba(30,58,95,0.6)',
-                  } : {
-                    background: 'rgba(253,252,248,0.95)',
-                    boxShadow: '0 2px 14px rgba(10,25,47,0.07)',
-                    border: '1px solid rgba(10,25,47,0.06)',
-                  }}
-                >
-                  {}
-                  <div className="relative flex-shrink-0">
-                    {isDirect ? (
-                      <Avatar
-                        name={chat.name}
-                        size={48}
-                        className="rounded-xl"
-                        gradient={accentColor}
-                      />
-                    ) : (
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center"
-                        style={{ background: chat.coverColor }}
+
+            {/* Welcome Heading */}
+            <h2 className="text-xl font-bold tracking-tight mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+              Patricia Web
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider text-cyan-500 bg-cyan-500/10 border border-cyan-500/20 uppercase">
+                Beta
+              </span>
+            </h2>
+
+            {/* Description */}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto leading-relaxed">
+              Envía y recibe mensajes, comparte parches de estudio, colecciona monas y conéctate con tus compañeros de facultad en tiempo real.
+            </p>
+
+            {/* Quick Action Buttons */}
+            <div className="w-full space-y-2.5">
+              {[
+                { 
+                  label: 'Añadir nuevo contacto', 
+                  desc: 'Busca estudiantes de tu facultad', 
+                  icon: UserPlus, 
+                  color: '#3B82F6', 
+                  action: () => navigate('/matches') 
+                },
+                { 
+                  label: 'Explorar parches activos', 
+                  desc: 'Únete a grupos de estudio o deporte', 
+                  icon: Users, 
+                  color: '#06B6D4', 
+                  action: () => navigate('/parches') 
+                },
+                { 
+                  label: 'Crear nuevo parche', 
+                  desc: 'Organiza un evento o grupo', 
+                  icon: MessageSquarePlus, 
+                  color: '#D97706', 
+                  action: () => navigate('/parches/create') 
+                },
+              ].map((btn, index) => {
+                const Icon = btn.icon;
+                return (
+                  <motion.button
+                    key={index}
+                    whileHover={{ x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={btn.action}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all hover:bg-gray-100/50 dark:hover:bg-[#112240]/40"
+                    style={isDark ? {
+                      background: 'rgba(13, 27, 46, 0.4)',
+                      borderColor: 'rgba(30, 58, 95, 0.3)',
+                    } : {
+                      background: 'white',
+                      borderColor: 'rgba(10, 25, 47, 0.05)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-sm"
+                        style={{ background: btn.color }}
                       >
-                        <EmojiIcon emoji={chat.emoji} size={22} color="white" strokeWidth={2} />
+                        <Icon size={16} />
                       </div>
-                    )}
-                    {chat.online && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2" style={{ background: accentColor, borderColor: isDark ? '#0D1B2E' : 'rgba(253,252,248,0.95)' }} />
-                    )}
-                  </div>
-                  {}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-800 dark:text-white text-sm truncate">{chat.name}</h3>
-                      <span className="text-[11px] text-gray-400 flex-shrink-0 ml-2">{chat.lastTime}</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <p className="text-xs text-gray-400 truncate">{chat.lastMessage}</p>
-                      {chat.unread > 0 && (
-                        <span
-                          className="ml-2 flex-shrink-0 min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1"
-                          style={{ background: accentColor }}
-                        >
-                          {chat.unread}
-                        </span>
-                      )}
-                    </div>
-                    {!isDirect && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <div className="flex -space-x-1">
-                          {chat.memberAvatars.slice(0, 2).map((av, j) => (
-                            <img key={j} src={av} alt="" className="w-4 h-4 rounded-full object-cover" style={{ border: `1px solid ${isDark ? '#0D1B2E' : 'rgba(253,252,248,0.95)'}` }} />
-                          ))}
-                        </div>
-                        <span className="text-[10px] text-gray-400">{chat.members} miembros</span>
+                      <div>
+                        <h4 className="text-[11px] font-bold text-gray-800 dark:text-white m-0">
+                          {btn.label}
+                        </h4>
+                        <p className="text-[9px] text-gray-400 m-0 mt-0.5">
+                          {btn.desc}
+                        </p>
                       </div>
-                    )}
-                    {isDirect && (
-                      <span className="text-[10px] text-gray-400 mt-0.5">{chat.faculty}</span>
-                    )}
-                  </div>
-                </motion.button>
-              );
-            })}
+                    </div>
+                    <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
-        )}
+
+          {/* Bottom Security notice */}
+          <div className="absolute bottom-6 flex items-center gap-1.5 text-[9px] text-gray-400 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Cifrado de extremo a extremo de patrici.a
+          </div>
+        </div>
       </div>
     </div>
   );

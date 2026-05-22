@@ -1,5 +1,6 @@
-import type { CSSProperties } from "react";
-import { Toaster as Sonner, ToasterProps } from "sonner";
+import type { CSSProperties, ComponentProps } from "react";
+import { Toaster as Sonner } from "sonner";
+type ToasterProps = ComponentProps<typeof Sonner>;
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
