@@ -147,10 +147,10 @@ export function ParchesPage() {
   // ── render helpers ──
   const ParcheCard = ({
     parche,
-    showJoin = false,
+    isJoined = false,
   }: {
     parche: ParcheResponse;
-    showJoin?: boolean;
+    isJoined?: boolean;
   }) => (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -160,7 +160,7 @@ export function ParchesPage() {
     >
       <div className="h-2 w-full" style={{ background: categoryColor(parche.category) }} />
       <div className="p-6">
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-4">
           {parche.imageUrl ? (
             <img
               src={parche.imageUrl}
@@ -201,7 +201,7 @@ export function ParchesPage() {
               )}
             </div>
           </div>
-          {!showJoin && (
+          {isJoined ? (
             <button
               onClick={e => { e.stopPropagation(); navigate(`/chat/${parche.id}`); }}
               className="w-12 h-12 rounded-[1.2rem] flex items-center justify-center text-white flex-shrink-0 shadow-md hover:scale-105 transition-all"
@@ -211,25 +211,12 @@ export function ParchesPage() {
                 <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
               </svg>
             </button>
+          ) : (
+            <div className="w-12 h-12 rounded-[1.2rem] flex items-center justify-center text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-800/40 flex-shrink-0 group-hover:translate-x-1 transition-transform">
+              <ChevronRight size={20} />
+            </div>
           )}
         </div>
-
-        {showJoin && (
-          <div className="flex items-center justify-between mt-5 pt-5 border-t border-slate-100 dark:border-white/5">
-            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-              {parche.category}
-            </span>
-            <button
-              className="px-6 py-2.5 rounded-full text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-md hover:scale-105 flex items-center gap-2 disabled:opacity-60"
-              style={{ background: GRADIENT }}
-              disabled={joiningId === parche.id}
-              onClick={e => handleJoin(e, parche.id)}
-            >
-              {joiningId === parche.id ? <Loader2 size={14} className="animate-spin" /> : null}
-              Unirme
-            </button>
-          </div>
-        )}
       </div>
     </motion.div>
   );
@@ -366,7 +353,7 @@ export function ParchesPage() {
                 <button onClick={() => setActiveTab('explorar')} className="mt-6 px-8 py-3 rounded-full text-white text-sm font-bold shadow-lg" style={{ background: GRADIENT }}>Explorar Parches</button>
               </div>
             ) : (
-              filteredMine.map(parche => <ParcheCard key={parche.id} parche={parche} />)
+              filteredMine.map(parche => <ParcheCard key={parche.id} parche={parche} isJoined={true} />)
             )}
           </motion.div>
         )}
@@ -443,7 +430,10 @@ export function ParchesPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-6">
-                {exploreParches.map(parche => <ParcheCard key={parche.id} parche={parche} showJoin />)}
+                {exploreParches.map(parche => {
+                  const isJoined = myParches.some(p => p.id === parche.id);
+                  return <ParcheCard key={parche.id} parche={parche} isJoined={isJoined} />;
+                })}
               </div>
             )}
           </motion.div>

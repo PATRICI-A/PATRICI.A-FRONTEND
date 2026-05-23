@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle, Edit, Trash2, X, Plus, Check, Crown } from 'lucide-react';
+import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle, Edit, Trash2, X, Plus, Check, Crown, Loader2 } from 'lucide-react';
 import { matchUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { getParcheById, joinParche, leaveParche, type ParcheDetailResponse } from '../services/parches.service';
@@ -60,12 +60,17 @@ export function ParchemDetailPage() {
       getParcheById(id)
         .then(res => {
           setParche(res);
-          const isMember = res.members.some(m => m.studentId === currentUser?.id);
+          const uid = currentUser?.id;
+          const sid = currentUser?.studentId;
+          const isMember = res.members.some(m =>
+            (uid && m.studentId === uid) ||
+            (sid && m.studentId === sid)
+          );
           setJoined(isMember);
         })
         .finally(() => setLoading(false));
     }
-  }, [id, currentUser?.id]);
+  }, [id, currentUser?.id, currentUser?.studentId]);
   const [shareToast, setShareToast] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
@@ -80,6 +85,8 @@ export function ParchemDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const isOwner = currentUser?.id === parche?.ownerId;
+  const membersCount = parche ? (parche.actualMembers || parche.members.length) : 0;
+  const isFull = parche ? (membersCount >= parche.maximumQuota) : false;
 
   const reportReasons = ['Contenido inapropiado', 'Acoso', 'Spam', 'Información falsa', 'Otro'];
   const handleNextStep = () => {
@@ -101,23 +108,79 @@ export function ParchemDetailPage() {
     setReportCaseNumber('');
   };
   
-  const handleLeave = () => {
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleJoin = async () => {
+    if (!id || isFull || isJoining) return;
+    setIsJoining(true);
+    try {
+      await joinParche(id);
+      setJoined(true);
+      if (parche) {
+        setParche(prev => {
+          if (!prev) return null;
+          const isMember = prev.members.some(m => m.studentId === currentUser?.id);
+          const newMembers = isMember
+            ? prev.members
+            : [
+                ...prev.members,
+                {
+                  id: `m-${Date.now()}`,
+                  parcheId: prev.id,
+                  studentId: currentUser?.id || 'u1',
+                  unionDate: new Date().toISOString(),
+                },
+              ];
+          return {
+            ...prev,
+            actualMembers: prev.actualMembers + 1,
+            members: newMembers,
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Error joining parche:", err);
+      alert("No pudimos unirte al parche. Intenta de nuevo.");
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleLeave = async () => {
+    if (!id || isLeaving) return;
     if (isOwner && membersCount > 1) {
       setShowTransferModal(true);
     } else if (isOwner && membersCount <= 1) {
       setShowDeleteConfirm(true);
     } else {
-      setJoined(false);
-      // optionally call leaveParche API here
+      setIsLeaving(true);
+      try {
+        await leaveParche(id);
+        setJoined(false);
+        if (parche) {
+          setParche(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              actualMembers: Math.max(0, prev.actualMembers - 1),
+              members: prev.members.filter(m => m.studentId !== currentUser?.id),
+            };
+          });
+        }
+      } catch (err) {
+        console.error("Error leaving parche:", err);
+        alert("No pudimos salir del parche. Intenta de nuevo.");
+      } finally {
+        setIsLeaving(false);
+      }
     }
   };
 
   if (loading) return <ParcheDetailSkeleton />;
   if (!id || !parche) return <div className="min-h-screen pt-20 text-center font-bold">Parche no encontrado</div>;
 
-  const membersCount = parche.actualMembers || parche.members.length;
   const membersList = matchUsers.slice(0, Math.min(4, membersCount));
-  const isFull = membersCount >= parche.maximumQuota;
   const handleShare = async () => {
     const url = window.location.href;
     if (typeof navigator.share === 'function') {
@@ -442,16 +505,18 @@ export function ParchemDetailPage() {
         </div>
 
         {/* Paty Mascot Callout */}
-        <div className="flex items-center gap-4 bg-blue-50/50 dark:bg-slate-800/50 p-4 rounded-[2rem] border border-blue-100/50 dark:border-white/5 shadow-sm mt-2 relative overflow-hidden">
-          <img src={patySelfieImg} alt="Paty" className="w-20 h-20 object-contain drop-shadow-md z-10" />
-          <div className="z-10 relative">
-            <p className="font-black text-gray-900 dark:text-white text-sm">¡Tip de Paty!</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium leading-relaxed">
-              Comparte este parche e invita a más personas para llenarlo más rápido.
-            </p>
+        {joined && (
+          <div className="flex items-center gap-4 bg-blue-50/50 dark:bg-slate-800/50 p-4 rounded-[2rem] border border-blue-100/50 dark:border-white/5 shadow-sm mt-2 relative overflow-hidden">
+            <img src={patySelfieImg} alt="Paty" className="w-20 h-20 object-contain drop-shadow-md z-10" />
+            <div className="z-10 relative">
+              <p className="font-black text-gray-900 dark:text-white text-sm">¡Tip de Paty!</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium leading-relaxed">
+                Comparte este parche e invita a más personas para llenarlo más rápido.
+              </p>
+            </div>
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl" />
           </div>
-          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl" />
-        </div>
+        )}
 
         {/* Acciones */}
         <div className="flex gap-4">
@@ -468,23 +533,26 @@ export function ParchemDetailPage() {
               </motion.button>
               <button
                 onClick={handleLeave}
-                className="w-16 h-16 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors active:scale-95"
+                disabled={isLeaving}
+                className="w-16 h-16 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors active:scale-95 disabled:opacity-60"
               >
-                <LogOut size={22} />
+                {isLeaving ? <Loader2 size={22} className="animate-spin text-red-500" /> : <LogOut size={22} />}
               </button>
             </>
           ) : (
             <motion.button
               whileTap={{ scale: 0.96 }}
-              onClick={() => !isFull && setJoined(true)}
-              disabled={isFull}
+              onClick={handleJoin}
+              disabled={isFull || isJoining}
               className="flex-1 py-4.5 rounded-[1.5rem] text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
               style={{
                 background: isFull ? 'rgba(156,163,175,0.4)' : GOLD_GRADIENT,
                 boxShadow: isFull ? 'none' : '0 8px 30px rgba(217,119,6,0.4)',
               }}
             >
-              {isFull ? (
+              {isJoining ? (
+                <><Loader2 size={20} className="animate-spin" /> Uniendo...</>
+              ) : isFull ? (
                 <><AlertCircle size={20} strokeWidth={2.5} /> Parche lleno</>
               ) : (
                 <><Sparkles size={20} strokeWidth={2.5} /> Unirme al Parche</>

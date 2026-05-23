@@ -359,7 +359,29 @@ export async function getParcheById(id: string): Promise<ParcheDetailResponse> {
   } catch (error) {
     logFallback(`GET /parches/${id}`, error);
     const list = getLocalParchesList();
-    const found = list.find(p => p.id === id) || list[0];
+    // Only use an exact match — never fall back to list[0] to avoid
+    // returning a parche the current user owns when navigating to a stranger's parche
+    const found = list.find(p => p.id === id);
+    if (!found) {
+      // Return a generic stub for unknown parches
+      return {
+        id,
+        name: 'Parche',
+        description: '',
+        category: 'SOCIAL',
+        type: 'PUBLIC',
+        status: 'ACTIVE',
+        maximumQuota: 10,
+        actualMembers: 0,
+        ownerId: 'unknown',
+        date: '',
+        hour: '',
+        imageUrl: '',
+        place: { displayName: 'Campus', code: 'CAMPUS' },
+        event: null,
+        members: []
+      };
+    }
     return {
       id: found.id,
       name: found.name,
@@ -375,9 +397,8 @@ export async function getParcheById(id: string): Promise<ParcheDetailResponse> {
       imageUrl: cleanImageUrl(found.imageUrl),
       place: { displayName: found.lugar || 'Lugar Campus', code: found.lugar || 'CAMPUS' },
       event: null,
-      members: found.membersList || [
-        { id: 'm1', parcheId: found.id, studentId: found.ownerId, unionDate: '2026-05-22' }
-      ]
+      // Only return real members — never inject the owner automatically
+      members: found.membersList || []
     };
   }
 }
