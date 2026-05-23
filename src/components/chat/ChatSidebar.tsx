@@ -51,6 +51,21 @@ export interface ChatSidebarProps {
   activeId?: string;
 }
 
+type SidebarDirectChat = {
+  id: string;
+  userId: string;
+  name: string;
+  avatar: string;
+  faculty: string;
+  lastMessage: string;
+  lastTime: string;
+  unread: number;
+  online: boolean;
+  accentColor: string;
+  chatType: 'direct';
+  demo?: boolean;
+};
+
 export function ChatSidebar({ activeId }: ChatSidebarProps) {
   const navigate = useNavigate();
   const { currentUser, isDark } = useApp();
@@ -144,8 +159,7 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
   const directChatList = useMemo(() => {
     const currentUserId = currentUser?.id || 'u1';
     const safeConnections = Array.isArray(connections) ? connections : [];
-
-    return safeConnections
+    const liveDirectChats: SidebarDirectChat[] = safeConnections
       .filter(conn => conn && (conn.requesterId || conn.addresseeId))
       .map(conn => {
         const friendId = conn.requesterId === currentUserId ? conn.addresseeId : conn.requesterId;
@@ -167,6 +181,28 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
           chatType: 'direct' as const,
         };
       });
+
+    const demoFriend = matchUsers.find(u => u.id === 'u2') || directChats.find(c => c.userId === 'u2');
+    const hasDemoFriend = liveDirectChats.some(chat => chat.userId === 'u2');
+
+    if (!hasDemoFriend && demoFriend) {
+      liveDirectChats.unshift({
+        id: 'u2',
+        userId: 'u2',
+        name: demoFriend.name,
+        avatar: demoFriend.avatar,
+        faculty: demoFriend.faculty || 'Ingeniería de Sistemas',
+        lastMessage: 'Me encantaron las fotos del último parche! 📸',
+        lastTime: 'Ahora',
+        unread: 2,
+        online: demoFriend.online || false,
+        accentColor: ('accentColor' in demoFriend ? (demoFriend as any).accentColor : null) || '#8B5CF6',
+        chatType: 'direct' as const,
+        demo: true,
+      });
+    }
+
+    return liveDirectChats;
   }, [connections, currentUser, lastMessages]);
 
   const allChats = useMemo(() => {
@@ -276,7 +312,7 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
             return (
               <button
                 key={chat.id}
-                onClick={() => navigate(isDirect ? `/direct-chat/${chat.id}` : `/chat/${chat.id}`)}
+                onClick={() => navigate(isDirect ? `/direct-chat/${chat.id}${chat.chatType === 'direct' && chat.demo ? '?demo=1' : ''}` : `/chat/${chat.id}`)}
                 className="w-full flex items-center gap-3 rounded-xl p-3 text-left transition-all hover:bg-gray-100/50 dark:hover:bg-[#112240]/40"
                 style={isDark ? {
                   background: isSelected ? 'rgba(30,58,95,0.4)' : '#0D1B2E',

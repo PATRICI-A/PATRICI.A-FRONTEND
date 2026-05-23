@@ -200,7 +200,7 @@ export function DirectChatPage() {
           senderId: friendId,
           receiverId: currentUserId,
           senderName: chat.name,
-          content: `Demo recibido: ${trimmedInput}`,
+          content: '❤️👍',
           type: 'TEXT',
           imageUrl: null,
           sentAt: new Date().toISOString(),

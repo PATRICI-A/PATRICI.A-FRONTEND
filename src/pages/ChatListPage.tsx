@@ -115,13 +115,6 @@ export function ChatListPage() {
               <div className="w-full space-y-2.5">
                 {[
                   { 
-                    label: 'Abrir chat demo', 
-                    desc: 'Conversacion simulada lista para video', 
-                    icon: MessageSquarePlus, 
-                    color: '#10B981', 
-                    action: () => navigate('/direct-chat/u2?demo=1') 
-                  },
-                  { 
                     label: 'Añadir nuevo contacto', 
                     desc: 'Busca estudiantes de tu facultad', 
                     icon: UserPlus, 
