@@ -2,11 +2,50 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion } from 'motion/react';
 import { Search, MessageSquare, Users, User } from 'lucide-react';
-import { parches, directChats, chatMessages, matchUsers, TEAL } from '../../types/mockData';
+import { directChats, matchUsers, TEAL } from '../../types/mockData';
 import { EmojiIcon } from '../ui/EmojiIcon';
 import { Avatar } from '../ui/Avatar';
 import { useApp } from '../../store/AppContext';
 import { chatService, type ConnectionResponse } from '../../services/chat.service';
+import { getMyParches, type ParcheResponse } from '../../services/parches.service';
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  MUSIC: '🎵', SPORT: '⚽', TECHNOLOGY: '💻', STUDY: '📚',
+  CULTURE: '🎨', SOCIAL: '🤝', FOOD: '🍕', WELLNESS: '🧘',
+};
+const categoryEmoji = (cat: string) => CATEGORY_EMOJI[cat?.toUpperCase()] ?? '🤝';
+
+const CATEGORY_COLOR: Record<string, string> = {
+  MUSIC: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+  SPORT: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)',
+  TECHNOLOGY: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+  STUDY: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+  CULTURE: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
+  SOCIAL: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+  FOOD: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)',
+  WELLNESS: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+};
+const categoryColor = (cat: string) => CATEGORY_COLOR[cat?.toUpperCase()] ?? 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)';
+
+const formatTime = (isoString?: string) => {
+  if (!isoString) return '';
+  try {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Ahora';
+    if (diffMins < 60) return `${diffMins} min`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} h`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `${diffDays} días`;
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } catch {
+    return '';
+  }
+};
 
 export interface ChatSidebarProps {
   activeId?: string;
@@ -18,41 +57,89 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'direct' | 'groups'>('all');
   const [connections, setConnections] = useState<ConnectionResponse[]>([]);
+  const [myParches, setMyParches] = useState<ParcheResponse[]>([]);
+  const [lastMessages, setLastMessages] = useState<Record<string, { content: string; sentAt: string }>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadConnections = async () => {
+    const loadData = async () => {
       try {
-        const data = await chatService.getActiveConnections();
-        setConnections(data);
+        const [connectionsData, parchesData] = await Promise.all([
+          chatService.getActiveConnections().catch(() => []),
+          getMyParches().catch(() => [])
+        ]);
+        setConnections(connectionsData);
+        setMyParches(parchesData);
+
+        // Fetch last messages in background for each channel
+        const currentUserId = currentUser?.id || 'u1';
+        const msgPromises: Promise<any>[] = [];
+
+        const safeConnections = Array.isArray(connectionsData) ? connectionsData : [];
+        safeConnections.forEach(conn => {
+          if (conn && (conn.requesterId || conn.addresseeId)) {
+            const friendId = conn.requesterId === currentUserId ? conn.addresseeId : conn.requesterId;
+            msgPromises.push(
+              chatService.fetchFriendMessages(friendId, 0, 1)
+                .then(res => ({
+                  id: friendId,
+                  message: res.content && res.content.length > 0 ? res.content[0] : null
+                }))
+                .catch(() => ({ id: friendId, message: null }))
+            );
+          }
+        });
+
+        const safeParches = Array.isArray(parchesData) ? parchesData : [];
+        safeParches.forEach(p => {
+          msgPromises.push(
+            chatService.fetchParcheMessages(p.id, 0, 1)
+              .then(res => ({
+                id: p.id,
+                message: res.content && res.content.length > 0 ? res.content[0] : null
+              }))
+              .catch(() => ({ id: p.id, message: null }))
+          );
+        });
+
+        const results = await Promise.all(msgPromises);
+        const newLastMessages: Record<string, { content: string; sentAt: string }> = {};
+        results.forEach(res => {
+          if (res && res.message) {
+            newLastMessages[res.id] = {
+              content: res.message.content,
+              sentAt: res.message.sentAt
+            };
+          }
+        });
+        setLastMessages(newLastMessages);
       } catch (error) {
-        console.error('Error al cargar conexiones:', error);
+        console.error('Error al cargar datos en la barra lateral:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadConnections();
-  }, []);
+    loadData();
+  }, [currentUser]);
 
-  // Compute the live messages data dynamically to fix "Reflejo de mensajes"
+  // Compute the live messages data dynamically
   const groupChatList = useMemo(() => {
-    return parches
-      .filter(p => p.joined)
-      .map(p => {
-        const msgs = chatMessages.filter(m => m.chatId === p.id);
-        const hasMsgs = msgs.length > 0;
-        const lastMsg = hasMsgs ? msgs[msgs.length - 1] : null;
-
-        return {
-          ...p,
-          chatType: 'group' as const,
-          lastMessage: lastMsg ? lastMsg.content : 'No hay mensajes aún',
-          lastTime: lastMsg ? lastMsg.timestamp : '1h',
-          unread: p.id === 'p4' ? 1 : 0, // Mock unread values
-          online: p.id === 'p4' || p.id === 'p1',
-        };
-      });
-  }, [chatMessages]);
+    return myParches.map(p => {
+      const lm = lastMessages[p.id];
+      return {
+        id: p.id,
+        name: p.name,
+        emoji: categoryEmoji(p.category),
+        coverColor: categoryColor(p.category),
+        members: p.actualMembers,
+        chatType: 'group' as const,
+        lastMessage: lm ? lm.content : 'No hay mensajes aún',
+        lastTime: lm ? formatTime(lm.sentAt) : '',
+        unread: 0,
+        online: false,
+      };
+    });
+  }, [myParches, lastMessages]);
 
   const directChatList = useMemo(() => {
     const currentUserId = currentUser?.id || 'u1';
@@ -64,10 +151,7 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
         const friendId = conn.requesterId === currentUserId ? conn.addresseeId : conn.requesterId;
         const matchedProfile = matchUsers.find(u => u.id === friendId) || 
                                directChats.find(c => c.userId === friendId);
-
-        const msgs = chatMessages.filter(m => m.chatId === friendId);
-        const hasMsgs = msgs.length > 0;
-        const lastMsg = hasMsgs ? msgs[msgs.length - 1] : null;
+        const lm = lastMessages[friendId];
 
         return {
           id: friendId || '',
@@ -75,15 +159,15 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
           name: matchedProfile?.name || `Estudiante ${(friendId || '').slice(0, 4)}`,
           avatar: matchedProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
           faculty: matchedProfile?.faculty || 'Facultad de Ingeniería',
-          lastMessage: lastMsg ? lastMsg.content : (matchedProfile as any)?.lastMessage || 'Conexión aceptada 🤝',
-          lastTime: lastMsg ? lastMsg.timestamp : (matchedProfile as any)?.lastTime || 'Ahora',
-          unread: (matchedProfile as any)?.unread || 0,
-          online: (matchedProfile as any)?.online || false,
-          accentColor: (matchedProfile as any)?.accentColor || '#06B6D4',
+          lastMessage: lm ? lm.content : 'Conexión aceptada 🤝',
+          lastTime: lm ? formatTime(lm.sentAt) : '',
+          unread: 0,
+          online: matchedProfile?.online || false,
+          accentColor: matchedProfile?.accentColor || '#06B6D4',
           chatType: 'direct' as const,
         };
       });
-  }, [chatMessages, connections, currentUser]);
+  }, [connections, currentUser, lastMessages]);
 
   const allChats = useMemo(() => {
     const combined = [...directChatList, ...groupChatList];
