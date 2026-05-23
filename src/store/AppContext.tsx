@@ -115,12 +115,15 @@ export function AppProvider({ children }: { readonly children: ReactNode }) {
   const login = (user: User) => {
     setIsLoggedIn(true);
     setCurrentUser(user);
+    localStorage.setItem('patricia-logged-in', 'true');
+    localStorage.setItem('patricia-user', JSON.stringify(user));
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     clearAuth();
+    localStorage.removeItem('patricia-user');
   };
 
   const updateUser = useCallback((patch: Partial<User>) => {
