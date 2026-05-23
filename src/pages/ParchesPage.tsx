@@ -5,6 +5,7 @@ import { Plus, Search, MapPin, Clock, Users, Lock, Globe, ChevronRight, Flame, N
 import { GRADIENT, PINK, ORANGE, GOLD_GRADIENT, GOLD_LIGHT, TEAL_GRADIENT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+import { ServiceUnavailableModal } from '../components/ui/ServiceUnavailableModal';
 import patyParcheImg from '../assets/PATY PARCHE2.png';
 import patySelfieImg from '../assets/PATY SELFIE.png';
 import {
@@ -58,6 +59,7 @@ export function ParchesPage() {
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [errorMine, setErrorMine] = useState<string | null>(null);
   const [errorExplore, setErrorExplore] = useState<string | null>(null);
+  const [serviceError, setServiceError] = useState(false);
 
   // Derive unique categories from explore list
   const uniqueCategories = ['Todos', ...Array.from(new Set(exploreParches.map(p => p.category)))];
@@ -71,6 +73,7 @@ export function ParchesPage() {
       setMyParches(data);
     } catch {
       setErrorMine('No pudimos cargar tus parches. Intenta de nuevo.');
+      setServiceError(true);
     } finally {
       setLoadingMine(false);
     }
@@ -222,7 +225,7 @@ export function ParchesPage() {
   );
 
   return (
-    <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto flex flex-col min-h-screen pb-8">
+    <div className="w-full px-4 md:w-4/6 md:px-0 max-w-[1200px] mx-auto flex flex-col min-h-screen pb-8">
       {/* Header & Controls */}
       <div className="pt-6 pb-6 flex flex-col gap-6">
         {/* Superior Row */}
@@ -448,6 +451,7 @@ export function ParchesPage() {
       >
         <Plus size={28} strokeWidth={2.5} />
       </button>
+      <ServiceUnavailableModal show={serviceError} onClose={() => setServiceError(false)} />
     </div>
   );
 }
