@@ -52,6 +52,39 @@ export interface UserMatchProfileDto {
   active: boolean;
 }
 
+export interface UserProfileData {
+  id: string;
+  name: string;
+  email: string;
+  career?: string;
+  secondaryCareer?: string;
+  semester: number;
+  gender: string;
+  biography?: string;
+  photoUrl?: string;
+  avatar?: string;
+  privacyLevel?: string;
+  faculty?: string;
+  xp?: number;
+  activeParches?: number;
+  streak?: number;
+  rankFaculty?: number;
+  interests?: string[];
+  isAvailable?: boolean;
+}
+
+export interface UpdateProfileData {
+  name?: string;
+  biography?: string;
+  career?: string;
+  secondaryCareer?: string;
+  semester?: number;
+  gender?: string;
+  privacyLevel?: string;
+  interests?: string[];
+}
+
+
 export type CareerEnum =
   | 'CIVIL_ENGINEERING'
   | 'ELECTRICAL_ENGINEERING'
@@ -109,6 +142,32 @@ export const profileService = {
     const { data } = await profileApi.get<UserResponse>(`/api/v1/users/${userId}`);
     return data;
   },
+
+  async getMyProfile(userId?: string): Promise<UserProfileData | null> {
+    const id = userId ?? localStorage.getItem('patricia_user_id');
+    if (!id) return null;
+    const { data } = await profileApi.get<UserProfileData>(`/api/v1/users/${id}`);
+    return data;
+  },
+
+  async updateProfile(userId: string, payload: UpdateProfileData): Promise<UserProfileData> {
+    const { data } = await profileApi.patch<UserProfileData>(`/api/v1/users/${userId}`, payload);
+    return data;
+  },
+
+  async getProfileImage(userId?: string): Promise<string | null> {
+    const id = userId ?? localStorage.getItem('patricia_user_id');
+    if (!id) return null;
+    try {
+      const response = await profileApi.get(`/api/v1/users/${id}/profile-image`, {
+        responseType: 'blob',
+      });
+      return URL.createObjectURL(response.data);
+    } catch {
+      return null;
+    }
+  },
+
 
   async getBatchProfiles(ids: string[]): Promise<BatchProfileResponse[]> {
     if (ids.length === 0) return [];
