@@ -13,7 +13,7 @@ import { authService } from '../services/auth.service';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 import patiOlvidareImg from '../assets/pati-olvidar.png';
-import patiRestablecerImg from '../assets/pati-restablecer.png';
+import patiRestablecerImg from '../assets/Pati-Contrasena.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
