@@ -221,7 +221,7 @@ export function HomePage() {
                 </div>
                 {nextMona && (
                   <p className="text-xs mt-2" style={{ color: isDark ? '#6B7280' : 'rgba(10,25,47,0.45)' }}>
-                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.condition}
+                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.description}
                   </p>
                 )}
               </div>
@@ -565,7 +565,6 @@ export function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              onClick={() => navigate(`/user/${user.id}`)}
               onClick={() => navigate(`/user/${user.id}`)}
               className="rounded-2xl overflow-hidden flex flex-row cursor-pointer active:scale-[0.98] transition-all"
               style={{

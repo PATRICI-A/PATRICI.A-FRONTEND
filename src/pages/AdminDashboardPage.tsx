@@ -33,7 +33,7 @@ interface Metric {
   label: string;
   value: string | number;
   change: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
   color: string;
   bg: string;
 }
@@ -50,7 +50,7 @@ interface User {
   email: string;
   avatar: string;
   faculty: string;
-  status: 'active' | 'suspended' | 'banned';
+  status: 'active' | 'suspended' | 'banned' | 'flagged';
   verified: boolean;
   xp: number;
   level: number;
@@ -1870,7 +1870,7 @@ export function AdminDashboardPage() {
                       <CheckCircle size={22} /> {editingEventId ? 'Guardar Cambios' : 'Publicar Evento Oficial'}
                     </motion.button>
                     {editingEventId && (
-                      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' }); }} className="w-full sm:w-auto px-6 py-4 rounded-2xl text-gray-700 dark:text-gray-300 font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1A2F4A] hover:bg-gray-200 dark:hover:bg-[#233554] transition-all ml-0 sm:ml-4 mt-4 sm:mt-0">
+                      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: '' }); }} className="w-full sm:w-auto px-6 py-4 rounded-2xl text-gray-700 dark:text-gray-300 font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1A2F4A] hover:bg-gray-200 dark:hover:bg-[#233554] transition-all ml-0 sm:ml-4 mt-4 sm:mt-0">
                         Cancelar
                       </motion.button>
                     )}

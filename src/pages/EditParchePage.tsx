@@ -45,7 +45,7 @@ export function EditParchePage() {
           setDescription(res.description || '');
           setCategory(res.category || '');
           setIsPublic(res.type === 'PUBLIC');
-          setLocation(res.place?.displayName || res.lugar || '');
+          setLocation(res.place?.displayName || '');
           setDate(res.date || '');
           setTime(res.hour || '');
           setMaxMembers(String(res.maximumQuota || 10));
