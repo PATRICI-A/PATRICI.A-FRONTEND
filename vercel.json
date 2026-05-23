@@ -1,3 +1,44 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://patricia-api-gateway-qa.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/api/:path*"
+    },
+    {
+      "source": "/svc/profile/:path*",
+      "destination": "https://patricia-profile-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/events/:path*",
+      "destination": "https://patricia-campus-events-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/notifications/:path*",
+      "destination": "https://patricia-notificati-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/wellness/:path*",
+      "destination": "https://patricia-suport-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/analytics/:path*",
+      "destination": "https://patricia-stati-analytics-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/chat/:path*",
+      "destination": "https://patricia-chat-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/matching/:path*",
+      "destination": "https://patricia-social-matching-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/svc/gateway/:path*",
+      "destination": "https://patricia-api-gateway-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
