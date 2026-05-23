@@ -163,7 +163,7 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
           lastTime: lm ? formatTime(lm.sentAt) : '',
           unread: 0,
           online: matchedProfile?.online || false,
-          accentColor: matchedProfile?.accentColor || '#06B6D4',
+          accentColor: (matchedProfile && 'accentColor' in matchedProfile ? (matchedProfile as any).accentColor : null) || '#06B6D4',
           chatType: 'direct' as const,
         };
       });
