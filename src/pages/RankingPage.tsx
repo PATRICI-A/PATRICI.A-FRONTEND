@@ -206,7 +206,7 @@ export function RankingPage() {
       const mapped = apiRank.map(apiUser => ({
         id: apiUser.studentId,
         name: apiUser.studentName,
-        levelName: undefined,
+        levelName: '',
         totalMonas: apiUser.totalMonas,
         monasThisPeriod: 0,
         isCurrentUser: apiUser.studentId === currentUser?.id
