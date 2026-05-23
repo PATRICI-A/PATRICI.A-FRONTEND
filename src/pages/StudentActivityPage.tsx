@@ -174,7 +174,7 @@ export function StudentActivityPage() {
             <div className="w-full h-3 rounded-full overflow-hidden mb-3" style={{ background: isDark ? '#112240' : '#E5E2D8' }}>
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: affinityLevel === 'LOW' ? '25%' : affinityLevel === 'MEDIUM' ? '50%' : affinityLevel === 'HIGH' ? '75%' : '100%' }}
+                animate={{ width: (affinityLevel as string) === 'LOW' ? '25%' : (affinityLevel as string) === 'MEDIUM' ? '50%' : (affinityLevel as string) === 'HIGH' ? '75%' : '100%' }}
                 transition={{ duration: 1 }}
                 className="h-full rounded-full"
                 style={{ background: currentAffinity.color }}

@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Mail, Lock, Eye, EyeOff, Check, AlertCircle,
   Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle,
-  CheckCircle2,
+  CheckCircle2, KeyRound,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
-import logoImg from '../assets/logo_nuevo_patricia.png';
+import { authService } from '../services/auth.service';
+import fondoClaro from '../assets/fondoClaroPATRICIA.png';
+import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 import patiOlvidareImg from '../assets/pati-olvidar.png';
 import patiRestablecerImg from '../assets/pati-restablecer.png';
 const TEAL  = '#06B6D4';
@@ -79,8 +81,13 @@ export function ForgotPasswordPage() {
   const handleSend = async () => {
     if (!emailValid || sendLoading || blockCooldown > 0) return;
     setSendLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setSendLoading(false);
+    try {
+      await authService.forgotPassword(email);
+    } catch {
+      // Always show the same message to avoid email enumeration
+    } finally {
+      setSendLoading(false);
+    }
     const nextAttempts = sendAttempts + 1;
     setSendAttempts(nextAttempts);
     setStatusMsg('Si existe una cuenta asociada a ese correo, hemos enviado instrucciones para restablecer la contraseña.');
@@ -126,9 +133,15 @@ export function ForgotPasswordPage() {
     if (otpExpired) { setCodeError('El código ha expirado. Solicita uno nuevo.'); return; }
     if (!codeValid) { setCodeError('Código incorrecto.'); return; }
     setResetLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setResetLoading(false);
-    setPhase('success');
+    try {
+      await authService.resetPassword(email, codeStr, newPassword, confirmPwd);
+      setPhase('success');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setCodeError(axiosErr.response?.data?.message ?? 'Error al restablecer la contraseña. Verifica el código.');
+    } finally {
+      setResetLoading(false);
+    }
   };
   const handleBack = () => {
     if (phase === 'reset') { setPhase('email'); return; }
