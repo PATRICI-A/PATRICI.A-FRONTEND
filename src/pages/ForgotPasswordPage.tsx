@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import { authService } from '../services/auth.service';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 import patiContrasena from '../assets/Pati-Contrasena.png';
@@ -81,8 +82,13 @@ export function ForgotPasswordPage() {
   const handleSend = async () => {
     if (!emailValid || sendLoading || blockCooldown > 0) return;
     setSendLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setSendLoading(false);
+    try {
+      await authService.forgotPassword(email);
+    } catch {
+      // Always show the same message to avoid email enumeration
+    } finally {
+      setSendLoading(false);
+    }
     const nextAttempts = sendAttempts + 1;
     setSendAttempts(nextAttempts);
     setStatusMsg('Si existe una cuenta asociada a ese correo, hemos enviado instrucciones para restablecer la contraseña.');
@@ -128,9 +134,15 @@ export function ForgotPasswordPage() {
     if (otpExpired) { setCodeError('El código ha expirado. Solicita uno nuevo.'); return; }
     if (!codeValid) { setCodeError('Código incorrecto.'); return; }
     setResetLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setResetLoading(false);
-    setPhase('success');
+    try {
+      await authService.resetPassword(email, codeStr, newPassword, confirmPwd);
+      setPhase('success');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setCodeError(axiosErr.response?.data?.message ?? 'Error al restablecer la contraseña. Verifica el código.');
+    } finally {
+      setResetLoading(false);
+    }
   };
   const handleBack = () => {
     if (phase === 'reset') { setPhase('email'); return; }

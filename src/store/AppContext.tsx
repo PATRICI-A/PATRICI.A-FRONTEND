@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { notifications as initialNotifications, type Notification } from '../types/mockData';
+import { decodeTokenToUser, clearAuth } from '../services/auth.service';
+
 export interface User {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ export interface User {
   monas: string[];
   studentId?: string;
 }
+
 export interface GeoState {
   enabled: boolean;
   loading: boolean;
@@ -31,6 +34,7 @@ export interface GeoState {
   mapY: number | null;
   error: string | null;
 }
+
 const GEO_INITIAL: GeoState = {
   enabled: false,
   loading: false,
@@ -43,6 +47,7 @@ const GEO_INITIAL: GeoState = {
   mapY: null,
   error: null,
 };
+
 interface AppContextType {
   isDark: boolean;
   toggleTheme: () => void;
@@ -57,48 +62,40 @@ interface AppContextType {
   updateGeo: (patch: Partial<GeoState>) => void;
   toggleGeo: () => void;
 }
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
-const mockCurrentUser: User = {
-  id: 'u1',
-  name: 'Patricia S.',
-  email: 'patricia.smith@universidad.edu.co',
-  avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
-  faculty: 'Ingeniería de Sistemas',
-  program: 'Ingeniería de Sistemas',
-  semester: 6,
-  interests: ['Programación', 'Fotografía', 'Música', 'Diseño', 'Gaming'],
-  bio: 'Estudiante de sistemas apasionada por el diseño y la tecnología. Busco personas con quienes aprender y crear cosas geniales.',
-  socialImpact: 1240,
-  xp: 3450,
-  level: 14,
-  activeParches: 8,
-  streak: 12,
-  rankFaculty: 4,
-  monas: ['tech-puppy', 'honors', 'social', 'pionera', 'genio'],
-  studentId: '2023123456',
-};
-export function AppProvider({ children }: { children: ReactNode }) {
+
+function getInitialAuthState(): { isLoggedIn: boolean; currentUser: User | null } {
+  const token = localStorage.getItem('patricia-token');
+  if (!token) return { isLoggedIn: false, currentUser: null };
+  try {
+    const user = decodeTokenToUser(token);
+    return { isLoggedIn: true, currentUser: user };
+  } catch {
+    return { isLoggedIn: false, currentUser: null };
+  }
+}
+
+export function AppProvider({ children }: { readonly children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [currentUser, setCurrentUser] = useState<User | null>(mockCurrentUser);
+  const initialAuth = getInitialAuthState();
+  const [isLoggedIn, setIsLoggedIn] = useState(initialAuth.isLoggedIn);
+  const [currentUser, setCurrentUser] = useState<User | null>(initialAuth.currentUser);
   const [notificationsList, setNotificationsList] = useState<Notification[]>(initialNotifications);
   const [geo, setGeoState] = useState<GeoState>(GEO_INITIAL);
+
   useEffect(() => {
     const saved = localStorage.getItem('patricia-theme');
     if (saved === 'dark') {
       setIsDark(true);
       document.documentElement.classList.add('dark');
     }
-    const savedLogin = localStorage.getItem('patricia-logged-in');
-    if (savedLogin === 'true') {
-      setIsLoggedIn(true);
-      setCurrentUser(mockCurrentUser);
-    }
     const savedGeo = localStorage.getItem('patricia-geo-enabled') === 'true';
     if (savedGeo) {
       setGeoState(prev => ({ ...prev, enabled: true }));
     }
   }, []);
+
   const toggleTheme = () => {
     setIsDark(prev => {
       const next = !prev;
@@ -112,19 +109,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return next;
     });
   };
+
   const login = (user: User) => {
     setIsLoggedIn(true);
     setCurrentUser(user);
-    localStorage.setItem('patricia-logged-in', 'true');
   };
+
   const logout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
-    localStorage.removeItem('patricia-logged-in');
+    clearAuth();
   };
+
   const updateGeo = useCallback((patch: Partial<GeoState>) => {
     setGeoState(prev => ({ ...prev, ...patch }));
   }, []);
+
   const toggleGeo = useCallback(() => {
     setGeoState(prev => {
       const next = !prev.enabled;
@@ -135,23 +135,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return { ...prev, enabled: true, loading: true, error: null };
     });
   }, []);
+
   const unreadNotificationsCount = notificationsList.filter(n => !n.read).length;
 
+  const value = useMemo(() => ({
+    isDark, toggleTheme,
+    isLoggedIn, currentUser, login, logout,
+    notifications: unreadNotificationsCount,
+    notificationsList,
+    setNotificationsList,
+    geo, updateGeo, toggleGeo,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [isDark, isLoggedIn, currentUser, unreadNotificationsCount, notificationsList, geo, updateGeo, toggleGeo]);
+
   return (
-    <AppContext.Provider
-      value={{
-        isDark, toggleTheme,
-        isLoggedIn, currentUser, login, logout,
-        notifications: unreadNotificationsCount,
-        notificationsList,
-        setNotificationsList,
-        geo, updateGeo, toggleGeo,
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
 }
+
 export function useApp() {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp must be used within AppProvider');

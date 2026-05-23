@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sun, Moon, Calendar } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import { authService } from '../services/auth.service';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import loginIllustration from '../assets/Pati-Login.png';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
@@ -40,37 +41,33 @@ export function LoginPage() {
     }
     setIsLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 1200));
-    const userRole = email.toLowerCase().includes('organizador') ? 'ORGANIZADOR' : 'ESTUDIANTE';
-    if (userRole === 'ORGANIZADOR') {
-      localStorage.setItem('organizerSession', JSON.stringify({
-        email,
-        name: email.split('@')[0],
-        role: 'ORGANIZADOR'
-      }));
+    try {
+      const { user, tokens } = await authService.login({ email, password });
+      const isOrganizer = tokens.accessToken && (
+        email.toLowerCase().includes('organizador') ||
+        user.email.toLowerCase().includes('organizador')
+      );
+      if (isOrganizer) {
+        localStorage.setItem('organizerSession', JSON.stringify({ email, name: user.name, role: 'ORGANIZADOR' }));
+        login(user);
+        navigate('/organizer/dashboard');
+        return;
+      }
+      login(user);
+      navigate('/home');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
+      console.error('[Login error]', axiosErr);
+      if (axiosErr.response?.status === 401) {
+        setError('Correo o contraseña incorrectos.');
+      } else if (!axiosErr.response) {
+        setError('No se pudo conectar al servidor. Revisa tu conexión o CORS.');
+      } else {
+        setError(`Error ${axiosErr.response.status}: ${axiosErr.response?.data?.message ?? 'Inténtalo de nuevo.'}`);
+      }
+    } finally {
       setIsLoading(false);
-      navigate('/organizer/dashboard');
-      return;
     }
-    login({
-      id: 'u1',
-      name: 'Patricia S.',
-      email: email,
-      avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
-      faculty: 'Ingeniería en Sistemas',
-      semester: 6,
-      interests: ['Programación', 'Fotografía', 'Música', 'Diseño', 'Gaming'],
-      bio: 'Estudiante de sistemas apasionada por el diseño y la tecnología.',
-      socialImpact: 1240,
-      xp: 3450,
-      level: 14,
-      activeParches: 8,
-      streak: 12,
-      rankFaculty: 4,
-      monas: ['tech-puppy', 'honors', 'social', 'pionera', 'genio'],
-    });
-    setIsLoading(false);
-    navigate('/home');
   };
   return (
     <div className="min-h-screen transition-colors duration-300 flex flex-col relative">
