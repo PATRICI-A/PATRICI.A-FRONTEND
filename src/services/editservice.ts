@@ -54,6 +54,13 @@ const GENDER_MAP: Record<string, string> = {
     'OTHER': 'OTHER',
 };
 
+const API_TO_UI_GENDER: Record<string, string> = {
+    'MALE': 'M',
+    'FEMALE': 'F',
+    'OTHER': 'O',
+    'PREFER_NOT_TO_SAY': 'PREFER_NOT_TO_SAY',
+};
+
 export const editService = {
     getProfile: async () => {
         const data = await profileService.getMyProfile();
@@ -62,7 +69,7 @@ export const editService = {
         return {
             ...data,
             bio: data.biography || '',
-            genero: data.gender || 'M',
+            genero: API_TO_UI_GENDER[data.gender ?? ''] ?? data.gender ?? 'M',
             privacidad: data.privacyLevel || 'PUBLICO',
             faculty: data.career ? (REVERSE_CAREER_MAP[data.career] ?? data.career) : '',
             secondCareer: ''
@@ -85,8 +92,13 @@ export const editService = {
             gender: mappedGender,
             privacyLevel: mappedPrivacy,
         };
-        if (mappedCareer) payload.career = mappedCareer;
-        if (data.secondCareer) payload.secondaryCareer = data.secondCareer;
+        // Only send career if it resolved to a known enum value
+        const validCareers = Object.values(CAREER_MAP);
+        if (mappedCareer && validCareers.includes(mappedCareer)) payload.career = mappedCareer;
+        if (data.secondCareer) {
+            const mappedSecond = CAREER_MAP[data.secondCareer] ?? null;
+            if (mappedSecond) payload.secondaryCareer = mappedSecond;
+        }
 
         const result = await profileService.updateProfile(userId, payload);
 

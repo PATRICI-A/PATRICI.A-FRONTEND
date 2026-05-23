@@ -312,22 +312,6 @@ export function HomePage() {
               />
             </div>
           </div>
-          {}
-          <div
-            className="px-4 py-3 flex items-center justify-between"
-            style={{
-              background: isDark ? 'rgba(245,158,11,0.10)' : 'rgba(212,137,10,0.07)',
-              borderTop: isDark ? '1px solid rgba(245,158,11,0.18)' : '1px solid rgba(212,137,10,0.15)',
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <BookOpen size={16} style={{ color: GOLD_LIGHT }} />
-              <span className="text-[11px] font-bold" style={{ color: isDark ? GOLD_LIGHT : '#92600A' }}>
-                Escanea sobres QR para desbloquear patricias
-              </span>
-            </div>
-            <Sparkles size={18} style={{ color: GOLD_LIGHT }} />
-          </div>
         </motion.button>
       </section>
       {}

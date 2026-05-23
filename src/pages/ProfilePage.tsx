@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
+import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, LogOut, Lock, ScanLine, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
 import patyImg from '../assets/patyProfile.png';
 import { useApp } from '../store/AppContext';
 import { monas, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
@@ -60,7 +60,6 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const { currentUser, logout, isDark } = useApp();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
 
   const [apiUser, setApiUser] = useState<UserProfileData | null>(null);
   const [gamStats, setGamStats] = useState<UserStatsResponse | null>(null);
@@ -102,13 +101,6 @@ export function ProfilePage() {
   const xpPercent = (activeUser.xp / xpForNextLevel) * 100;
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const handleLogout = () => { logout(); navigate('/'); };
-  const handleShareQR = async () => {
-    const url = `${window.location.origin}/profile?user=${activeUser.id}`;
-    if (typeof navigator.share === 'function') { try { await navigator.share({ title: `${activeUser.name} en patrici.a`, url }); return; } catch {} }
-    try { await navigator.clipboard.writeText(url); } catch {}
-    setShowQRModal(false); setTimeout(() => alert('¡Enlace copiado al portapapeles!'), 100);
-  };
-
   return (
       <div className="flex flex-col min-h-screen pb-4">
         <div className="w-full md:w-4/6 md:mx-auto px-5 pt-5 pb-4 flex items-center justify-between">
@@ -123,9 +115,6 @@ export function ProfilePage() {
             <motion.button whileTap={{ scale: 0.92 }} onClick={() => navigate('/notifications')} className="relative w-10 h-10 rounded-full bg-white dark:bg-[#112240] shadow-sm flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#172A45] transition-all active:scale-90">
               <Bell size={18} />
               {unreadNotifications > 0 && ( <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: GRADIENT }}>{unreadNotifications > 9 ? '9+' : unreadNotifications}</motion.div> )}
-            </motion.button>
-            <motion.button whileTap={{ scale: 0.92 }} onClick={() => setShowQRModal(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md" style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 12px rgba(217,119,6,0.4)' }}>
-              <QrCode size={17} />
             </motion.button>
             <button onClick={() => navigate('/settings')} className="w-10 h-10 rounded-full bg-white dark:bg-[#112240] shadow-sm flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#172A45] transition-all active:scale-90">
               <Settings size={18} />
@@ -231,7 +220,7 @@ export function ProfilePage() {
                 );
               })}
             </div>
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => navigate('/monas')} className="w-full mt-3 py-2.5 rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold" style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 16px rgba(217,119,6,0.35)' }}><ScanLine size={13} />Escanear QR para desbloquear más patricias</motion.button>
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => navigate('/monas')} className="w-full mt-3 py-2.5 rounded-xl flex items-center justify-center gap-2 text-white text-xs font-bold" style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 16px rgba(217,119,6,0.35)' }}><Trophy size={13} />Ver álbum completo</motion.button>
           </div>
 
           <div className="px-5 mb-4">
@@ -274,29 +263,6 @@ export function ProfilePage() {
           </div>
         </div>
 
-        <AnimatePresence>
-          {showQRModal && (
-              <>
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={() => setShowQRModal(false)} />
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 rounded-3xl overflow-hidden max-h-[88vh] overflow-y-auto" style={{ background: '#0A1628', border: '1.5px solid rgba(255,255,255,0.08)' }}>
-                  <div className="h-1 w-full" style={{ background: GOLD_GRADIENT }} />
-                  <div className="p-6 flex flex-col items-center">
-                    <div className="w-full flex justify-between items-center mb-5">
-                      <div><p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p><h3 className="text-white font-black text-lg">Tu QR de Perfil</h3></div>
-                      <button onClick={() => setShowQRModal(false)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.1)' }}><X size={16} className="text-white" /></button>
-                    </div>
-                    <div className="p-4 rounded-2xl mb-4" style={{ background: 'white', boxShadow: `0 0 40px rgba(245,158,11,0.3)` }}><MockQRCode seed={activeUser.id} size={190} /></div>
-                    <div className="text-center mb-5">
-                      <p className="text-white font-black text-base">{activeUser.name}</p><p className="text-blue-400 text-xs">{activeUser.faculty} · Niv. {activeUser.level}</p>
-                      <div className="flex items-center justify-center gap-3 mt-2"><span className="text-[10px] text-white/50">{activeUser.xp.toLocaleString()} XP</span><span className="text-[10px] text-white/30">·</span><span className="text-[10px] text-white/50">{unlockedMonas.length} patricias</span></div>
-                    </div>
-                    <motion.button whileTap={{ scale: 0.96 }} onClick={handleShareQR} className="w-full py-4 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2" style={{ background: GOLD_GRADIENT, boxShadow: '0 8px 24px rgba(217,119,6,0.4)' }}><Share2 size={16} />Compartir mi perfil</motion.button>
-                    <p className="text-white/30 text-xs mt-3 text-center">Otros estudiantes pueden escanear este código para conectar contigo</p>
-                  </div>
-                </motion.div>
-              </>
-          )}
-        </AnimatePresence>
       </div>
   );
 }

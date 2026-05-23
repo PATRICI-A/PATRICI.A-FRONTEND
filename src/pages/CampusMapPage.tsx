@@ -205,7 +205,8 @@ export function CampusMapPage() {
       updateGeo({ loading: false, error: 'Tu dispositivo no soporta GPS' });
       return;
     }
-    const onSuccess = (pos: GeolocationPosition) => {
+
+    const applyPosition = (pos: GeolocationPosition) => {
       const { latitude: lat, longitude: lng, accuracy } = pos.coords;
       const onCampus = isOnCampus(lat, lng);
       const { x: mapX, y: mapY } = coordsToMapPct(lat, lng);
@@ -220,7 +221,8 @@ export function CampusMapPage() {
         error: null,
       });
     };
-    const onError = (err: GeolocationPositionError) => {
+
+    const handleError = (err: GeolocationPositionError) => {
       const messages: Record<number, string> = {
         1: 'Permiso de ubicación denegado',
         2: 'Ubicación no disponible',
@@ -233,19 +235,31 @@ export function CampusMapPage() {
         detectedZone: null,
       });
     };
+
     updateGeo({ loading: true, error: null });
-    watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+
+    // Quick low-accuracy fix so the user sees a position immediately
+    navigator.geolocation.getCurrentPosition(applyPosition, () => { /* continue watching */ }, {
+      enableHighAccuracy: false,
+      timeout: 8000,
+      maximumAge: 60000,
+    });
+
+    // Continuous high-accuracy tracking
+    watchIdRef.current = navigator.geolocation.watchPosition(applyPosition, handleError, {
       enableHighAccuracy: true,
-      timeout: 15000,
+      timeout: 30000,
       maximumAge: 5000,
     });
+
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
     };
-  }, [geo.enabled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.enabled, updateGeo]);
   const mappedEvents = events.filter(ev => EVENT_LOCATION[ev.id]);
   const getEventsAt = useCallback((lmId: string) =>
     mappedEvents.filter(e => EVENT_LOCATION[e.id] === lmId), [mappedEvents]);
