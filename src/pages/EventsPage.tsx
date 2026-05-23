@@ -6,9 +6,22 @@ import {
   Search, Bell, BellRing, Calendar, MapPin, Clock, Users, X,
   ChevronLeft, ChevronRight, ChevronDown, QrCode, History, AlertCircle, Lock, SlidersHorizontal,
 } from 'lucide-react';
-import { events, GRADIENT, PINK } from '../types/mockData';
+import { GRADIENT, PINK } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import type { Event } from '../types/mockData';
+import { searchEvents, rsvpEvent } from '../services/events.service';
+import type { EventResponse } from '../services/events.service';
+
+function formatDateToSpanish(dateStr: string) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parts[0];
+  const monthNum = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  return `${day} ${months[monthNum - 1]} ${year}`;
+}
 import mascotRockstar from '../assets/mascota_rockstar.png';
 
 
@@ -75,12 +88,55 @@ export function EventsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showFullCalendar, setShowFullCalendar] = useState(false);
 
-  const [eventStates, setEventStates] = useState<Record<string, { registered: boolean; reminder: boolean }>>(
-    Object.fromEntries(events.map(e => [e.id, { registered: e.registered, reminder: e.reminder }]))
-  );
-  const [attendeeCounts, setAttendeeCounts] = useState<Record<string, number>>(
-    Object.fromEntries(events.map(e => [e.id, e.attendees]))
-  );
+  const [eventsList, setEventsList] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [eventStates, setEventStates] = useState<Record<string, { registered: boolean; reminder: boolean }>>({});
+  const [attendeeCounts, setAttendeeCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      try {
+        const res = await searchEvents();
+        const mapped = res.content.map((apiEvent: EventResponse) => ({
+          id: apiEvent.id,
+          title: apiEvent.name,
+          description: apiEvent.description,
+          category: apiEvent.category || 'General',
+          date: formatDateToSpanish(apiEvent.startDate),
+          time: apiEvent.startTime ? apiEvent.startTime.substring(0, 5) : '00:00',
+          location: apiEvent.locationDetails || apiEvent.zone || 'Campus',
+          emoji: '📅',
+          coverGradient: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
+          coverImage: apiEvent.imageUrl || '',
+          attendees: apiEvent.registeredCount || 0,
+          maxAttendees: apiEvent.capacity,
+          registered: !!apiEvent.isRegistered,
+          reminder: false,
+          official: apiEvent.organizerName ? apiEvent.organizerName.includes('Oficial') : false,
+          isPast: apiEvent.status === 'COMPLETED' || new Date(apiEvent.endDate || apiEvent.startDate) < new Date(),
+          organizer: apiEvent.organizerName || 'Organizador',
+        })) as Event[];
+        
+        setEventsList(mapped);
+        
+        const newStates: Record<string, { registered: boolean; reminder: boolean }> = {};
+        const newCounts: Record<string, number> = {};
+        mapped.forEach(e => {
+          newStates[e.id] = { registered: e.registered || false, reminder: e.reminder || false };
+          newCounts[e.id] = e.attendees || 0;
+        });
+        setEventStates(newStates);
+        setAttendeeCounts(newCounts);
+      } catch (err) {
+        console.error("Error fetching events", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showQRFor, setShowQRFor] = useState<string | null>(null);
   const [cancelModal, setCancelModal] = useState<{ eventId: string; reason: string } | null>(null);
@@ -103,8 +159,8 @@ export function EventsPage() {
   const isPast = (event: Event) => !!event.isPast;
 
   const carouselEvents = useMemo(() => {
-    return events.filter(e => !isPast(e));
-  }, []);
+    return eventsList.filter(e => !isPast(e));
+  }, [eventsList]);
 
   const spotsLeft = (event: Event) => {
     if (!event.maxAttendees) return null;
@@ -116,12 +172,21 @@ export function EventsPage() {
     return left === null || left > 0;
   };
 
-  const handleConfirmAttendance = (eventId: string, e?: React.MouseEvent) => {
+  const handleConfirmAttendance = async (eventId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const event = events.find(ev => ev.id === eventId);
+    const event = eventsList.find(ev => ev.id === eventId);
     if (!event || isPast(event) || !hasCapacity(event)) return;
+    
     setEventStates(prev => ({ ...prev, [eventId]: { ...prev[eventId], registered: true } }));
     setAttendeeCounts(prev => ({ ...prev, [eventId]: (prev[eventId] ?? 0) + 1 }));
+
+    try {
+      await rsvpEvent(eventId);
+    } catch (err) {
+      console.error("Error in RSVP", err);
+      setEventStates(prev => ({ ...prev, [eventId]: { ...prev[eventId], registered: false } }));
+      setAttendeeCounts(prev => ({ ...prev, [eventId]: Math.max((prev[eventId] ?? 0) - 1, 0) }));
+    }
   };
 
   const handleStartCancel = (eventId: string, e?: React.MouseEvent) => {
@@ -129,13 +194,20 @@ export function EventsPage() {
     setCancelModal({ eventId, reason: '' });
   };
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!cancelModal) return;
     const { eventId } = cancelModal;
     setEventStates(prev => ({ ...prev, [eventId]: { ...prev[eventId], registered: false } }));
     setAttendeeCounts(prev => ({ ...prev, [eventId]: Math.max((prev[eventId] ?? 0) - 1, 0) }));
     setCancelModal(null);
     if (selectedEvent?.id === eventId) setSelectedEvent(null);
+
+    try {
+      await rsvpEvent(eventId);
+    } catch (err) {
+      setEventStates(prev => ({ ...prev, [eventId]: { ...prev[eventId], registered: true } }));
+      setAttendeeCounts(prev => ({ ...prev, [eventId]: (prev[eventId] ?? 0) + 1 }));
+    }
   };
 
   const toggleReminder = (id: string, e?: React.MouseEvent) => {
@@ -167,10 +239,10 @@ export function EventsPage() {
 
   const hasEventOnDate = (d: Date) => {
     const formatted = formatEventDate(d);
-    return events.some(e => e.date === formatted);
+    return eventsList.some(e => e.date === formatted);
   };
 
-  const allFiltered = useMemo(() => events.filter(e => {
+  const allFiltered = useMemo(() => eventsList.filter(e => {
     const matchesCategory = activeCategory === 'Todos' || e.category === activeCategory;
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -190,8 +262,8 @@ export function EventsPage() {
   }, [upcomingEvents, carouselEvents, carouselIndex, activeCategory, searchQuery, selectedDate]);
 
   const agendaEvents = useMemo(() => {
-    return events.filter(e => eventStates[e.id]?.registered);
-  }, [eventStates]);
+    return eventsList.filter(e => eventStates[e.id]?.registered);
+  }, [eventsList, eventStates]);
 
   const nextAgendaEvent = useMemo(() => {
     const activeUpcoming = agendaEvents.filter(e => !isPast(e));
@@ -1201,7 +1273,7 @@ export function EventsPage() {
         <div className="px-5 mb-4">
           <h3 className="font-semibold text-sm text-gray-800 dark:text-white mb-3">Tus Recordatorios</h3>
           <div className="space-y-2">
-            {events.filter(e => eventStates[e.id]?.reminder).map(event => (
+            {eventsList.filter(e => eventStates[e.id]?.reminder).map(event => (
               <div key={event.id} className="flex items-center gap-3 bg-white dark:bg-[#112240] rounded-xl p-3 shadow-sm">
                 <BellRing size={16} color="#60A5FA" />
                 <div className="flex-1 min-w-0">

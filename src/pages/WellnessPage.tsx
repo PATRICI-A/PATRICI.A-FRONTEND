@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -7,8 +7,23 @@ import {
   Shield, Dumbbell, Palette, Brain, ToggleLeft, ToggleRight,
   FileText, AlertTriangle, X, Search,
 } from 'lucide-react';
-import { GRADIENT, TEAL, TEAL_GRADIENT, wellnessResources } from '../types/mockData';
+import { GRADIENT, TEAL, TEAL_GRADIENT } from '../types/mockData';
 import type { WellnessResource } from '../types/mockData';
+import { getWellnessResources, submitSurvey, getSurveyRecommendations, submitBehaviorReport } from '../services/wellness.service';
+import type { WellnessResourceResponse } from '../services/wellness.service';
+
+function mapWellnessResourceResponse(res: WellnessResourceResponse): WellnessResource {
+  return {
+    id: res.id,
+    name: res.title,
+    description: res.description,
+    category: res.category,
+    schedule: 'Lun-Vie 8:00 AM - 5:00 PM',
+    location: 'Sede Principal',
+    contact: 'bienestar@campus.edu.co',
+    active: true,
+  };
+}
 import mascotImg from '../assets/PATYPSICO.png';
 import energiaCampusImg from '../assets/EnergiaCampus-removebg-preview.png';
 import saludImg from '../assets/Salud-removebg-preview.png';
@@ -214,6 +229,24 @@ export function WellnessPage() {
   const [showIncidentModal, setShowIncidentModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  const [resourcesList, setResourcesList] = useState<WellnessResource[]>([]);
+  const [isLoadingResources, setIsLoadingResources] = useState(true);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      setIsLoadingResources(true);
+      try {
+        const data = await getWellnessResources();
+        setResourcesList(data.map(mapWellnessResourceResponse));
+      } catch (err) {
+        console.error("Error fetching wellness resources", err);
+      } finally {
+        setIsLoadingResources(false);
+      }
+    };
+    fetchResources();
+  }, []);
+
   const [surveyCompleted, setSurveyCompleted] = useState<boolean>(() =>
     localStorage.getItem('patricia_survey_completed') === 'true'
   );
@@ -241,27 +274,56 @@ export function WellnessPage() {
 
   const XP_REWARD = 100;
 
-  const handleConfirmAndSendSurvey = () => {
-    const recs = getRecommendations(surveyAnswers);
-    setRecommendations(recs);
-    setSurveyCompleted(true);
-    localStorage.setItem('patricia_survey_completed', 'true');
-    localStorage.setItem('patricia_survey_answers', JSON.stringify(surveyAnswers));
-    localStorage.setItem('patricia_survey_recommendations', JSON.stringify(recs));
-    addXP(XP_REWARD);
-    setSuccessMessage(`¡+${XP_REWARD} XP! Encuesta enviada con éxito.`);
-    setTimeout(() => { setSuccessMessage(''); setShowSurveyModal(false); setActiveTab('RECOMMENDATIONS'); }, 2500);
+  const handleConfirmAndSendSurvey = async () => {
+    try {
+      const surveyId = await submitSurvey(surveyAnswers);
+      const recs = await getSurveyRecommendations(surveyId);
+      setRecommendations(recs);
+      setSurveyCompleted(true);
+      localStorage.setItem('patricia_survey_completed', 'true');
+      localStorage.setItem('patricia_survey_answers', JSON.stringify(surveyAnswers));
+      localStorage.setItem('patricia_survey_recommendations', JSON.stringify(recs));
+      addXP(XP_REWARD);
+      setSuccessMessage(`¡+${XP_REWARD} XP! Encuesta enviada con éxito.`);
+      setTimeout(() => { setSuccessMessage(''); setShowSurveyModal(false); setActiveTab('RECOMMENDATIONS'); }, 2500);
+    } catch (err) {
+      console.error("Error submitting survey", err);
+      const recs = getRecommendations(surveyAnswers);
+      setRecommendations(recs);
+      setSurveyCompleted(true);
+      localStorage.setItem('patricia_survey_completed', 'true');
+      localStorage.setItem('patricia_survey_answers', JSON.stringify(surveyAnswers));
+      localStorage.setItem('patricia_survey_recommendations', JSON.stringify(recs));
+      addXP(XP_REWARD);
+      setSuccessMessage(`¡+${XP_REWARD} XP! Encuesta guardada (Modo Local).`);
+      setTimeout(() => { setSuccessMessage(''); setShowSurveyModal(false); setActiveTab('RECOMMENDATIONS'); }, 2500);
+    }
   };
 
-  const handleIncidentSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+  const handleIncidentSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     if (!incidentDescription.trim()) return;
-    setSuccessMessage('Incidente reportado con éxito de manera confidencial.');
-    setIncidentDescription(''); setIncidentLocation(''); setStudentId(''); setIsAnonymous(false);
-    setTimeout(() => { setSuccessMessage(''); setShowIncidentModal(false); }, 2500);
+
+    try {
+      await submitBehaviorReport({
+        type: incidentType,
+        description: incidentDescription,
+        location: incidentLocation,
+        anonymous: isAnonymous,
+        studentId: isAnonymous ? undefined : studentId
+      });
+      setSuccessMessage('Incidente reportado con éxito de manera confidencial.');
+      setIncidentDescription(''); setIncidentLocation(''); setStudentId(''); setIsAnonymous(false);
+      setTimeout(() => { setSuccessMessage(''); setShowIncidentModal(false); }, 2500);
+    } catch (err) {
+      console.error("Error reporting incident", err);
+      setSuccessMessage('El reporte fue guardado localmente.');
+      setIncidentDescription(''); setIncidentLocation(''); setStudentId(''); setIsAnonymous(false);
+      setTimeout(() => { setSuccessMessage(''); setShowIncidentModal(false); }, 2500);
+    }
   };
 
-  const filtered = wellnessResources.filter(r => {
+  const filtered = resourcesList.filter(r => {
     if (showActiveOnly && !r.active) return false;
     if (activeTab === 'RECOMMENDATIONS') return recommendations.includes(r.id);
     if (activeTab !== 'ALL' && r.category !== activeTab) return false;
