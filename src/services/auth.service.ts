@@ -1,44 +1,138 @@
-﻿import api from './http';
+import api from './http';
+import { jwtDecode } from 'jwt-decode';
 import type { User } from '../store/AppContext';
+import { profileService } from './profileService';
+
 export interface LoginPayload {
   email: string;
   password: string;
 }
-export interface RegisterPayload {
-  name: string;
-  email: string;
-  password: string;
-  faculty: string;
-  program: string;
-  semester: number;
-  interests: string[];
+
+export interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
 }
-export interface AuthResponse {
-  token: string;
-  user: User;
+
+export interface MessageResponse {
+  message: string;
 }
+
+interface JwtClaims {
+  sub: string;
+  email?: string;
+  name?: string;
+  roles?: string[];
+  iat: number;
+  exp: number;
+}
+
+export function decodeTokenToUser(token: string): User {
+  const claims = jwtDecode<JwtClaims>(token);
+  return {
+    id: claims.sub,
+    name: claims.name ?? claims.email ?? claims.sub,
+    email: claims.email ?? claims.sub,
+    avatar: '',
+    faculty: '',
+    semester: 1,
+    interests: [],
+    bio: '',
+    socialImpact: 0,
+    xp: 0,
+    level: 1,
+    activeParches: 0,
+    streak: 0,
+    rankFaculty: 0,
+    monas: [],
+  };
+}
+
+export function clearAuth() {
+  localStorage.removeItem('patricia-token');
+  localStorage.removeItem('patricia-refresh-token');
+  localStorage.removeItem('patricia-logged-in');
+  localStorage.removeItem('patricia_user_id');
+}
+
 export const authService = {
-  async login(payload: LoginPayload): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>('/auth/login', payload);
-    localStorage.setItem('patricia-token', data.token);
+  async login(payload: LoginPayload): Promise<{ tokens: TokenResponse; user: User }> {
+    const { data } = await api.post<TokenResponse>('/auth/login', payload);
+    localStorage.setItem('patricia-token', data.accessToken);
+    localStorage.setItem('patricia-refresh-token', data.refreshToken);
+    const user = decodeTokenToUser(data.accessToken);
+    localStorage.setItem('patricia_user_id', user.id);
+    try {
+      const profileUser = await profileService.getUserByEmail(payload.email);
+      localStorage.setItem('patricia_user_id', profileUser.id);
+    } catch {
+      // non-blocking
+    }
+    return { tokens: data, user };
+  },
+
+  async initVerification(email: string): Promise<MessageResponse> {
+    const { data } = await api.post<MessageResponse>('/auth/init-verification', { email });
     return data;
   },
-  async register(payload: RegisterPayload): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>('/auth/register', payload);
-    localStorage.setItem('patricia-token', data.token);
+
+  async verifyOtp(email: string, otp: string): Promise<TokenResponse> {
+    const { data } = await api.post<TokenResponse>('/auth/verify-otp', { email, otp });
+    localStorage.setItem('patricia-token', data.accessToken);
+    localStorage.setItem('patricia-refresh-token', data.refreshToken);
+    try {
+      const profileUser = await profileService.getUserByEmail(email);
+      localStorage.setItem('patricia_user_id', profileUser.id);
+    } catch {
+      // non-blocking
+    }
     return data;
   },
-  async forgotPassword(email: string): Promise<void> {
-    await api.post('/auth/forgot-password', { email });
+
+  async resendOtp(email: string): Promise<MessageResponse> {
+    const { data } = await api.post<MessageResponse>('/auth/resend-otp', { email });
+    return data;
   },
-  async resetPassword(token: string, password: string): Promise<void> {
-    await api.post('/auth/reset-password', { token, password });
+
+  async forgotPassword(email: string): Promise<MessageResponse> {
+    const { data } = await api.post<MessageResponse>('/auth/forgot-password', { email });
+    return data;
   },
-  async verifyOtp(email: string, code: string): Promise<void> {
-    await api.post('/auth/verify-otp', { email, code });
+
+  async resetPassword(
+    email: string,
+    code: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<MessageResponse> {
+    const { data } = await api.post<MessageResponse>('/auth/reset-password', {
+      email,
+      code,
+      newPassword,
+      confirmPassword,
+      passwordsMatch: newPassword === confirmPassword,
+    });
+    return data;
   },
-  logout(): void {
-    localStorage.removeItem('patricia-token');
-    localStorage.removeItem('patricia-logged-in');
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<MessageResponse> {
+    const { data } = await api.post<MessageResponse>('/auth/change-password', { currentPassword, newPassword });
+    return data;
+  },
+
+  async refreshToken(): Promise<TokenResponse> {
+    const refreshToken = localStorage.getItem('patricia-refresh-token');
+    const { data } = await api.post<TokenResponse>('/auth/refresh', { refreshToken });
+    localStorage.setItem('patricia-token', data.accessToken);
+    localStorage.setItem('patricia-refresh-token', data.refreshToken);
+    return data;
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await api.post('/auth/logout', {});
+    } finally {
+      clearAuth();
+    }
   },
 };

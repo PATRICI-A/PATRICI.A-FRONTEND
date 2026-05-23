@@ -43,9 +43,9 @@ const patriciaRarities = [
 ];
 
 const testimonials = [
-  { id: 't1', name: 'Carlos M.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100', program: 'Ingeniería de Sistemas · 5to semestre', comment: 'La mejor plataforma para conectar con estudiantes de mi facultad. Encontré mi grupo de estudio y ahora compartimos recursos y nos ayudamos mutuamente.', date: 'Hace 2 días', rating: 5 },
-  { id: 't2', name: 'María S.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100', program: 'Diseño Industrial · 3er semestre', comment: 'Increíble cómo patrici.a facilita la organización de eventos y parches. Ya he asistido a 5 eventos este mes.', date: 'Hace 1 semana', rating: 5 },
-  { id: 't3', name: 'Andrés L.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100', program: 'Administración · 7mo semestre', comment: 'El sistema de patricias es adictivo! Me encanta desbloquear nuevas y ver mi progreso en el campus.', date: 'Hace 3 días', rating: 4 },
+  { id: 't1', name: 'Ignacio Castillo', program: 'Estudiante · 7 Semestre Ingeniería de Sistemas', comment: 'Sería chévere esta oportunidad de interactuar con demás carreras.' },
+  { id: 't2', name: 'Laura', program: '3 Semestre Ingeniería Civil', comment: 'Mi mayor dificultad es encontrar personas con mis mismos intereses, me gustaría tener una ayuda para poder socializar.' },
+  { id: 't3', name: 'Santiago Malagón', program: 'Graduado de Economía', comment: 'Me parece una aplicación muy buena y útil, en su momento me hubiera servido mucho.' },
 ];
 
 export function LandingPage() {
@@ -173,8 +173,8 @@ export function LandingPage() {
               ))}
             </div>
             
-            <div className="absolute inset-0 px-6 sm:px-12 md:px-16 lg:px-24 flex flex-col z-20">
-              <div className="flex-1 flex flex-col justify-center mt-24 mb-4">
+            <div className="absolute inset-0 px-5 sm:px-10 md:px-16 lg:px-24 flex flex-col z-20">
+              <div className="flex-1 flex flex-col justify-center mt-20 sm:mt-24 mb-4">
                 <div className="max-w-5xl relative">
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -239,15 +239,15 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="px-6 py-24 relative overflow-hidden bg-transparent">
+        <section className="px-4 sm:px-6 py-14 sm:py-24 relative overflow-hidden bg-transparent">
           <div className="text-center mb-8 relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <h2 className="text-gray-900 dark:text-white mb-3 text-4xl md:text-5xl font-black tracking-tight">Todo lo que necesitas</h2>
               <p className="text-lg text-blue-600 dark:text-blue-400 font-medium">Una plataforma diseñada para el bienestar universitario</p>
             </motion.div>
           </div>
-          
-          <div className="relative w-full max-w-6xl mx-auto h-[350px] md:h-[280px] z-10 flex items-center">
+
+          <div className="relative w-full max-w-6xl mx-auto px-10 sm:px-0 h-auto md:h-[280px] min-h-[280px] z-10 flex items-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentFeatureIndex}
@@ -257,7 +257,7 @@ export function LandingPage() {
                 transition={{ duration: 0.4, ease: "circOut" }}
                 className="w-full"
               >
-                <div className="w-full relative flex flex-col md:flex-row items-center gap-8 md:gap-12 group p-8 md:p-12 z-10 min-h-[250px]">
+                <div className="w-full relative flex flex-col md:flex-row items-center gap-8 md:gap-12 group p-5 sm:p-8 md:p-12 z-10 min-h-[200px] sm:min-h-[250px]">
                   
                   <div className="absolute inset-0 bg-white/80 dark:bg-[#112240]/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-white/50 dark:border-white/10 overflow-hidden pointer-events-none -z-10">
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none" style={{ background: `radial-gradient(circle at center, ${features[currentFeatureIndex].glow}, transparent 70%)` }} />
@@ -265,22 +265,22 @@ export function LandingPage() {
 
                   <div className="relative z-10">
                     <div className="absolute inset-0 rounded-3xl blur-2xl opacity-50" style={{ background: features[currentFeatureIndex].gradient }} />
-                    <motion.div 
-                      animate={{ y: [0, -10, 0] }} 
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0 rounded-3xl flex items-center justify-center shadow-xl border border-white/20"
+                      className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 flex-shrink-0 rounded-3xl flex items-center justify-center shadow-xl border border-white/20"
                       style={{ background: features[currentFeatureIndex].gradient }}
                     >
                       {(() => {
                         const Icon = features[currentFeatureIndex].icon;
-                        return <Icon size={48} color="white" className="drop-shadow-lg" />;
+                        return <Icon size={36} color="white" className="drop-shadow-lg" />;
                       })()}
                     </motion.div>
                   </div>
 
                   <div className="flex-1 text-center md:text-left z-10 pr-0 md:pr-48">
-                    <h3 className="text-2xl md:text-3xl text-gray-900 dark:text-white mb-4 font-bold tracking-tight">{features[currentFeatureIndex].title}</h3>
-                    <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">{features[currentFeatureIndex].description}</p>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl text-gray-900 dark:text-white mb-4 font-bold tracking-tight">{features[currentFeatureIndex].title}</h3>
+                    <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">{features[currentFeatureIndex].description}</p>
                   </div>
 
                   <div className="hidden md:block absolute -right-4 -bottom-10 h-[320px] w-[450px] z-20 pointer-events-auto flex items-end justify-end">
@@ -302,11 +302,11 @@ export function LandingPage() {
               </motion.div>
             </AnimatePresence>
             
-            <button onClick={prevFeature} className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-2xl border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 hover:bg-gray-50 transition-all">
-              <ChevronLeft size={28} />
+            <button onClick={prevFeature} className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-2xl border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 hover:bg-gray-50 transition-all">
+              <ChevronLeft size={22} />
             </button>
-            <button onClick={nextFeature} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-2xl border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 hover:bg-gray-50 transition-all">
-              <ChevronRight size={28} />
+            <button onClick={nextFeature} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-2xl border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 hover:bg-gray-50 transition-all">
+              <ChevronRight size={22} />
             </button>
           </div>
 
@@ -325,18 +325,18 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="px-6 py-24 bg-[#050B14] relative overflow-hidden">
+        <section className="px-4 sm:px-6 py-14 sm:py-24 bg-[#050B14] relative overflow-hidden">
           <div className="absolute inset-0 opacity-20 mix-blend-screen" style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)' }} />
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
           <div className="text-center mb-8 relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="text-white mb-3 text-4xl md:text-5xl font-black tracking-tight">Colecciona Patricias</h2>
-              <p className="text-lg text-blue-400 font-medium">Mientras más patricias consigas, más XP sumas para subir de nivel</p>
+              <h2 className="text-white mb-3 text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">Colecciona Patricias</h2>
+              <p className="text-sm sm:text-lg text-blue-400 font-medium">Mientras más patricias consigas, más XP sumas para subir de nivel</p>
             </motion.div>
           </div>
-          
-          <div className="relative w-full max-w-6xl mx-auto h-[450px] md:h-[350px] z-10 flex items-center">
+
+          <div className="relative w-full max-w-6xl mx-auto px-10 sm:px-0 h-auto md:h-[350px] min-h-[350px] z-10 flex items-center">
              <AnimatePresence mode="wait">
                 <motion.div
                   key={currentRarityIndex}
@@ -346,14 +346,14 @@ export function LandingPage() {
                   transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
                   className="w-full"
                 >
-                  <div className="flex flex-col md:flex-row items-center justify-center gap-12 bg-white/5 backdrop-blur-xl w-full rounded-[3rem] p-8 md:p-12 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                  <div className="flex flex-col md:flex-row items-center justify-center gap-6 sm:gap-12 bg-white/5 backdrop-blur-xl w-full rounded-[3rem] p-5 sm:p-8 md:p-12 border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
                     
                     <motion.div
                         whileHover={{ scale: 1.05, rotateX: 10, rotateY: -10 }}
                         className="relative rounded-3xl overflow-hidden flex flex-col items-center flex-shrink-0 cursor-pointer"
                         style={{
-                          width: 180,
-                          height: 260,
+                          width: 150,
+                          height: 220,
                           background: patriciaRarities[currentRarityIndex].bg,
                           border: `2px solid ${patriciaRarities[currentRarityIndex].border}`,
                           boxShadow: `0 15px 40px ${patriciaRarities[currentRarityIndex].border}50, inset 0 0 20px rgba(255,255,255,0.1)`,
@@ -386,7 +386,7 @@ export function LandingPage() {
                         </div>
                         <div className="flex-1 flex items-center justify-center w-full mt-6 z-10">
                           <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                            <EmojiIcon emoji={patriciaRarities[currentRarityIndex].emoji} size={70} color="white" strokeWidth={1} />
+                            <EmojiIcon emoji={patriciaRarities[currentRarityIndex].emoji} size={55} color="white" strokeWidth={1} />
                           </motion.div>
                         </div>
                         <div className="w-full text-center py-3 backdrop-blur-md z-10 border-t border-white/20" style={{ background: 'rgba(0,0,0,0.4)' }}>
@@ -418,24 +418,24 @@ export function LandingPage() {
                 </motion.div>
              </AnimatePresence>
              
-             <button onClick={prevRarity} className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/5 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 flex items-center justify-center text-white z-20 hover:scale-110 hover:bg-white/20 transition-all">
-                <ChevronLeft size={28} />
+             <button onClick={prevRarity} className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white/5 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 flex items-center justify-center text-white z-20 hover:scale-110 hover:bg-white/20 transition-all">
+                <ChevronLeft size={22} />
              </button>
-             <button onClick={nextRarity} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/5 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 flex items-center justify-center text-white z-20 hover:scale-110 hover:bg-white/20 transition-all">
-                <ChevronRight size={28} />
+             <button onClick={nextRarity} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white/5 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 flex items-center justify-center text-white z-20 hover:scale-110 hover:bg-white/20 transition-all">
+                <ChevronRight size={22} />
              </button>
           </div>
         </section>
 
-        <section className="px-6 py-24 bg-transparent relative">
+        <section className="px-4 sm:px-6 py-14 sm:py-24 bg-transparent relative">
           <div className="text-center mb-8 relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="text-gray-900 dark:text-white mb-3 text-4xl md:text-5xl font-black tracking-tight">Voces de la comunidad</h2>
-              <p className="text-lg text-blue-600 dark:text-blue-400 font-medium">Experiencias reales de estudiantes ECI</p>
+              <h2 className="text-gray-900 dark:text-white mb-3 text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">Voces de la comunidad</h2>
+              <p className="text-sm sm:text-lg text-blue-600 dark:text-blue-400 font-medium">Experiencias reales de estudiantes ECI</p>
             </motion.div>
           </div>
-          
-          <div className="relative w-full max-w-5xl mx-auto h-[300px] md:h-[260px] mb-16 z-10">
+
+          <div className="relative w-full max-w-5xl mx-auto h-auto md:h-[260px] min-h-[260px] mb-4 md:mb-16 z-10">
              <AnimatePresence mode="wait">
                 <motion.div
                   key={currentTestimonialIndex}
@@ -443,45 +443,44 @@ export function LandingPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.98 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="w-full absolute inset-0 flex items-center justify-center"
+                  className="w-full md:absolute md:inset-0 flex items-center justify-center"
                 >
-                  <div className="bg-white dark:bg-[#112240] w-full rounded-[3rem] p-10 md:p-14 border border-gray-100 dark:border-[#233554] shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden group">
-                    <Quote size={120} className="absolute -top-4 -right-4 text-blue-500/5 dark:text-blue-400/5 rotate-12 transition-transform duration-700 group-hover:rotate-0 group-hover:scale-110" />
+                  <div className="bg-white dark:bg-[#112240] w-full rounded-[3rem] p-5 sm:p-8 md:p-14 border border-gray-100 dark:border-[#233554] shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden group">
+                    <Quote size={80} className="absolute -top-4 -right-4 text-blue-500/5 dark:text-blue-400/5 rotate-12 transition-transform duration-700 group-hover:rotate-0 group-hover:scale-110" />
                     
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
-                      <div className="relative">
-                        <img
-                          src={testimonials[currentTestimonialIndex].avatar}
-                          alt={testimonials[currentTestimonialIndex].name}
-                          className="w-24 h-24 md:w-28 md:h-28 rounded-full object-cover shadow-xl border-4 border-white dark:border-[#1A2C4E]"
-                        />
-                      </div>
-                      
-                      <div className="flex-1 text-center md:text-left">
-                        <div className="flex items-center justify-center md:justify-start gap-1 mb-4">
-                          {[...Array(testimonials[currentTestimonialIndex].rating)].map((_, i) => (
-                            <Star key={i} size={18} className="fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                        <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed font-medium italic mb-6">
-                          "{testimonials[currentTestimonialIndex].comment}"
-                        </p>
-                        <div>
-                          <p className="font-bold text-lg text-gray-900 dark:text-white">{testimonials[currentTestimonialIndex].name}</p>
-                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonials[currentTestimonialIndex].program}</p>
-                        </div>
+                    <div className="relative z-10">
+                      <p className="text-sm sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed font-medium italic mb-6">
+                        "{testimonials[currentTestimonialIndex].comment}"
+                      </p>
+                      <div>
+                        <p className="font-bold text-lg text-gray-900 dark:text-white">{testimonials[currentTestimonialIndex].name}</p>
+                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonials[currentTestimonialIndex].program}</p>
                       </div>
                     </div>
                   </div>
                 </motion.div>
              </AnimatePresence>
              
-             <button onClick={prevTestimonial} className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 transition-transform">
-                <ChevronLeft size={28} />
+             <button onClick={prevTestimonial} className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 transition-transform">
+                <ChevronLeft size={22} />
              </button>
-             <button onClick={nextTestimonial} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-14 h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 transition-transform">
-                <ChevronRight size={28} />
+             <button onClick={nextTestimonial} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 transition-transform">
+                <ChevronRight size={22} />
              </button>
+          </div>
+
+          <div className="text-center mt-6 mb-8 relative z-10">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Para ver más testimonios visita nuestro Instagram:{' '}
+              <a
+                href="https://www.instagram.com/patrici.a_eci"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                @patrici.a_eci
+              </a>
+            </p>
           </div>
 
           <div className="max-w-4xl mx-auto relative z-10">
@@ -507,17 +506,17 @@ export function LandingPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-[3rem] p-12 text-center md:text-left shadow-2xl relative overflow-visible group flex flex-col md:flex-row items-center justify-between min-h-[350px]">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-[3rem] p-7 sm:p-10 md:p-12 text-center md:text-left shadow-2xl relative overflow-visible group flex flex-col md:flex-row items-center justify-between min-h-[280px] sm:min-h-[350px]">
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500 rounded-[3rem]" />
                 
                 <div className="relative z-10 md:w-2/3 pr-0 md:pr-12 flex flex-col items-center md:items-start">
-                  <h3 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">¿Quieres ser parte de la historia?</h3>
-                  <p className="text-lg md:text-xl text-blue-100 font-medium mb-8 max-w-xl text-center md:text-left">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">¿Quieres ser parte de la historia?</h3>
+                  <p className="text-sm sm:text-lg md:text-xl text-blue-100 font-medium mb-8 max-w-xl text-center md:text-left">
                     Únete a la comunidad de patrici.a, comparte tus experiencias, crea parches y cambia la forma de vivir el campus.
                   </p>
                   <button
                     onClick={() => navigate('/register')}
-                    className="px-10 py-5 rounded-2xl bg-white text-blue-600 text-xl font-black transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.3)] relative z-10"
+                    className="px-7 py-4 text-base sm:px-10 sm:py-5 sm:text-xl rounded-2xl bg-white text-blue-600 font-black transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.3)] relative z-10"
                   >
                     Crear mi cuenta gratis
                   </button>

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Dedicated axios instance pointing at the analytics microservice
 const analyticsApi = axios.create({
-  baseURL: 'https://patricia-stati-analytics-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  baseURL: '/svc/analytics',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -16,6 +16,44 @@ analyticsApi.interceptors.request.use((config) => {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type MetricType = 'USERS' | 'PARCHES' | 'EVENTS' | 'MATCHES' | 'ZONES';
+export type PatchCategory = 'STUDY' | 'SPORTS' | 'CULTURE' | 'GAMING' | 'FOOD' | 'MUSIC' | 'OTHER';
+export type CampusZone = 'BIBLIOTECA' | 'CAFETERIA' | 'CANCHA' | 'SALON' | 'PARQUEADERO' | 'EXTERNO';
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+export type ParticipationLevel = 'EMBAJADOR' | 'CONECTOR' | 'ACTIVO' | 'NUEVO';
+
+export interface AchievementInfo {
+  id: string;
+  name: string;
+  description: string;
+  xpReward: number;
+  earnedAt: string;
+}
+
+export interface StudentDashboardResponse {
+  userId: string;
+  patchesAttended: number;
+  topCategory: PatchCategory;
+  weeklyActivity: Partial<Record<DayOfWeek, number>>;
+  participationLevel: ParticipationLevel;
+  computedAt: string;
+  achievementsEarned: number;
+  recentAchievements: AchievementInfo[];
+  progressToNextLevel: number;
+}
+
+export interface SocialIndicatorsResponse {
+  weeklyParticipation: Record<string, unknown>;
+  networkGrowth: Record<string, unknown>;
+  socialAffinity: Record<string, number>;
+  activityLevel: string;
+}
+
+export interface InteractionAnalyticsResponse {
+  totalInteractions: number;
+  mostActiveZone: CampusZone;
+  peakActivityDay: DayOfWeek;
+  interactionSummary: Record<string, number>;
+}
 export type InstitutionalMetricType = 'EVENTS' | 'PARTICIPATION' | 'SOCIAL_ACTIVITY' | 'ALL';
 export type ReportFormat = 'CSV';
 export type ScheduleFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
@@ -107,6 +145,26 @@ export interface ReportFiltersRequest {
 }
 
 // ─── API calls ───────────────────────────────────────────────────────────────
+
+/** Estudiante — GET /api/v1/analytics/dashboard */
+export const getStudentDashboard = async (): Promise<StudentDashboardResponse> => {
+  const { data } = await analyticsApi.get<StudentDashboardResponse>('/api/v1/analytics/dashboard');
+  return data;
+};
+
+/** Estudiante — GET /api/v1/analytics/social-indicators */
+export const getSocialIndicators = async (weekRange?: number): Promise<SocialIndicatorsResponse> => {
+  const { data } = await analyticsApi.get<SocialIndicatorsResponse>('/api/v1/analytics/social-indicators', {
+    params: weekRange !== undefined ? { weekRange } : undefined,
+  });
+  return data;
+};
+
+/** Estudiante — GET /api/v1/analytics/interaction-analytics */
+export const getInteractionAnalytics = async (): Promise<InteractionAnalyticsResponse> => {
+  const { data } = await analyticsApi.get<InteractionAnalyticsResponse>('/api/v1/analytics/interaction-analytics');
+  return data;
+};
 
 /** Tab: Análisis — GET /api/v1/analytics/admin */
 export const getAdminAnalytics = async (params: {

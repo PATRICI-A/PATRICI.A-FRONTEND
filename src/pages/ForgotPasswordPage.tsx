@@ -5,15 +5,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Mail, Lock, Eye, EyeOff, Check, AlertCircle,
   Sun, Moon, Send, RefreshCw, ShieldCheck, XCircle,
-  CheckCircle2,
+  CheckCircle2, KeyRound,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import { authService } from '../services/auth.service';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
-import patiContrasena from '../assets/Pati-Contrasena.png';
-import patiRestablecer from '../assets/Pati-restablecer.png';
-import llaveOlvidarContrasena from '../assets/Llave-OlvidarContrasena.png';
+import patiOlvidareImg from '../assets/pati-olvidar.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -81,8 +80,13 @@ export function ForgotPasswordPage() {
   const handleSend = async () => {
     if (!emailValid || sendLoading || blockCooldown > 0) return;
     setSendLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setSendLoading(false);
+    try {
+      await authService.forgotPassword(email);
+    } catch {
+      // Always show the same message to avoid email enumeration
+    } finally {
+      setSendLoading(false);
+    }
     const nextAttempts = sendAttempts + 1;
     setSendAttempts(nextAttempts);
     setStatusMsg('Si existe una cuenta asociada a ese correo, hemos enviado instrucciones para restablecer la contraseña.');
@@ -128,9 +132,15 @@ export function ForgotPasswordPage() {
     if (otpExpired) { setCodeError('El código ha expirado. Solicita uno nuevo.'); return; }
     if (!codeValid) { setCodeError('Código incorrecto.'); return; }
     setResetLoading(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setResetLoading(false);
-    setPhase('success');
+    try {
+      await authService.resetPassword(email, codeStr, newPassword, confirmPwd);
+      setPhase('success');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setCodeError(axiosErr.response?.data?.message ?? 'Error al restablecer la contraseña. Verifica el código.');
+    } finally {
+      setResetLoading(false);
+    }
   };
   const handleBack = () => {
     if (phase === 'reset') { setPhase('email'); return; }
@@ -150,98 +160,39 @@ export function ForgotPasswordPage() {
         }}
       />
       {}
-      <div className="mx-auto w-full max-w-6xl relative px-4 sm:px-6" style={{ zIndex: 1 }}>
-        <div className="flex items-center justify-between p-4 sm:p-6 lg:p-8">
-          <button
-            onClick={handleBack}
-            aria-label="Volver"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <button
-            onClick={toggleTheme}
-            aria-label="Cambiar tema"
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90 dark:bg-[#112240] shadow-sm text-gray-800 dark:text-white backdrop-blur"
-          >
-            {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
-        <div className="grid md:grid-cols-2 items-center gap-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
-            className="hidden md:flex justify-center md:justify-start"
-          >
-            <div className="w-full max-w-[460px] lg:max-w-[820px] xl:max-w-[920px] bg-transparent" style={{ aspectRatio: '3 / 4' }}>
-              <img
-                src={phase === 'reset' ? patiRestablecer : patiContrasena}
-                alt="Patricia ilustración de contraseña"
-                className="w-full h-full object-contain bg-transparent drop-shadow-none"
-                style={{ width: '100%', height: '100%' }}
-              />
-            </div>
-          </motion.div>
-          <div className="flex flex-col w-full">
-            <div className="md:hidden w-full mb-4 px-6 sm:px-8">
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-44 overflow-hidden bg-transparent flex-shrink-0 relative z-20" style={{ aspectRatio: '3 / 4' }}>
-                  <img src={phase === 'reset' ? patiRestablecer : patiContrasena} alt="Patricia" className="w-full h-full object-contain block" />
-                </div>
-                <div className="text-center">
-                  {phase === 'reset' ? (
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden" style={{ background: GRADIENT }}>
-                      <ShieldCheck size={28} color="white" strokeWidth={2} />
-                    </div>
-                  ) : (
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 overflow-hidden bg-transparent">
-                      <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
-                    </div>
-                  )}
-                  <h1 className="text-gray-900 dark:text-white" style={phase === 'reset' ? { color: '#000' } : undefined}>{phase === 'reset' ? 'Restablecer contraseña' : 'Olvidé mi contraseña'}</h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed" style={phase === 'reset' ? { color: '#000' } : undefined}>
-                    {phase === 'reset'
-                      ? (statusMsg || 'Introduce el código enviado y crea una nueva contraseña.')
-                      : 'Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.'}
-                </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden md:flex flex-col items-center mb-6 text-center">
-              {phase === 'reset' ? (
-                <>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: GRADIENT }}>
-                    <ShieldCheck size={28} color="white" strokeWidth={2} />
+      <div className="hidden md:block pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-[0.07]" style={{ background: GRADIENT }} />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'linear-gradient(135deg,#EC4899,#8B5CF6)' }} />
+      </div>
+      {}
+      <div className="relative w-full max-w-6xl mx-auto my-10 rounded-3xl shadow-none overflow-hidden flex flex-col min-h-screen md:min-h-0 dark:bg-transparent bg-transparent md:backdrop-blur-sm md:dark:bg-transparent transition-colors duration-300">
+        {}
+        {}
+        {}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 sm:px-6 md:px-8 pb-10 w-full">
+            <motion.div className="grid gap-8 lg:grid-cols-[1fr_1fr] items-center w-full">
+              <div className="order-1 lg:order-2">
+                <div className="rounded-[2rem] bg-white/90 dark:bg-[#0f172a]/90 shadow-none border border-transparent dark:border-transparent p-8 relative">
+                  <div className="flex items-center justify-between mb-6">
+                    <button
+                      onClick={handleBack}
+                      aria-label="Volver"
+                      className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-none text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <button
+                      onClick={toggleTheme}
+                      aria-label="Cambiar tema"
+                      className="w-9 h-9 rounded-full flex items-center justify-center bg-white dark:bg-[#1A304F] shadow-none text-gray-500 dark:text-gray-400 active:scale-90 transition-transform"
+                    >
+                      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                    </button>
                   </div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-white" style={{ color: '#000' }}>Restablecer contraseña</h1>
-                  {statusMsg && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md" style={{ color: '#000' }} aria-live="polite">
-                      {statusMsg}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden bg-transparent">
-                    <img src={llaveOlvidarContrasena} alt="Llave para olvidar contraseña" className="w-full h-full object-contain block" />
-                  </div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-md">
-                    Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className="relative w-full max-w-md mx-auto my-4 md:my-0 rounded-3xl shadow-2xl overflow-hidden flex flex-col bg-white/80 backdrop-blur-sm dark:bg-[#0D1F3C] md:dark:bg-[#112240] transition-colors duration-300" style={{ zIndex: 1 }}>
-              {}
-              <div className="flex-1 overflow-y-auto">
-                <div className="px-6 sm:px-8 py-8 w-full">
-            <AnimatePresence mode="wait">
-              {}
-              {phase === 'email' && (
+                  <AnimatePresence mode="wait">
+                {}
+                {phase === 'email' && (
                 <motion.div
                   key="email"
                   initial={{ opacity: 0, x: 30 }}
@@ -250,7 +201,15 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="mb-8 mt-2" />
+                  <div className="text-center mb-8 mt-2">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-none" style={{ background: GRADIENT }}>
+                      <KeyRound size={28} color="white" strokeWidth={2} />
+                    </div>
+                    <h1 className="text-gray-900 dark:text-white">Olvidé mi contraseña</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                      Ingresa tu correo institucional y te enviaremos instrucciones para restablecerla.
+                    </p>
+                  </div>
                   {}
                   <div className="mb-5">
                     <label htmlFor="fp-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -278,22 +237,19 @@ export function ForgotPasswordPage() {
                     </div>
                     <div id="fp-email-error" aria-live="polite" className="mt-1 min-h-[18px]" />
                     {}
-                    <p className="mt-1.5 text-[11px] transition-colors duration-200"
-                      style={{
-                        color: email.length === 0
-                          ? (isDark ? '#6B7280' : '#9CA3AF')
-                          : emailValid
-                          ? '#10B981'
-                          : '#EF4444',
-                      }}
-                    >
-                      {email.length > 0 && !emailValid ? '✗ ' : ''}
-                      {email.length > 0 && !emailValid ? (
-                        <>
-                          Debe terminar en <span className="font-medium">@mail.escuelaing.edu.co</span>
-                        </>
-                      ) : null}
-                    </p>
+                    {!emailValid && (
+                      <p className="mt-1.5 text-[11px] transition-colors duration-200"
+                        style={{
+                          color: email.length === 0
+                            ? (isDark ? '#6B7280' : '#9CA3AF')
+                            : '#EF4444',
+                        }}
+                      >
+                        {email.length > 0 ? '✗ ' : ''}
+                        Debe terminar en{' '}
+                        <span className="font-medium">@mail.escuelaing.edu.co</span>
+                      </p>
+                    )}
                   </div>
                   {}
                   {sendAttempts >= 2 && sendAttempts < MAX_SEND_ATTEMPTS && blockCooldown === 0 && (
@@ -329,7 +285,7 @@ export function ForgotPasswordPage() {
                     onClick={handleSend}
                     disabled={!emailValid || sendLoading || blockCooldown > 0}
                     whileTap={emailValid && !sendLoading && blockCooldown === 0 ? { scale: 0.97 } : {}}
-                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg transition-all"
+                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-none transition-all"
                     style={{
                       background: emailValid && blockCooldown === 0 ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'),
                       opacity: emailValid && !sendLoading && blockCooldown === 0 ? 1 : 0.65,
@@ -367,7 +323,24 @@ export function ForgotPasswordPage() {
                   transition={{ duration: 0.25 }}
                 >
                   {}
-                  <div className="mb-6 mt-2" />
+                  <div className="text-center mb-6 mt-2">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-none" style={{ background: GRADIENT }}>
+                      <ShieldCheck size={28} color="white" strokeWidth={2} />
+                    </div>
+                    <h1 className="text-gray-900 dark:text-white">Restablecer contraseña</h1>
+                    {}
+                    {statusMsg && (
+                      <motion.p
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-xs mt-2 px-4 leading-relaxed"
+                        style={{ color: TEAL }}
+                        aria-live="polite"
+                      >
+                        {statusMsg}
+                      </motion.p>
+                    )}
+                  </div>
                   {}
                   <div className="flex justify-center mb-5">
                     <div
@@ -556,7 +529,7 @@ export function ForgotPasswordPage() {
                     onClick={handleReset}
                     disabled={!resetValid || resetLoading}
                     whileTap={resetValid && !resetLoading ? { scale: 0.97 } : {}}
-                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-65"
+                    className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-none transition-all disabled:opacity-65"
                     style={{
                       background: resetValid ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'),
                       cursor: resetValid && !resetLoading ? 'pointer' : 'not-allowed',
@@ -591,7 +564,7 @@ export function ForgotPasswordPage() {
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.1 }}
-                    className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-xl"
+                    className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-none"
                     style={{ background: 'linear-gradient(135deg,#10B981,#06B6D4)' }}
                   >
                     <CheckCircle2 size={40} color="white" strokeWidth={2.5} />
@@ -608,7 +581,7 @@ export function ForgotPasswordPage() {
                     transition={{ delay: 0.4 }}
                     onClick={() => navigate('/login')}
                     whileTap={{ scale: 0.97 }}
-                    className="mt-8 w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg"
+                    className="mt-8 w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-none"
                     style={{ background: GRADIENT }}
                   >
                     Iniciar sesión
@@ -618,7 +591,14 @@ export function ForgotPasswordPage() {
             </AnimatePresence>
                 </div>
               </div>
-            </div>
+              <div className="order-2 lg:order-1 flex justify-center">
+                <img
+                  src={patiOlvidareImg}
+                  alt={phase === 'email' ? 'Patricia Olvidé contraseña' : 'Patricia Restablecer contraseña'}
+                  className="w-full max-w-md rounded-[2rem] object-cover bg-transparent"
+                />
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>

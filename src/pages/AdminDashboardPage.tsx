@@ -22,10 +22,11 @@ import {
   Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell,
   Clock, ChevronDown, User
 } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT, ECI_LOCATIONS } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import patyAdmin from '../assets/PATY_ADMIN.png';
 import patyAdmin2 from '../assets/PATY_ADMIN2.png';
+import patySelfieImg from '../assets/PATY SELFIE.png';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
 interface Metric {
@@ -192,8 +193,10 @@ export function AdminDashboardPage() {
   }, [activeSection, fetchReportHistory]);
 
   // Nuevo estado para Creación de Eventos
+  const [eventTab, setEventTab] = useState<'create' | 'manage'>('manage');
+  const [eventCreatedState, setEventCreatedState] = useState(false);
   const [newEvent, setNewEvent] = useState({
-    title: '', date: '', time: '', location: '', description: '', coverImage: ''
+    title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: ''
   });
   const [includePatricia, setIncludePatricia] = useState(false);
   const [newPatricia, setNewPatricia] = useState({
@@ -211,6 +214,11 @@ export function AdminDashboardPage() {
     if (editingEventId) {
       setEvents(prev => prev.map(ev => ev.id === editingEventId ? { ...ev, title: newEvent.title, date: newEvent.date, category: newEvent.description || ev.category } : ev));
       showSuccess(`Evento "${newEvent.title}" actualizado exitosamente.`);
+      setNewEvent({ title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: '' });
+      setIncludePatricia(false);
+      setNewPatricia({ image: '', description: '', xpValue: 50, rarity: 'comun', code: '' });
+      setEditingEventId(null);
+      setEventTab('manage');
     } else {
       const createdEvent: Event = {
         id: `e${Date.now()}`,
@@ -222,13 +230,17 @@ export function AdminDashboardPage() {
         category: 'Evento Oficial'
       };
       setEvents(prev => [createdEvent, ...prev]);
-      showSuccess(`Evento "${newEvent.title}" publicado exitosamente${includePatricia ? ' con Patricia asociada' : ''}.`);
+      
+      setEventCreatedState(true);
+      setTimeout(() => {
+        setEventCreatedState(false);
+        setNewEvent({ title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: '' });
+        setIncludePatricia(false);
+        setNewPatricia({ image: '', description: '', xpValue: 50, rarity: 'comun', code: '' });
+        setEditingEventId(null);
+        setEventTab('manage');
+      }, 2000);
     }
-    
-    setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' });
-    setIncludePatricia(false);
-    setNewPatricia({ image: '', description: '', xpValue: 50, rarity: 'comun', code: '' });
-    setEditingEventId(null);
   };
 
   const handleEditEvent = (eventToEdit: Event) => {
@@ -238,10 +250,12 @@ export function AdminDashboardPage() {
       date: eventToEdit.date,
       time: '',
       location: '',
+      locationDetails: '',
       description: eventToEdit.category,
       coverImage: ''
     });
     setIncludePatricia(false);
+    setEventTab('create');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -668,27 +682,27 @@ export function AdminDashboardPage() {
           {activeSection === 'analytics' && (
             <>
               {/* Welcome banner with Paty */}
-              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden mb-6">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden mb-6">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="flex items-center gap-4">
                   <motion.img
                     src={patyAdmin}
                     alt="Paty Admin"
-                    className="w-28 h-28 sm:w-36 sm:h-36 object-contain flex-shrink-0 drop-shadow-2xl"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0 drop-shadow-xl"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200 }}
                   />
-                  <div className="flex-1 text-center sm:text-left">
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
                       ¡Hola, Admin! 👋
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
-                      Bienvenido al panel de control de <span className="font-bold text-blue-600 dark:text-blue-400">PATRICI.A</span>. Aquí puedes monitorear la actividad del campus, gestionar usuarios y mucho más.
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-snug mt-0.5">
+                      Bienvenido al panel de control de <span className="font-bold text-blue-600 dark:text-blue-400">PATRICI.A</span>. Monitorea la actividad del campus y gestiona usuarios.
                     </p>
                     {loadingAnalytics && (
-                      <div className="flex items-center gap-2 mt-3">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                         <span className="text-xs font-bold text-blue-500">Cargando datos del servidor...</span>
                       </div>
                     )}
@@ -1457,34 +1471,34 @@ export function AdminDashboardPage() {
           {activeSection === 'users' && (
             <div className="space-y-8">
               {/* Buscador de usuarios premium con Paty */}
-              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden transition-all duration-300">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                  <div className="flex-1 text-center sm:text-left w-full">
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-2 text-2xl flex items-center justify-center sm:justify-start gap-3">
-                      <Users size={28} className="text-blue-500" />
-                      Directorio de Usuarios
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 max-w-xl">
-                      Gestiona, verifica y modera a todos los usuarios de la comunidad de PATRICI.A.
-                    </p>
-                    <div className="relative w-full max-w-2xl">
-                      <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-blue-500" />
-                      <input
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar usuarios por nombre o email..."
-                        className="w-full pl-14 pr-6 py-4 rounded-2xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border-2 border-gray-200/50 dark:border-[#233554]/50 text-gray-900 dark:text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#112240] transition-all shadow-inner"
-                      />
-                    </div>
-                  </div>
+                <div className="flex items-center gap-4 mb-4">
                   <motion.img
                     src={patyAdmin}
                     alt="Paty Directorio"
-                    className="w-28 h-28 sm:w-36 sm:h-36 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-3">
+                      <Users size={24} className="text-blue-500" />
+                      Directorio de Usuarios
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      Gestiona, verifica y modera a todos los usuarios de la comunidad de PATRICI.A.
+                    </p>
+                  </div>
+                </div>
+                <div className="relative w-full max-w-2xl">
+                  <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" />
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar usuarios por nombre o email..."
+                    className="w-full pl-12 pr-6 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border-2 border-gray-200/50 dark:border-[#233554]/50 text-gray-900 dark:text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#112240] transition-all shadow-inner"
                   />
                 </div>
               </div>
@@ -1565,31 +1579,31 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'parches' && (
             <div className="space-y-6">
-              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 justify-between">
-                  <div className="flex-1 text-center sm:text-left">
-                    <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 mb-2">
-                      <h3 className="font-bold text-gray-900 dark:text-white text-2xl flex items-center gap-3">
-                        <MapPin size={28} className="text-red-500" />
-                        Parches Activos y Reportados
-                      </h3>
-                      <span className="px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-sm font-black tracking-widest uppercase text-red-600 dark:text-red-400">
-                        {parches.length} Parches
-                      </span>
-                    </div>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
-                      Supervisa los grupos sociales activos, atiende los reportes de la comunidad y asegura un ambiente seguro.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-4 mb-5">
                   <motion.img
                     src={patyAdmin2}
                     alt="Paty Parches"
-                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    className="w-16 h-20 sm:w-20 sm:h-24 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200 }}
                   />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-2">
+                        <MapPin size={22} className="text-red-500" />
+                        Parches Activos y Reportados
+                      </h3>
+                      <span className="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-xs font-black tracking-widest uppercase text-red-600 dark:text-red-400">
+                        {parches.length} Parches
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Supervisa los grupos sociales activos, atiende los reportes de la comunidad y asegura un ambiente seguro.
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -1661,29 +1675,68 @@ export function AdminDashboardPage() {
           {activeSection === 'events' && (
             <div className="space-y-6">
               {/* Eventos header with Paty */}
-              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
-                  <div className="flex-1 text-center sm:text-left">
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center justify-center sm:justify-start gap-3">
-                      <Calendar size={28} className="text-blue-500" />
-                      Gestión de Eventos
-                    </h2>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
-                      Crea y administra eventos institucionales oficiales. También puedes configurar y asociar Monas (Patricias) exclusivas para los asistentes.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-4">
                   <motion.img
                     src={patyAdmin}
                     alt="Paty Eventos"
-                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    className="w-16 h-20 sm:w-20 sm:h-24 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200 }}
                   />
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                      <Calendar size={24} className="text-blue-500" />
+                      Gestión de Eventos
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      Crea y administra eventos institucionales oficiales con Monas (Patricias) exclusivas para asistentes.
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              {/* Tabs para eventos */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setEventTab('manage')}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                    eventTab === 'manage'
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-white/80 dark:bg-[#112240]/80 text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-[#1A2F4A]'
+                  }`}
+                >
+                  Ver Eventos Activos
+                </button>
+                <button
+                  onClick={() => setEventTab('create')}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                    eventTab === 'create'
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-white/80 dark:bg-[#112240]/80 text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-[#1A2F4A]'
+                  }`}
+                >
+                  Crear Evento Oficial
+                </button>
+              </div>
+
+              {/* Contenido Condicional */}
+              {eventCreatedState ? (
+                <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-12 shadow-xl flex flex-col items-center justify-center text-center transition-all">
+                  <motion.img
+                    src={patySelfieImg}
+                    alt="Evento Creado"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-48 h-48 sm:w-64 sm:h-64 object-contain mb-6 drop-shadow-2xl"
+                  />
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">¡Evento Creado!</h3>
+                  <p className="text-gray-600 dark:text-gray-400">El evento ha sido registrado exitosamente y ya es público.</p>
+                </div>
+              ) : eventTab === 'create' ? (
+              <>
               {/* Formulario de Creación de Eventos */}
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
@@ -1700,7 +1753,24 @@ export function AdminDashboardPage() {
                     </div>
                     <div>
                       <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Ubicación *</label>
-                      <input value={newEvent.location} onChange={e => setNewEvent({...newEvent, location: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="Ej. Plazoleta Principal" />
+                      <div className="relative">
+                        <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
+                        <select
+                          value={newEvent.location}
+                          onChange={e => setNewEvent({...newEvent, location: e.target.value})}
+                          className="w-full pl-12 pr-10 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none"
+                        >
+                          <option value="" disabled>Selecciona el lugar...</option>
+                          {ECI_LOCATIONS.map(loc => (
+                            <option key={loc} value={loc}>{loc}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Detalles de la ubicación (Opcional)</label>
+                      <input value={newEvent.locationDetails} onChange={e => setNewEvent({...newEvent, locationDetails: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="Ej. Frente a la cancha principal, Salón 204" />
                     </div>
                     <div>
                       <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Fecha *</label>
@@ -1800,14 +1870,16 @@ export function AdminDashboardPage() {
                       <CheckCircle size={22} /> {editingEventId ? 'Guardar Cambios' : 'Publicar Evento Oficial'}
                     </motion.button>
                     {editingEventId && (
-                      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' }); }} className="w-full sm:w-auto px-6 py-4 rounded-2xl text-gray-700 dark:text-gray-300 font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1A2F4A] hover:bg-gray-200 dark:hover:bg-[#233554] transition-all ml-0 sm:ml-4 mt-4 sm:mt-0">
+                      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: '' }); }} className="w-full sm:w-auto px-6 py-4 rounded-2xl text-gray-700 dark:text-gray-300 font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1A2F4A] hover:bg-gray-200 dark:hover:bg-[#233554] transition-all ml-0 sm:ml-4 mt-4 sm:mt-0">
                         Cancelar
                       </motion.button>
                     )}
                   </div>
                 </form>
               </div>
-
+              </>
+              ) : (
+              <>
               {/* Lista de Eventos */}
               <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl">
                 <div className="flex items-center justify-between mb-6">
@@ -1868,32 +1940,34 @@ export function AdminDashboardPage() {
                   )}
                 </div>
               </div>
+              </>
+              )}
             </div>
           )}
           {}
           {activeSection === 'patricias' && (
             <div className="space-y-6">
               {/* Patricias header with Paty */}
-              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
-                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
-                  <div className="flex-1 text-center sm:text-left">
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center justify-center sm:justify-start gap-3">
-                      <Zap size={28} className="text-purple-500 fill-purple-500/20" />
-                      Inventario de Monas
-                    </h2>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
-                      Administra la colección oficial de Patricias de la universidad, su nivel de rareza y puntos XP otorgados.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-4">
                   <motion.img
                     src={patyAdmin2}
                     alt="Paty Colección"
-                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    className="w-16 h-20 sm:w-20 sm:h-24 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200 }}
                   />
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                      <Zap size={24} className="text-purple-500 fill-purple-500/20" />
+                      Inventario de Monas
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      Administra la colección oficial de Patricias de la universidad, su nivel de rareza y puntos XP otorgados.
+                    </p>
+                  </div>
                 </div>
               </div>
               

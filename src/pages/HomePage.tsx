@@ -2,11 +2,39 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
-import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
+import { Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { parches, matchUsers, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
+import { parches, vibraCategories, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
+import { useMatchingStore } from '../store/matchingStore';
+import type { Event, Mona } from '../types/mockData';
+import { eventsService } from '../services/events.service';
+import type { ApiEvent } from '../services/events.service';
+import { getMonas } from '../services/gamification.service';
+
+const HOME_MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const HOME_CAT_META: Record<string, { uiCat: string; emoji: string; gradient: string }> = {
+  ACADEMIC: { uiCat: 'Tecnología', emoji: '💻', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
+  CULTURAL: { uiCat: 'Arte',       emoji: '🎨', gradient: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)' },
+  SPORTS:   { uiCat: 'Social',     emoji: '⚽', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
+  WELLNESS: { uiCat: 'Bienestar',  emoji: '🧘', gradient: 'linear-gradient(135deg, #06B6D4 0%, #10B981 100%)' },
+};
+function homeApiEventToMock(e: ApiEvent): Event {
+  const d = new Date(e.dateTime);
+  const meta = HOME_CAT_META[e.category] ?? { uiCat: 'Social', emoji: '🎉', gradient: GRADIENT };
+  const attended = (e.maxCapacity ?? 0) - (e.availableCapacity ?? e.maxCapacity ?? 0);
+  return {
+    id: e.id, title: e.name, description: e.description ?? '',
+    category: meta.uiCat, emoji: meta.emoji,
+    date: `${d.getDate()} ${HOME_MONTHS[d.getMonth()]} ${d.getFullYear()}`,
+    time: e.startTime ?? '', location: e.location,
+    organizer: 'Escuela Colombiana de Ingeniería',
+    attendees: Math.max(attended, 0), maxAttendees: e.maxCapacity,
+    coverGradient: meta.gradient, official: e.type === 'WITH_CAPACITY',
+    registered: false, reminder: false, tags: [meta.uiCat],
+    isPast: e.status === 'FINISHED' || e.status === 'CANCELLED',
+  };
+}
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import patySelfie from '../assets/PatySelfie.png';
 import patyAlbum from '../assets/Album.png';
 import mascotFutbol from '../assets/mascota_futbol.png';
 import vibraMusica from '../assets/Musica-removebg-preview.png';
@@ -17,19 +45,34 @@ import vibraVideojuegos from '../assets/Videojuegos-removebg-preview.png';
 import vibraPintura from '../assets/Pintura-removebg-preview.png';
 export function HomePage() {
   const navigate = useNavigate();
-  const { currentUser, isDark, geo } = useApp();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
+  const { isDark, geo } = useApp();
+  const matchingStore = useMatchingStore();
+  const [homeEvents, setHomeEvents] = useState<Event[]>([]);
+  const [homeMonas, setHomeMonas] = useState<Mona[]>(monas);
+
+  useEffect(() => {
+    eventsService.getEvents().then(apiEvents => {
+      if (apiEvents.length > 0) setHomeEvents(apiEvents.map(homeApiEventToMock));
+    });
+    getMonas().then(apiMonas => {
+      if (apiMonas.length > 0) {
+        const unlockedSet = new Set(apiMonas.filter(m => m.unlocked).map(m => m.monaId));
+        setHomeMonas(monas.map(m => ({ ...m, unlocked: unlockedSet.has(m.id) })));
+      }
+    });
+    if (matchingStore.explore.length === 0) matchingStore.loadTab('explore');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
-  const autoplayTimerRef = useRef<any>(null);
+  const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAutoplay = () => {
     if (autoplayTimerRef.current) {
       clearInterval(autoplayTimerRef.current);
     }
     autoplayTimerRef.current = setInterval(() => {
-      setCurrentEventIndex(prev => (prev + 1) % events.length);
+      setCurrentEventIndex(prev => (prev + 1) % homeEvents.length);
     }, 6000);
   };
 
@@ -43,15 +86,16 @@ export function HomePage() {
   useEffect(() => {
     startAutoplay();
     return () => stopAutoplay();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNextEvent = () => {
-    setCurrentEventIndex(prev => (prev + 1) % events.length);
+    setCurrentEventIndex(prev => (prev + 1) % homeEvents.length);
     startAutoplay();
   };
 
   const handlePrevEvent = () => {
-    setCurrentEventIndex(prev => (prev === 0 ? events.length - 1 : prev - 1));
+    setCurrentEventIndex(prev => (prev === 0 ? homeEvents.length - 1 : prev - 1));
     startAutoplay();
   };
 
@@ -87,23 +131,18 @@ export function HomePage() {
     setVibraAtStart(scrollLeft <= 10);
     setVibraAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
   };
-  const handleQuickConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
-    const status = connectionStates[userId] || currentStatus || 'none';
-    if (status === 'none') {
-      setConnectionStates(prev => ({ ...prev, [userId]: 'pending' }));
-    }
+  const handleQuickConnect = (userId: string) => {
+    const user = matchingStore.explore.find(u => u.id === userId);
+    if (!user || user.connectionStatus !== 'none') return;
+    matchingStore.sendRequest(userId);
   };
-  const getConnectionStatus = (userId: string, originalStatus?: 'none' | 'pending' | 'connected') => {
-    return connectionStates[userId] || originalStatus || 'none';
-  };
-  const featuredEvent = events[0];
   const topParches = parches.slice(0, 3);
-  const topMatches = matchUsers.slice(0, 4);
-  const unlockedMonas = monas.filter(m => m.unlocked);
-  const totalMonas = monas.length;
-  const albumPercent = Math.round((unlockedMonas.length / totalMonas) * 100);
+  const topMatches = matchingStore.explore.slice(0, 4);
+  const unlockedMonas = homeMonas.filter(m => m.unlocked);
+  const totalMonas = homeMonas.length;
+  const albumPercent = totalMonas > 0 ? Math.round((unlockedMonas.length / totalMonas) * 100) : 0;
   const recentMonas = unlockedMonas.slice(-4);
-  const nextMona = monas.find(m => !m.unlocked);
+  const nextMona = homeMonas.find(m => !m.unlocked);
   return (
     <div className="w-full md:w-4/6 md:mx-auto flex flex-col min-h-screen pb-4">
       {}
@@ -221,7 +260,7 @@ export function HomePage() {
                 </div>
                 {nextMona && (
                   <p className="text-xs mt-2" style={{ color: isDark ? '#6B7280' : 'rgba(10,25,47,0.45)' }}>
-                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.condition}
+                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.description}
                   </p>
                 )}
               </div>
@@ -402,7 +441,7 @@ export function HomePage() {
                   }}
                 >
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform"
                     style={{ background: parche.coverColor }}
                   >
                     <EmojiIcon emoji={parche.emoji} size={20} color="white" strokeWidth={2} />
@@ -410,7 +449,7 @@ export function HomePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <h3 className="font-semibold text-gray-800 dark:text-white text-xs truncate">{parche.name}</h3>
-                      {parche.trending && (
+                      {parche.type === 'public' && (
                         <span className="flex items-center gap-0.5 text-[9px] font-bold" style={{ color: ORANGE }}>
                           <Flame size={12} />
                         </span>
@@ -559,7 +598,19 @@ export function HomePage() {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {topMatches.slice(0, 4).map((user, i) => (
+          {matchingStore.loading.explore && topMatches.length === 0 ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl overflow-hidden flex flex-row animate-pulse" style={{ height: '160px', background: isDark ? '#112240' : '#F3F4F6' }}>
+                <div className="flex-shrink-0" style={{ width: '50%', background: isDark ? '#1E3A5F' : '#E5E7EB' }} />
+                <div className="flex flex-col gap-2 p-4" style={{ width: '50%' }}>
+                  <div className="h-4 rounded-full" style={{ background: isDark ? '#1E3A5F' : '#E5E7EB', width: '70%' }} />
+                  <div className="h-3 rounded-full" style={{ background: isDark ? '#1E3A5F' : '#E5E7EB', width: '50%' }} />
+                </div>
+              </div>
+            ))
+          ) : topMatches.length === 0 ? (
+            <p className="col-span-2 text-center text-gray-400 py-6 text-sm">No hay matches disponibles aún</p>
+          ) : topMatches.map((user, i) => (
             <motion.div
               key={user.id}
               initial={{ opacity: 0, y: 10 }}
@@ -574,25 +625,23 @@ export function HomePage() {
                 height: '160px',
               }}
             >
-              
               <div className="relative flex-shrink-0" style={{ width: '50%' }}>
                 <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)' }}>
                   <span className="text-white font-bold text-4xl select-none">{user.name.charAt(0)}</span>
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                    onError={e => { e.currentTarget.style.display = 'none'; }}
-                  />
+                  {user.photoUrl && (
+                    <img
+                      src={user.photoUrl}
+                      alt={user.name}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      onError={e => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
                 </div>
-                
                 <div className="absolute inset-y-0 right-0 w-8 pointer-events-none" style={{ background: isDark ? 'linear-gradient(to right, transparent, #112240)' : 'linear-gradient(to right, transparent, rgba(253,252,248,0.95))' }} />
                 <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold text-white shadow" style={{ background: TEAL_GRADIENT }}>
                   {user.matchPercent}%
                 </div>
-
               </div>
-              
               <div className="flex flex-col justify-between p-4" style={{ width: '50%' }}>
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
@@ -600,33 +649,37 @@ export function HomePage() {
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: TEAL }} />
                   </div>
                   <div className="flex gap-1.5 flex-wrap mb-2">
-                    {user.interests.slice(0, 2).map(interest => (
-                      <span key={interest} className="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style={{ background: isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.1)', color: TEAL }}>
-                        {interest}
+                    {user.tags.slice(0, 2).map(tag => (
+                      <span key={tag} className="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style={{ background: isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.1)', color: TEAL }}>
+                        {tag}
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-1"><MapPin size={11} /> {user.commonPlace}</p>
+                  {user.career && (
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                      <MapPin size={11} /> {user.career.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                    </p>
+                  )}
                 </div>
                 <div className="mt-2">
-                <button
-                  className="w-full py-2 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95 text-white text-xs font-bold shadow-md"
-                  style={{
-                    background: getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? '#10B981' :
-                                getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? '#F59E0B' :
-                                GRADIENT,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  }}
-                  onClick={e => { e.stopPropagation(); handleQuickConnect(user.id, user.connectionStatus); }}
-                >
-                  {getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? (
-                    <><Heart size={13} fill="white" /><span>Conectado</span></>
-                  ) : getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? (
-                    <><Clock size={13} /><span>Pendiente</span></>
-                  ) : (
-                    <><Heart size={13} /><span>Conectar</span></>
-                  )}
-                </button>
+                  <button
+                    className="w-full py-2 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95 text-white text-xs font-bold shadow-md"
+                    style={{
+                      background: user.connectionStatus === 'connected' ? '#10B981' :
+                                  user.connectionStatus === 'pending' ? '#F59E0B' :
+                                  GRADIENT,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
+                    onClick={e => { e.stopPropagation(); handleQuickConnect(user.id); }}
+                  >
+                    {user.connectionStatus === 'connected' ? (
+                      <><Heart size={13} fill="white" /><span>Conectado</span></>
+                    ) : user.connectionStatus === 'pending' ? (
+                      <><Clock size={13} /><span>Pendiente</span></>
+                    ) : (
+                      <><Heart size={13} /><span>Conectar</span></>
+                    )}
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -634,8 +687,8 @@ export function HomePage() {
         </div>
       </section>
       {}
-      <section className="px-5 mb-8 relative">
-        
+      {homeEvents.length > 0 && <section className="px-5 mb-8 relative">
+
         <div className="flex items-end justify-between mb-4 relative z-20">
           <div>
             <div className="flex items-center gap-2">
@@ -655,7 +708,7 @@ export function HomePage() {
           <div className="relative min-h-[460px] sm:min-h-[360px] w-full overflow-visible">
             <AnimatePresence mode="wait">
               {(() => {
-                const event = events[currentEventIndex];
+                const event = homeEvents[currentEventIndex] ?? homeEvents[0];
                 return (
                   <motion.div
                     key={currentEventIndex}
@@ -852,7 +905,7 @@ export function HomePage() {
 
           
           <div className="flex justify-center gap-2 mt-4 relative z-20">
-            {events.map((_, idx) => (
+            {homeEvents.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectEvent(idx)}
@@ -868,10 +921,10 @@ export function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
       {}
       <section className="px-5 mb-8 relative">
-        
+
         <div className="flex items-end justify-between mb-4 relative z-20">
           <div>
             <div className="flex items-center gap-2">
@@ -1071,14 +1124,6 @@ export function HomePage() {
           )}
         </div>
       </section>
-      {}
-      <button
-        onClick={() => navigate('/parches/create')}
-        className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"
-        style={{ background: GRADIENT }}
-      >
-        <Plus size={28} />
-      </button>
     </div>
   );
 }

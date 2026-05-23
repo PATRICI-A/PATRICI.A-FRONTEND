@@ -1,9 +1,18 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Bell, Shield, Eye, EyeOff, Moon, Globe, Trash2, ChevronRight, Sun, Smartphone, Volume2, MapPin, Users, Lock } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import { profileService } from '../services/profileService';
+import { clearAuth } from '../services/auth.service';
+
+const PRIVACY_TO_API: Record<string, string> = {
+  PUBLICO: 'PUBLIC', SOLO_MATCHES: 'FRIENDS_ONLY', PRIVADO: 'PRIVATE',
+};
+const API_TO_PRIVACY: Record<string, string> = {
+  PUBLIC: 'PUBLICO', FRIENDS_ONLY: 'SOLO_MATCHES', PRIVATE: 'PRIVADO',
+};
 
 type PrivacyLevel = 'PUBLICO' | 'SOLO_MATCHES' | 'PRIVADO';
 
@@ -25,6 +34,34 @@ export function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    profileService.getMyProfile().then(profile => {
+      if (profile?.privacyLevel && API_TO_PRIVACY[profile.privacyLevel]) {
+        setPrivacyLevel(API_TO_PRIVACY[profile.privacyLevel] as PrivacyLevel);
+      }
+    });
+  }, []);
+
+  const handlePrivacyChange = (level: PrivacyLevel) => {
+    setPrivacyLevel(level);
+    const userId = localStorage.getItem('patricia_user_id');
+    if (userId) profileService.updateProfile(userId, { privacyLevel: PRIVACY_TO_API[level] });
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) return;
+    const userId = localStorage.getItem('patricia_user_id');
+    if (!userId) return;
+    setIsDeleting(true);
+    try {
+      await profileService.deleteAccount(userId);
+    } catch { /* ignore — still clear auth and redirect */ } finally {
+      clearAuth();
+      navigate('/login');
+    }
+  };
 
   const ToggleSwitch = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
     <button
@@ -145,7 +182,7 @@ export function SettingsPage() {
                 return (
                   <button
                     key={opt.value}
-                    onClick={() => setPrivacyLevel(opt.value)}
+                    onClick={() => handlePrivacyChange(opt.value)}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all active:scale-[0.98]"
                     style={{
                       borderColor: selected ? opt.color : (isDark ? '#2A2D4A' : '#E5E7EB'),
@@ -263,11 +300,11 @@ export function SettingsPage() {
                   Cancelar
                 </button>
                 <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={!deletePassword}
+                  onClick={handleDeleteAccount}
+                  disabled={!deletePassword || isDeleting}
                   className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  Eliminar cuenta
+                  {isDeleting ? 'Eliminando...' : 'Eliminar cuenta'}
                 </button>
               </div>
             </div>

@@ -3,22 +3,31 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Lock, Mail, ShieldCheck, AlertCircle, Sun, Moon } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE } from '../types/mockData';
+import { GRADIENT, PINK } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
+import { authService } from '../services/auth.service';
 export function AdminLoginPage() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useApp();
-  const [email, setEmail] = useState('admin@admin.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const handleLogin = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@admin.com' && password.length > 0) {
+    setError('');
+    setIsLoading(true);
+    try {
+      await authService.login({ email, password });
       localStorage.setItem('adminSession', 'true');
       navigate('/admin/dashboard');
-    } else {
-      setError('Credenciales de administrador inválidas');
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string; error?: string } } };
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? 'Credenciales de administrador inválidas';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -89,7 +98,7 @@ export function AdminLoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@admin.com"
+                  placeholder="correo@escuelaing.edu.co"
                   className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
                   required
                 />
@@ -128,11 +137,15 @@ export function AdminLoginPage() {
             <motion.button
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full py-3.5 rounded-xl text-white font-bold shadow-lg flex items-center justify-center gap-2"
+              disabled={isLoading}
+              className="w-full py-3.5 rounded-xl text-white font-bold shadow-lg flex items-center justify-center gap-2 disabled:opacity-60"
               style={{ background: GRADIENT }}
             >
-              <ShieldCheck size={18} />
-              Acceder al Panel
+              {isLoading ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verificando...</>
+              ) : (
+                <><ShieldCheck size={18} />Acceder al Panel</>
+              )}
             </motion.button>
           </form>
           {}

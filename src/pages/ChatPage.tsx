@@ -4,15 +4,32 @@ import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Send, Smile, Plus, Phone, MoreVertical,
-  Image as ImageIcon, Users, X, Bell, BellOff, Trash2,
-  UserCheck, Film, ChevronRight, Search, AlertCircle, Eraser,
-  MapPin, Clock, User, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
+  Image as ImageIcon, Users, BellOff,
+  UserCheck, Search, AlertCircle, Eraser,
+  MapPin, Clock, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { parches, chatMessages, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
+import { parches, directChats, matchUsers, GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
+import { chatService, type MessageResponse } from '../services/chat.service';
+import { getParcheById } from '../services/parches.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  MUSIC: '🎵', SPORT: '⚽', TECHNOLOGY: '💻', STUDY: '📚',
+  CULTURE: '🎨', SOCIAL: '🤝', FOOD: '🍕', WELLNESS: '🧘',
+};
+const CATEGORY_COLOR: Record<string, string> = {
+  MUSIC: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+  SPORT: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)',
+  TECHNOLOGY: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+  STUDY: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+  CULTURE: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
+  SOCIAL: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+  FOOD: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)',
+  WELLNESS: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+};
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
 function extractGradientColors(coverColor: string) {
   const hexes = coverColor.match(/#[0-9A-Fa-f]{6}/g);
@@ -20,12 +37,6 @@ function extractGradientColors(coverColor: string) {
   const bubbleBg = coverColor.includes('gradient') ? coverColor : `linear-gradient(135deg, ${accentColor}, ${accentColor})`;
   return { bubbleBg, accentColor };
 }
-const chatList = parches.filter(p => p.joined).map((p, i) => ({
-  ...p,
-  lastMessage: ['¡Ya estoy en la mesa del fondo! 🔌', 'Coffee & Python esta noche? ☕', 'Alguien ya terminó los ejercicios?'][i % 3],
-  lastTime: ['Ahora', '15 min', '1h'][i % 3],
-  unread: [3, 0, 1][i % 3],
-}));
 const CONTEXT_ACTIONS = [
   { icon: UserCheck, label: 'Ver perfil del parche',    color: '#3B82F6', action: 'profile' },
   { icon: Search,    label: 'Buscar en el chat',        color: '#06B6D4', action: 'search' },
@@ -37,73 +48,99 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { currentUser, isDark } = useApp();
-  const parche = parches.find(p => p.id === id) || parches[0];
-  const [messages, setMessages] = useState<typeof chatMessages>([]);
+  const mockParche = parches.find(p => p.id === id) || parches[0];
+  const [apiParche, setApiParche] = useState<{ id: string; name: string; emoji: string; coverColor: string; membersCount: number } | null>(null);
+  const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [mutedChats, setMutedChats] = useState<string[]>([]);
-  const [reportingMessage, setReportingMessage] = useState<typeof chatMessages[0] | null>(null);
+  const [reportingMessage, setReportingMessage] = useState<MessageResponse | null>(null);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
+
+  const parche = apiParche
+    ? { id: apiParche.id, name: apiParche.name, emoji: apiParche.emoji, coverColor: apiParche.coverColor, members: apiParche.membersCount }
+    : mockParche;
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
 
-  // reiniciar mensajes al cambiar de chat
+  // Helper to fetch matching user avatars
+  const getSenderAvatar = (senderId: string) => {
+    if (senderId === currentUser?.id || senderId === 'u1') {
+      return currentUser?.avatar || 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?w=50';
+    }
+    const matched = matchUsers.find(u => u.id === senderId) || 
+                    directChats.find(c => c.userId === senderId);
+    return matched?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50';
+  };
+
+  // Load real parche info and messages from the backend
   useEffect(() => {
-    const currentParche = parches.find(p => p.id === id) || parches[0];
-    setMessages(chatMessages.filter(m => m.chatId === currentParche.id));
-    setInput('');
-    setShowEmojis(false);
-    setShowInfo(false);
-    setShowAttachments(false);
-    setShowContextMenu(false);
+    if (!id) return;
+
+    Promise.allSettled([
+      getParcheById(id),
+      chatService.fetchParcheMessages(id, 0, 100),
+    ]).then(([parcheResult, msgsResult]) => {
+      setInput('');
+      setShowEmojis(false);
+      setShowInfo(false);
+      setShowAttachments(false);
+      setShowContextMenu(false);
+
+      if (parcheResult.status === 'fulfilled') {
+        const data = parcheResult.value;
+        const cat = data.category?.toUpperCase() ?? 'SOCIAL';
+        setApiParche({
+          id: data.id,
+          name: data.name,
+          emoji: CATEGORY_EMOJI[cat] ?? '🤝',
+          coverColor: CATEGORY_COLOR[cat] ?? 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+          membersCount: data.actualMembers,
+        });
+      }
+
+      if (msgsResult.status === 'fulfilled') {
+        setMessages(msgsResult.value.content);
+      } else {
+        setMessages([]);
+        console.error('Error al cargar mensajes del parche:', msgsResult.reason);
+      }
+    });
   }, [id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const newMsg = {
-      id: `m_${Date.now()}`,
-      chatId: parche.id,
-      sender: 'Tú',
-      senderId: 'u1',
-      avatar: currentUser?.avatar || '',
-      content: input.trim(),
-      timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
-      type: 'text' as const,
-      isMe: true,
-    };
-    chatMessages.push(newMsg); // Mutar arreglo global en memoria
-    setMessages(prev => [...prev, newMsg]);
-    setInput('');
-    setShowEmojis(false);
-    if (Math.random() > 0.5) {
-      setTimeout(() => {
-        const replies = ['¡Genial! 🙌', 'Sí, ya voy para allá', '¿A qué hora llegas?', '👍👍', '¡Perfecto!', 'Ok, nos vemos 😊'];
-        const replyMsg = {
-          id: `m_${Date.now()}`,
-          chatId: parche.id,
-          sender: 'Diego Fabian',
-          senderId: 'u3',
-          avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-          content: replies[Math.floor(Math.random() * replies.length)],
-          timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
-          type: 'text' as const,
-        };
-        chatMessages.push(replyMsg); // Mutar arreglo global
-        setMessages(prev => [...prev, replyMsg]);
-      }, 2000 + Math.random() * 2000);
+  const handleSend = async () => {
+    if (!input.trim() || !id) return;
+    setSendError(null);
+    try {
+      const responseMsg = await chatService.sendParcheMessage(id, input.trim());
+      setMessages(prev => [...prev, responseMsg]);
+      setInput('');
+      setShowEmojis(false);
+    } catch (error) {
+      const e = error as { response?: { status?: number; data?: unknown } };
+      const status = e?.response?.status;
+      const raw = e?.response?.data;
+      const rawObj = (typeof raw === 'object' && raw !== null) ? raw as { message?: string; error?: string } : null;
+      const msg = rawObj
+        ? (rawObj.message ?? rawObj.error ?? `Error ${status ?? 'de red'} al enviar mensaje`)
+        : `Error ${status ?? 'de red'} al enviar mensaje`;
+      console.error('Error al enviar mensaje al parche:', error);
+      setSendError(msg);
+      setTimeout(() => setSendError(null), 5000);
     }
   };
   const handleContextAction = (action: string) => {
@@ -270,11 +307,10 @@ export function ChatPage() {
             onClick={() => navigate('/profile')}
             className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#1E3A5F] shadow-sm active:scale-95 transition-transform ml-1"
           >
-            <img
-              src={currentUser?.avatar}
-              alt={currentUser?.name}
-              className="w-full h-full object-cover"
-            />
+            {currentUser?.avatar
+              ? <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold" style={{ background: GRADIENT }}>{(currentUser?.name || '?')[0].toUpperCase()}</div>
+            }
           </button>
         </div>
       </div>
@@ -333,24 +369,12 @@ export function ChatPage() {
           </div>
           <div className="space-y-3">
             {messages.map((msg, i) => {
-              if (msg.type === 'system') {
-                return (
-                  <div key={msg.id} className="flex justify-center">
-                    <span
-                      className="text-xs backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5"
-                      style={{
-                        color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(10,25,47,0.45)',
-                        background: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(253,252,248,0.8)',
-                        border: isDark ? 'none' : '1px solid rgba(10,25,47,0.08)',
-                      }}
-                    >
-                      <User size={10} /> {msg.content}
-                    </span>
-                  </div>
-                );
-              }
-              const isMe = msg.isMe || msg.senderId === 'u1';
-              const showAvatar = !isMe && (i === 0 || messages[i - 1].senderId !== msg.senderId || messages[i - 1].type === 'system');
+              const currentUserId = currentUser?.id || 'u1';
+              const isMe = msg.senderId === currentUserId;
+              const showAvatar = !isMe && (i === 0 || messages[i - 1].senderId !== msg.senderId);
+              const avatarUrl = getSenderAvatar(msg.senderId);
+              const timestamp = new Date(msg.sentAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
               return (
                 <motion.div
                   key={msg.id}
@@ -362,15 +386,14 @@ export function ChatPage() {
                 >
                   {!isMe && (
                     <div className="w-8 flex-shrink-0 mt-auto">
-                      {showAvatar && <img src={msg.avatar} alt={msg.sender} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" />}
+                      {showAvatar && <img src={avatarUrl} alt={msg.senderName} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" />}
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col relative`}>
                     {showAvatar && !isMe && (
-                      <span className="text-[11px] text-white/60 mb-1 ml-1">{msg.sender}</span>
+                      <span className="text-[11px] text-white/60 mb-1 ml-1">{msg.senderName}</span>
                     )}
-                    {}
-                    {!isMe && msg.senderId !== 'u1' && hoveredMessageId === msg.id && (
+                    {!isMe && msg.senderId !== currentUserId && hoveredMessageId === msg.id && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -388,9 +411,9 @@ export function ChatPage() {
                         <Flag size={12} className="text-white" />
                       </motion.button>
                     )}
-                    {msg.type === 'image' ? (
+                    {msg.type === 'IMAGE' ? (
                       <div className={`rounded-2xl overflow-hidden ${isMe ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
-                        <img src={msg.imageUrl} alt="Imagen" className="w-56 h-36 object-cover" />
+                        <img src={msg.imageUrl || ''} alt="Imagen" className="w-56 h-36 object-cover" />
                         {msg.content && (
                           <div className="px-3 py-2 text-sm" style={isMe ? { background: bubbleBg, color: 'white' } : { background: isDark ? '#152238' : 'rgba(253,252,248,0.9)', color: isDark ? '#D1D9E6' : '#111827' }}>
                             {msg.content}
@@ -409,14 +432,14 @@ export function ChatPage() {
                         {msg.content}
                       </div>
                     )}
-                    {isMe && (
-                      <div className="flex items-center gap-1 mt-0.5 mr-1">
-                        <span className="text-[10px] text-white/50">{msg.timestamp}</span>
+                    <div className="flex items-center gap-1 mt-0.5 mr-1">
+                      <span className="text-[10px] text-white/50">{timestamp}</span>
+                      {isMe && (
                         <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
                           <path d="M1 5L4 8L8 2M6 5L9 8L13 2" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -481,6 +504,9 @@ export function ChatPage() {
         className="px-4 py-3 border-t backdrop-blur-md"
         style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
       >
+        {sendError && (
+          <div className="text-xs text-red-500 font-medium mb-2 px-1">{sendError}</div>
+        )}
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setShowAttachments(v => !v); setShowEmojis(false); }}
@@ -567,7 +593,7 @@ export function ChatPage() {
                 }}
               >
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  De: {reportingMessage.sender}
+                  De: {reportingMessage.senderName}
                 </p>
                 <p className="text-gray-800 dark:text-white">
                   "{reportingMessage.content}"
