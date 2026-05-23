@@ -19,23 +19,23 @@ export interface AuthResponse {
 }
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>('/auth/login', payload);
+    const { data } = await api.post<AuthResponse>('/v1/auth/login', payload);
     localStorage.setItem('patricia-token', data.token);
     return data;
   },
   async register(payload: RegisterPayload): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>('/auth/register', payload);
+    const { data } = await api.post<AuthResponse>('/v1/auth/register', payload);
     localStorage.setItem('patricia-token', data.token);
     return data;
   },
   async forgotPassword(email: string): Promise<void> {
-    await api.post('/auth/forgot-password', { email });
+    await api.post('/v1/auth/forgot-password', { email });
   },
   async resetPassword(token: string, password: string): Promise<void> {
-    await api.post('/auth/reset-password', { token, password });
+    await api.post('/v1/auth/reset-password', { token, password });
   },
   async verifyOtp(email: string, code: string): Promise<void> {
-    await api.post('/auth/verify-otp', { email, code });
+    await api.post('/v1/auth/verify-otp', { email, code });
   },
   logout(): void {
     localStorage.removeItem('patricia-token');
