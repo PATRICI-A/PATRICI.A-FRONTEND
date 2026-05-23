@@ -8,6 +8,7 @@ import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
 import { getAvailablePlaces } from '../services/parches.service';
 import type { PlaceResponse } from '../services/parches.service';
+import { useMatchingStore } from '../store/matchingStore';
 
 const FALLBACK_PLACES: PlaceResponse[] = [
   { code: 'EDIFICIO_A', displayName: 'Edificio A' },
@@ -32,16 +33,11 @@ const categories = [
   { id: 'FOOD', label: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)' },
   { id: 'WELLNESS', label: 'Bienestar', emoji: '🧘', gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' },
 ];
-const friends = [
-  { id: 'u2', name: 'Valentina R.', avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-  { id: 'u3', name: 'Mateo S.', avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-  { id: 'u4', name: 'Sofía M.', avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-  { id: 'u5', name: 'Daniel C.', avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
-];
 import { createParche, sendInvitation } from '../services/parches.service';
 
 export function CreateParchePage() {
   const navigate = useNavigate();
+  const { friends, loadTab: loadMatchTab } = useMatchingStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -62,6 +58,8 @@ export function CreateParchePage() {
     getAvailablePlaces()
       .then(data => setPlaces(data.length > 0 ? data : FALLBACK_PLACES))
       .catch(() => setPlaces(FALLBACK_PLACES));
+    loadMatchTab('friends');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const toggleFriend = (id: string) => {
     setInvitedFriends(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
@@ -394,7 +392,9 @@ export function CreateParchePage() {
               Invitar amigos ({invitedFriends.length} seleccionados)
             </label>
             <div className="space-y-2">
-              {friends.map(friend => {
+              {friends.length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500 py-2">Sin conexiones todavía. Conecta con personas en Matches.</p>
+              ) : friends.map(friend => {
                 const isInvited = invitedFriends.includes(friend.id);
                 return (
                   <button
@@ -408,10 +408,19 @@ export function CreateParchePage() {
                         : { borderColor: '#E5E7EB', background: 'white' }
                     }
                   >
-                    <img src={friend.avatar} alt={friend.name} className="w-9 h-9 rounded-full object-cover" />
-                    <span className="flex-1 text-sm font-medium text-gray-800 text-left">{friend.name}</span>
+                    {friend.photoUrl ? (
+                      <img src={friend.photoUrl} alt={friend.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                        style={{ background: GRADIENT }}
+                      >
+                        {friend.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200 text-left">{friend.name}</span>
                     <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                       style={isInvited ? { background: GRADIENT } : { background: '#E5E7EB' }}
                     >
                       {isInvited ? <Check size={12} color="white" /> : <Plus size={12} color="#9CA3AF" />}

@@ -75,16 +75,18 @@ export const useMatchingStore = create<MatchingState>((set) => ({
 
     try {
       if (tab === 'explore') {
-        const [candidates, scores, catalog] = await Promise.all([
+        const [candidates, scores, catalog, sentRequests] = await Promise.all([
           profileService.getMatchingCandidates(currentUserId),
           matchingService.getRecommendationsWithScores(currentUserId).catch(() => []),
           profileService.getTagsCatalog().catch(() => []),
+          matchingService.getSentRequests(currentUserId).catch(() => []),
         ]);
         const tagIdToName = new Map<string, string>();
         for (const cat of catalog) {
           for (const tag of cat.tags) tagIdToName.set(tag.id, tag.name);
         }
         const scoreMap = new Map(scores.map(s => [s.targetUserId, s.totalScore]));
+        const sentTargetMap = new Map(sentRequests.map(m => [m.targetId, m]));
         const allIds = candidates.map(c => c.id);
         const profiles = await profileService.getBatchProfiles(allIds);
         const profileMap = new Map(profiles.map(p => [p.id, p]));
@@ -94,9 +96,15 @@ export const useMatchingStore = create<MatchingState>((set) => ({
         }]));
 
         set({
-          explore: candidates.map(c =>
-            enrichUser(c.id, profileMap, candidateMap, scoreMap.get(c.id) ?? 50)
-          ),
+          explore: candidates.map(c => {
+            const sentMatch = sentTargetMap.get(c.id);
+            return enrichUser(
+              c.id, profileMap, candidateMap,
+              scoreMap.get(c.id) ?? 50,
+              sentMatch?.idMatch,
+              sentMatch ? 'pending' : 'none'
+            );
+          }),
         });
       } else if (tab === 'sent') {
         const sentMatches = await matchingService.getSentRequests(currentUserId);

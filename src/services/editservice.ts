@@ -31,6 +31,10 @@ const CAREER_MAP: Record<string, CareerEnum> = {
     'Ingeniería en Biotecnología': 'BIOTECHNOLOGY_ENGINEERING',
 };
 
+const REVERSE_CAREER_MAP: Record<string, string> = Object.fromEntries(
+    Object.entries(CAREER_MAP).map(([spanish, enumVal]) => [enumVal, spanish])
+);
+
 const PRIVACY_MAP: Record<string, string> = {
     'PUBLICO': 'PUBLIC',
     'SOLO_MATCHES': 'FRIENDS_ONLY',
@@ -60,7 +64,7 @@ export const editService = {
             bio: data.biography || '',
             genero: data.gender || 'M',
             privacidad: data.privacyLevel || 'PUBLICO',
-            faculty: data.career || '',
+            faculty: data.career ? (REVERSE_CAREER_MAP[data.career] ?? data.career) : '',
             secondCareer: ''
         };
     },

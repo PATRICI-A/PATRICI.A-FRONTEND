@@ -68,7 +68,10 @@ export function ParchemDetailPage() {
           );
           setJoined(isMember);
         })
+        .catch(() => {})
         .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [id, currentUser?.id, currentUser?.studentId]);
   const [shareToast, setShareToast] = useState(false);
@@ -178,7 +181,18 @@ export function ParchemDetailPage() {
   };
 
   if (loading) return <ParcheDetailSkeleton />;
-  if (!id || !parche) return <div className="min-h-screen pt-20 text-center font-bold">Parche no encontrado</div>;
+  if (!id || !parche) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
+      <p className="text-gray-500 dark:text-gray-400 font-semibold">Este parche no está disponible</p>
+      <button
+        onClick={() => navigate('/parches')}
+        className="px-5 py-2.5 rounded-2xl text-white font-bold text-sm"
+        style={{ background: GRADIENT }}
+      >
+        Ver parches
+      </button>
+    </div>
+  );
 
   const membersList = matchUsers.slice(0, Math.min(4, membersCount));
   const handleShare = async () => {

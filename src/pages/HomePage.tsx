@@ -10,6 +10,8 @@ import type { Event, Mona } from '../types/mockData';
 import { eventsService } from '../services/events.service';
 import type { ApiEvent } from '../services/events.service';
 import { getMonas } from '../services/gamification.service';
+import { searchParches } from '../services/parches.service';
+import type { ParcheResponse } from '../services/parches.service';
 
 const HOME_MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HOME_CAT_META: Record<string, { uiCat: string; emoji: string; gradient: string }> = {
@@ -43,12 +45,29 @@ import vibraEstudio from '../assets/Estudio-removebg-preview.png';
 import vibraGastronomia from '../assets/Gastronomia-removebg-preview.png';
 import vibraVideojuegos from '../assets/Videojuegos-removebg-preview.png';
 import vibraPintura from '../assets/Pintura-removebg-preview.png';
+const PARCHE_COVER_COLORS: Record<string, string> = {
+  MUSIC: 'linear-gradient(135deg, #EC4899, #F97316)',
+  SPORT: 'linear-gradient(135deg, #10B981, #3B82F6)',
+  TECHNOLOGY: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+  STUDY: 'linear-gradient(135deg, #10B981, #3B82F6)',
+  CULTURE: 'linear-gradient(135deg, #0EA5E9, #38BDF8)',
+  SOCIAL: 'linear-gradient(135deg, #4F46E5, #818CF8)',
+  FOOD: 'linear-gradient(135deg, #F59E0B, #EF4444)',
+  WELLNESS: 'linear-gradient(135deg, #06B6D4, #10B981)',
+};
+const PARCHE_EMOJIS: Record<string, string> = {
+  MUSIC: '🎵', SPORT: '⚽', TECHNOLOGY: '💻',
+  STUDY: '📚', CULTURE: '🎨', SOCIAL: '🤝',
+  FOOD: '🍕', WELLNESS: '🧘',
+};
+
 export function HomePage() {
   const navigate = useNavigate();
   const { isDark, geo } = useApp();
   const matchingStore = useMatchingStore();
   const [homeEvents, setHomeEvents] = useState<Event[]>([]);
   const [homeMonas, setHomeMonas] = useState<Mona[]>(monas);
+  const [apiParches, setApiParches] = useState<ParcheResponse[]>([]);
 
   useEffect(() => {
     eventsService.getEvents().then(apiEvents => {
@@ -60,6 +79,9 @@ export function HomePage() {
         setHomeMonas(monas.map(m => ({ ...m, unlocked: unlockedSet.has(m.id) })));
       }
     });
+    searchParches().then(data => {
+      if (data.length > 0) setApiParches(data.slice(0, 6));
+    }).catch(() => {});
     if (matchingStore.explore.length === 0) matchingStore.loadTab('explore');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -138,6 +160,21 @@ export function HomePage() {
   };
   const topParches = parches.slice(0, 3);
   const topMatches = matchingStore.explore.slice(0, 4);
+  const displayParches = apiParches.length > 0
+    ? apiParches.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        coverColor: PARCHE_COVER_COLORS[p.category] || 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+        emoji: PARCHE_EMOJIS[p.category] || '✨',
+        trending: false,
+        type: p.type === 'PUBLIC' ? 'public' as const : 'private' as const,
+        memberAvatars: [] as string[],
+        members: p.actualMembers,
+        maxMembers: p.maximumQuota,
+        isReal: true as const,
+      }))
+    : parches.slice(0, 6).map(p => ({ ...p, isReal: false as const }));
   const unlockedMonas = homeMonas.filter(m => m.unlocked);
   const totalMonas = homeMonas.length;
   const albumPercent = totalMonas > 0 ? Math.round((unlockedMonas.length / totalMonas) * 100) : 0;
@@ -1012,12 +1049,12 @@ export function HomePage() {
             </motion.button>
 
             
-            {parches.slice(0, 6).map(parche => (
+            {displayParches.map(parche => (
               <motion.button
                 key={`p-${parche.id}`}
                 whileHover={{ scale: 1.03, y: -3 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => navigate(`/parches/${parche.id}`)}
+                onClick={() => navigate(parche.isReal ? `/parches/${parche.id}` : '/parches')}
                 className="flex-shrink-0 rounded-3xl overflow-hidden text-left flex flex-col relative transition-all"
                 style={{
                   width: 210,
