@@ -9,24 +9,49 @@ import {
   MapPin, Clock, User, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { parches, directChats, matchUsers, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
+import { directChats, matchUsers, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { chatService, type MessageResponse } from '../services/chat.service';
+import { getParcheById } from '../services/parches.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  MUSIC: '🎵', SPORT: '⚽', TECHNOLOGY: '💻', STUDY: '📚',
+  CULTURE: '🎨', SOCIAL: '🤝', FOOD: '🍕', WELLNESS: '🧘',
+};
+
+const CATEGORY_COLOR: Record<string, string> = {
+  MUSIC: GRADIENT,
+  SPORT: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)',
+  TECHNOLOGY: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+  STUDY: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+  CULTURE: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
+  SOCIAL: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+  FOOD: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)',
+  WELLNESS: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+};
+
+const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+interface ActiveParche {
+  id: string;
+  name: string;
+  category: string;
+  members: number;
+  location: string;
+  time: string;
+  emoji: string;
+  coverColor: string;
+}
+
 function extractGradientColors(coverColor: string) {
   const hexes = coverColor.match(/#[0-9A-Fa-f]{6}/g);
   const accentColor = hexes ? hexes[hexes.length - 1] : '#3B82F6';
   const bubbleBg = coverColor.includes('gradient') ? coverColor : `linear-gradient(135deg, ${accentColor}, ${accentColor})`;
   return { bubbleBg, accentColor };
 }
-const chatList = parches.filter(p => p.joined).map((p, i) => ({
-  ...p,
-  lastMessage: ['¡Ya estoy en la mesa del fondo! 🔌', 'Coffee & Python esta noche? ☕', 'Alguien ya terminó los ejercicios?'][i % 3],
-  lastTime: ['Ahora', '15 min', '1h'][i % 3],
-  unread: [3, 0, 1][i % 3],
-}));
 const CONTEXT_ACTIONS = [
   { icon: UserCheck, label: 'Ver perfil del parche',    color: '#3B82F6', action: 'profile' },
   { icon: Search,    label: 'Buscar en el chat',        color: '#06B6D4', action: 'search' },
@@ -38,7 +63,7 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { currentUser, isDark } = useApp();
-  const parche = parches.find(p => p.id === id) || parches[0];
+  const [activeParche, setActiveParche] = useState<ActiveParche | null>(null);
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
@@ -56,7 +81,7 @@ export function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
-  const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
+  const { bubbleBg, accentColor } = extractGradientColors(activeParche?.coverColor ?? GRADIENT);
 
   // Helper to fetch matching user avatars
   const getSenderAvatar = (senderId: string) => {
@@ -79,15 +104,35 @@ export function ChatPage() {
 
   // reiniciar y cargar mensajes desde el backend de Azure al cambiar de parche
   useEffect(() => {
-    if (id) {
-      loadMessages(id);
+    if (!id || !isUuid(id)) {
+      navigate('/chat', { replace: true });
+      return;
     }
+
+    getParcheById(id)
+      .then((parche) => {
+        setActiveParche({
+          id: parche.id,
+          name: parche.name,
+          category: parche.category,
+          members: parche.actualMembers,
+          location: parche.place?.displayName || 'Campus',
+          time: parche.hour,
+          emoji: CATEGORY_EMOJI[parche.category?.toUpperCase()] ?? '🤝',
+          coverColor: CATEGORY_COLOR[parche.category?.toUpperCase()] ?? GRADIENT,
+        });
+      })
+      .catch((error) => {
+        console.error('Error al cargar datos del parche:', error);
+      });
+
+    loadMessages(id);
     setInput('');
     setShowEmojis(false);
     setShowInfo(false);
     setShowAttachments(false);
     setShowContextMenu(false);
-  }, [id]);
+  }, [id, navigate]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -110,12 +155,13 @@ export function ChatPage() {
     }
   };
   const handleContextAction = (action: string) => {
+    if (!activeParche) return;
     setShowContextMenu(false);
     switch (action) {
-      case 'profile': navigate(`/parches/${parche.id}`); break;
+      case 'profile': navigate(`/parches/${activeParche.id}`); break;
       case 'mute':
         setMutedChats(prev =>
-          prev.includes(parche.id) ? prev.filter(x => x !== parche.id) : [...prev, parche.id]
+          prev.includes(activeParche.id) ? prev.filter(x => x !== activeParche.id) : [...prev, activeParche.id]
         );
         break;
       case 'clear':
@@ -128,7 +174,7 @@ export function ChatPage() {
         alert(`Función "${action}" próximamente ✨`);
     }
   };
-  const isMuted = mutedChats.includes(parche.id);
+  const isMuted = activeParche ? mutedChats.includes(activeParche.id) : false;
   const handleReportMessage = () => {
     if (!reportingMessage || !reportReason) return;
     if (!reportDescription.trim()) return;
@@ -161,19 +207,20 @@ export function ChatPage() {
         <button
           onClick={() => setShowInfo(!showInfo)}
           className="flex items-center gap-3 flex-1 text-left"
+          disabled={!activeParche}
         >
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: parche.coverColor }}>
-              <EmojiIcon emoji={parche.emoji} size={18} color="white" strokeWidth={2} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: activeParche?.coverColor ?? GRADIENT }}>
+              <EmojiIcon emoji={activeParche?.emoji ?? '🤝'} size={18} color="white" strokeWidth={2} />
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#112240]" style={{ background: accentColor }} />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-800 dark:text-white text-sm">{parche.name}</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white text-sm">{activeParche?.name ?? 'Cargando parche...'}</h3>
             <div className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: accentColor }} />
               <span className="text-xs font-medium" style={{ color: accentColor }}>ACTIVO AHORA</span>
-              <span className="text-xs text-gray-400">· {parche.members} miembros</span>
+              <span className="text-xs text-gray-400">· {activeParche?.members ?? 0} miembros</span>
               {isMuted && <BellOff size={10} className="text-gray-400" />}
             </div>
           </div>
@@ -237,9 +284,10 @@ export function ChatPage() {
                       }}
                     />
                   </div>
-                  {CONTEXT_ACTIONS.map((item, i) => (
+                {CONTEXT_ACTIONS.map((item, i) => (
                     <button
                       key={item.action}
+                      disabled={!activeParche}
                       onClick={() => handleContextAction(item.action)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-[#172A45]"
                       style={{
@@ -283,7 +331,7 @@ export function ChatPage() {
       </div>
       {}
       <AnimatePresence>
-        {showInfo && (
+                {showInfo && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -295,17 +343,13 @@ export function ChatPage() {
             }}
           >
             <div className="px-4 py-3 flex items-center gap-3">
-              <div className="flex -space-x-1.5">
-                {parche.memberAvatars.map((av, i) => (
-                  <img key={i} src={av} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-white dark:border-[#112240]" />
-                ))}
-              </div>
               <div className="flex-1 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 flex-wrap">
-                <span className="flex items-center gap-1"><MapPin size={10} /> {parche.location}</span>
-                <span className="flex items-center gap-1"><Clock size={10} /> {parche.time}</span>
+                <span className="flex items-center gap-1"><MapPin size={10} /> {activeParche?.location ?? 'Campus'}</span>
+                <span className="flex items-center gap-1"><Clock size={10} /> {activeParche?.time ?? '--:--'}</span>
               </div>
               <button
-                onClick={() => navigate(`/parches/${parche.id}`)}
+                onClick={() => activeParche && navigate(`/parches/${activeParche.id}`)}
+                disabled={!activeParche}
                 className="text-xs font-medium px-3 py-1.5 rounded-full text-white"
                 style={{ background: bubbleBg }}
               >
@@ -739,7 +783,7 @@ export function ChatPage() {
         >
           {/* Left Side: Shared ChatSidebar List (hidden on mobile, visible on md: and up) */}
           <div className="hidden md:block md:w-[340px] lg:w-[380px] h-full flex-shrink-0">
-            <ChatSidebar activeId={parche.id} />
+            <ChatSidebar activeId={activeParche?.id ?? id} />
           </div>
 
           {/* Right Side: Active group chat conversation */}
