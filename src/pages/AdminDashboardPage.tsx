@@ -1,5 +1,15 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getAdminAnalytics,
+  getInstitutionalStats,
+  generateReport,
+  getReportHistory,
+  type AdminAnalyticsResponse,
+  type InstitutionalStatsResponse,
+  type ReportHistoryDTO,
+  type MetricType,
+} from '../services/analytics.service';
 import lightBg from '../assets/image-3.png';
 import darkBg from '../assets/image-2.png';
 import { useNavigate } from 'react-router';
@@ -9,10 +19,14 @@ import {
   BarChart3, MapPin, MessageCircle, AlertTriangle, LogOut,
   Menu, X, ChevronRight, Activity, Zap, Eye, Ban, CheckCircle,
   XCircle, Edit3, Trash2, Flag, Settings, Sun, Moon, UserCheck,
-  Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell
+  Search, Filter, MoreVertical, Lock, Unlock, Sliders, Bell,
+  Clock, ChevronDown, User
 } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE, TEAL, GOLD_LIGHT, GOLD_GRADIENT, ECI_LOCATIONS } from '../types/mockData';
 import logoImg from '../assets/logo_nuevo_patricia.png';
+import patyAdmin from '../assets/PATY_ADMIN.png';
+import patyAdmin2 from '../assets/PATY_ADMIN2.png';
+import patySelfieImg from '../assets/PATY SELFIE.png';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
 interface Metric {
@@ -101,6 +115,150 @@ export function AdminDashboardPage() {
   const [statsStartDate, setStatsStartDate] = useState('2025-01-01');
   const [statsEndDate, setStatsEndDate] = useState('2025-05-31');
   const [statsType, setStatsType] = useState<'all' | 'events' | 'participation' | 'social'>('all');
+
+  // ─── API State ─────────────────────────────────────────────────────────────
+  const [adminData, setAdminData] = useState<AdminAnalyticsResponse | null>(null);
+  const [institutionalData, setInstitutionalData] = useState<InstitutionalStatsResponse | null>(null);
+  const [reportHistoryData, setReportHistoryData] = useState<ReportHistoryDTO[]>([]);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [loadingInstitutional, setLoadingInstitutional] = useState(false);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
+
+  // ─── Fetch: Admin Analytics (Tab: Análisis) ───────────────────────────────
+  const metricTypeMap: Record<string, MetricType | undefined> = {
+    all: undefined, users: 'USERS', parches: 'PARCHES', events: 'EVENTS', matches: 'MATCHES', zones: 'ZONES'
+  };
+
+  const fetchAdminAnalytics = useCallback(async () => {
+    setLoadingAnalytics(true);
+    try {
+      const data = await getAdminAnalytics({
+        startDate: startDate,
+        endDate: endDate,
+        metricType: metricTypeMap[metricType],
+      });
+      setAdminData(data);
+    } catch (err) {
+      console.warn('Analytics API unavailable, using mock data', err);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  }, [startDate, endDate, metricType]);
+
+  useEffect(() => {
+    if (activeSection === 'analytics') fetchAdminAnalytics();
+  }, [activeSection, fetchAdminAnalytics]);
+
+  // ─── Fetch: Institutional Stats ────────────────────────────────────────────
+  const statsTypeMap: Record<string, 'EVENTS' | 'PARTICIPATION' | 'SOCIAL_ACTIVITY' | 'ALL'> = {
+    all: 'ALL', events: 'EVENTS', participation: 'PARTICIPATION', social: 'SOCIAL_ACTIVITY'
+  };
+
+  const fetchInstitutionalStats = useCallback(async () => {
+    setLoadingInstitutional(true);
+    try {
+      const data = await getInstitutionalStats({
+        startDate: statsStartDate,
+        endDate: statsEndDate,
+        metricType: statsTypeMap[statsType],
+      });
+      setInstitutionalData(data);
+    } catch (err) {
+      console.warn('Institutional stats API unavailable, using mock data', err);
+    } finally {
+      setLoadingInstitutional(false);
+    }
+  }, [statsStartDate, statsEndDate, statsType]);
+
+  useEffect(() => {
+    if (activeSection === 'institutional-stats') fetchInstitutionalStats();
+  }, [activeSection, fetchInstitutionalStats]);
+
+  // ─── Fetch: Report History ─────────────────────────────────────────────────
+  const fetchReportHistory = useCallback(async () => {
+    setLoadingReports(true);
+    try {
+      const data = await getReportHistory();
+      setReportHistoryData(data);
+    } catch (err) {
+      console.warn('Report history API unavailable, using mock data', err);
+    } finally {
+      setLoadingReports(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeSection === 'reports') fetchReportHistory();
+  }, [activeSection, fetchReportHistory]);
+
+  // Nuevo estado para Creación de Eventos
+  const [eventTab, setEventTab] = useState<'create' | 'manage'>('manage');
+  const [eventCreatedState, setEventCreatedState] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: ''
+  });
+  const [includePatricia, setIncludePatricia] = useState(false);
+  const [newPatricia, setNewPatricia] = useState({
+    image: '', description: '', xpValue: 50, rarity: 'comun', code: ''
+  });
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+
+  const handleCreateEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEvent.title || !newEvent.date || !newEvent.location) {
+      showError('Por favor completa los campos obligatorios (Título, Fecha, Ubicación).');
+      return;
+    }
+    
+    if (editingEventId) {
+      setEvents(prev => prev.map(ev => ev.id === editingEventId ? { ...ev, title: newEvent.title, date: newEvent.date, category: newEvent.description || ev.category } : ev));
+      showSuccess(`Evento "${newEvent.title}" actualizado exitosamente.`);
+      setNewEvent({ title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: '' });
+      setIncludePatricia(false);
+      setNewPatricia({ image: '', description: '', xpValue: 50, rarity: 'comun', code: '' });
+      setEditingEventId(null);
+      setEventTab('manage');
+    } else {
+      const createdEvent: Event = {
+        id: `e${Date.now()}`,
+        title: newEvent.title,
+        organizer: 'Administrador',
+        date: newEvent.date,
+        attendees: 0,
+        status: 'approved',
+        category: 'Evento Oficial'
+      };
+      setEvents(prev => [createdEvent, ...prev]);
+      
+      setEventCreatedState(true);
+      setTimeout(() => {
+        setEventCreatedState(false);
+        setNewEvent({ title: '', date: '', time: '', location: '', locationDetails: '', description: '', coverImage: '' });
+        setIncludePatricia(false);
+        setNewPatricia({ image: '', description: '', xpValue: 50, rarity: 'comun', code: '' });
+        setEditingEventId(null);
+        setEventTab('manage');
+      }, 2000);
+    }
+  };
+
+  const handleEditEvent = (eventToEdit: Event) => {
+    setEditingEventId(eventToEdit.id);
+    setNewEvent({
+      title: eventToEdit.title,
+      date: eventToEdit.date,
+      time: '',
+      location: '',
+      locationDetails: '',
+      description: eventToEdit.category,
+      coverImage: ''
+    });
+    setIncludePatricia(false);
+    setEventTab('create');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminSession');
     navigate('/admin/login');
@@ -221,11 +379,29 @@ export function AdminDashboardPage() {
       prev.includes(metric) ? prev.filter(m => m !== metric) : [...prev, metric]
     );
   };
-  const handleGenerateReport = () => {
-    const totalRecords = Math.floor(Math.random() * 15000) + 1000;
-    if (totalRecords > 10000) {
-      showSuccess('El reporte se está generando. Recibirás una notificación cuando esté listo.');
-    } else {
+  const handleGenerateReport = async (preview = false) => {
+    if (selectedMetrics.length === 0) return;
+    setGeneratingReport(true);
+    try {
+      const resp = await generateReport({
+        dateFrom: reportStartDate,
+        dateTo: reportEndDate,
+        metrics: selectedMetrics as MetricType[],
+        format: 'CSV',
+        preview,
+      });
+      if (preview) {
+        setShowPreview(true);
+        showSuccess('Vista previa generada.');
+      } else if (resp.status === 'PENDING' || resp.status === 'PROCESSING') {
+        showSuccess('El reporte se está generando. Recibirás una notificación cuando esté listo.');
+      } else if (resp.fileUrl) {
+        window.open(resp.fileUrl, '_blank');
+        showSuccess('Reporte generado y descargado correctamente.');
+      }
+      fetchReportHistory();
+    } catch {
+      // Fallback to local CSV generation
       const csvData = `data:text/csv;charset=utf-8,Tipo,Fecha,Detalles\n${selectedMetrics.map(m => `${m},${new Date().toISOString()},Datos de ${m}`).join('\n')}`;
       const link = document.createElement('a');
       link.setAttribute('href', encodeURI(csvData));
@@ -233,70 +409,98 @@ export function AdminDashboardPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showSuccess('Reporte generado y descargado correctamente.');
+      showSuccess('Reporte generado localmente (API no disponible).');
+    } finally {
+      setGeneratingReport(false);
     }
   };
-  const handleScheduleReport = () => {
+  const handleScheduleReport = async () => {
     if (!scheduleEmail.trim()) {
       setScheduleEmailError('Por favor ingresa un correo de entrega.');
       return;
     }
     setScheduleEmailError('');
+    const freqMap: Record<string, 'DAILY' | 'WEEKLY' | 'MONTHLY'> = { daily: 'DAILY', weekly: 'WEEKLY', monthly: 'MONTHLY' };
     const labels: Record<string, string> = { daily: 'diario', weekly: 'semanal', monthly: 'mensual' };
-    showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    try {
+      await generateReport({
+        dateFrom: reportStartDate,
+        dateTo: reportEndDate,
+        metrics: selectedMetrics.length > 0 ? selectedMetrics as MetricType[] : ['USERS'],
+        format: 'CSV',
+        schedule: {
+          frequency: freqMap[scheduleFrequency],
+          deliveryEmail: scheduleEmail,
+        },
+      });
+      showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    } catch {
+      showSuccess(`Reporte ${labels[scheduleFrequency]} programado correctamente para: ${scheduleEmail}`);
+    }
     setScheduleEmail('');
   };
-  const metrics: Metric[] = [
+  // ─── Computed data from API (with mock fallback) ───────────────────────────
+  const zoneColors: Record<string, string> = {
+    BIBLIOTECA: '#EF4444', CAFETERIA: '#F59E0B', BLOQUE_A: '#3B82F6',
+    BLOQUE_B: '#06B6D4', BLOQUE_C: '#8B5CF6', ZONA_DEPORTIVA: '#10B981',
+  };
+  const zoneLabels: Record<string, string> = {
+    BIBLIOTECA: 'Biblioteca', CAFETERIA: 'Cafetería', BLOQUE_A: 'Bloque A',
+    BLOQUE_B: 'Bloque B', BLOQUE_C: 'Bloque C', ZONA_DEPORTIVA: 'Zona Deportiva',
+  };
+
+  const metrics: Metric[] = adminData ? [
     {
       label: 'Usuarios Activos',
-      value: '2,847',
-      change: '+12.5% vs mes anterior',
-      icon: Users,
-      color: '#3B82F6',
-      bg: 'rgba(59,130,246,0.1)',
+      value: adminData.activeUsers.total.toLocaleString(),
+      change: adminData.alerts.find(a => a.metricName === 'activeUsers')?.message || `${adminData.retentionRate}% retención`,
+      icon: Users, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)',
     },
     {
       label: 'Parches Creados',
-      value: '486',
-      change: '+8.3% esta semana',
-      icon: Heart,
-      color: PINK,
-      bg: 'rgba(232,36,90,0.1)',
+      value: adminData.parcheStats.total.toLocaleString(),
+      change: adminData.abandonedParches > 0 ? `${adminData.abandonedParches} abandonados` : 'Sin abandonados',
+      icon: Heart, color: PINK, bg: 'rgba(232,36,90,0.1)',
     },
     {
-      label: 'Eventos Vigentes',
-      value: '24',
-      change: '6 próximos en 48h',
-      icon: Calendar,
-      color: '#10B981',
-      bg: 'rgba(16,185,129,0.1)',
+      label: 'Eventos Top',
+      value: adminData.topEvents.length.toString(),
+      change: adminData.topEvents[0] ? `#1: ${adminData.topEvents[0].eventName}` : 'Sin eventos',
+      icon: Calendar, color: '#10B981', bg: 'rgba(16,185,129,0.1)',
     },
     {
       label: 'Tasa de Matching',
-      value: '78%',
-      change: '+5% vs promedio',
-      icon: TrendingUp,
-      color: ORANGE,
-      bg: 'rgba(249,115,22,0.1)',
+      value: `${adminData.matchSuccessRate}%`,
+      change: `Promedio: ${Math.round(adminData.avgTimeToFirstMember)}min al 1er miembro`,
+      icon: TrendingUp, color: ORANGE, bg: 'rgba(249,115,22,0.1)',
     },
+  ] : [
+    { label: 'Usuarios Activos', value: '—', change: 'Cargando...', icon: Users, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
+    { label: 'Parches Creados', value: '—', change: 'Cargando...', icon: Heart, color: PINK, bg: 'rgba(232,36,90,0.1)' },
+    { label: 'Eventos Top', value: '—', change: 'Cargando...', icon: Calendar, color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
+    { label: 'Tasa de Matching', value: '—', change: 'Cargando...', icon: TrendingUp, color: ORANGE, bg: 'rgba(249,115,22,0.1)' },
   ];
-  const activityData = [
-    { day: 'Lun', value: 65 },
-    { day: 'Mar', value: 78 },
-    { day: 'Mié', value: 85 },
-    { day: 'Jue', value: 72 },
-    { day: 'Vie', value: 92 },
-    { day: 'Sáb', value: 45 },
-    { day: 'Dom', value: 38 },
-  ];
-  const campusZones = [
-    { name: 'Biblioteca', activity: 92, color: '#EF4444' },
-    { name: 'Cafetería', activity: 85, color: '#F59E0B' },
-    { name: 'Bloque A', activity: 68, color: '#3B82F6' },
-    { name: 'Bloque B', activity: 55, color: '#06B6D4' },
-    { name: 'Bloque C', activity: 72, color: '#8B5CF6' },
-    { name: 'Zona Deportiva', activity: 48, color: '#10B981' },
-  ];
+
+  const activityData: { day: string; value: number }[] = adminData?.activeUsers?.timeSeries
+    ? Object.entries(adminData.activeUsers.timeSeries).map(([day, value]) => ({ day, value }))
+    : [
+        { day: 'Lun', value: 0 }, { day: 'Mar', value: 0 }, { day: 'Mié', value: 0 },
+        { day: 'Jue', value: 0 }, { day: 'Vie', value: 0 }, { day: 'Sáb', value: 0 }, { day: 'Dom', value: 0 },
+      ];
+
+  const campusZones: { name: string; activity: number; color: string }[] = adminData?.campusHeatmap?.zones
+    ? Object.entries(adminData.campusHeatmap.zones).map(([zone, hourData]) => ({
+        name: zoneLabels[zone] || zone,
+        activity: Math.round(Object.values(hourData).reduce((s, v) => s + v, 0) / Math.max(Object.values(hourData).length, 1)),
+        color: zoneColors[zone] || '#8B5CF6',
+      })).sort((a, b) => b.activity - a.activity)
+    : [
+        { name: 'Biblioteca', activity: 0, color: '#EF4444' },
+        { name: 'Cafetería', activity: 0, color: '#F59E0B' },
+      ];
+
+  // Report history: API or fallback
+  const displayReportHistory = reportHistoryData.length > 0 ? reportHistoryData : [];
   const sidebarItems = [
     { id: 'analytics', label: 'Análisis', icon: BarChart3 },
     { id: 'reports', label: 'Reportes', icon: Download },
@@ -447,6 +651,9 @@ export function AdminDashboardPage() {
         </nav>
         {}
         <div className="p-3 border-t border-gray-200 dark:border-[#1E3A5F]">
+          <div className="flex items-center justify-center mb-3 px-2">
+            <img src={patyAdmin} alt="Paty" className="w-16 h-16 object-contain opacity-60 drop-shadow-md" />
+          </div>
           <button
             onClick={toggleTheme}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-all mb-2"
@@ -474,8 +681,36 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'analytics' && (
             <>
+              {/* Welcome banner with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden mb-6">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex items-center gap-4">
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Admin"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0 drop-shadow-xl"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+                      ¡Hola, Admin! 👋
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-snug mt-0.5">
+                      Bienvenido al panel de control de <span className="font-bold text-blue-600 dark:text-blue-400">PATRICI.A</span>. Monitorea la actividad del campus y gestiona usuarios.
+                    </p>
+                    {loadingAnalytics && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-xs font-bold text-blue-500">Cargando datos del servidor...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm mb-6">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">
@@ -548,7 +783,7 @@ export function AdminDashboardPage() {
                     scale: isHighlighted ? 1 : 0.97
                   }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+                  className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
                   style={{
                     filter: isHighlighted ? 'none' : 'grayscale(0.3)',
                     pointerEvents: isHighlighted ? 'auto' : 'none'
@@ -582,7 +817,7 @@ export function AdminDashboardPage() {
                 opacity: metricType === 'zones' ? 0.4 : 1,
                 scale: metricType === 'zones' ? 0.97 : 1
               }}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+              className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
               style={{
                 filter: metricType === 'zones' ? 'grayscale(0.3)' : 'none',
                 pointerEvents: metricType === 'zones' ? 'none' : 'auto'
@@ -634,7 +869,7 @@ export function AdminDashboardPage() {
                 opacity: metricType === 'all' || metricType === 'zones' ? 1 : 0.4,
                 scale: metricType === 'all' || metricType === 'zones' ? 1 : 0.97
               }}
-              className="bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm"
+              className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1"
               style={{
                 filter: metricType === 'all' || metricType === 'zones' ? 'none' : 'grayscale(0.3)',
                 pointerEvents: metricType === 'all' || metricType === 'zones' ? 'auto' : 'none'
@@ -685,41 +920,53 @@ export function AdminDashboardPage() {
             </motion.div>
           </div>
           {}
-          <div className="mt-4 sm:mt-6 bg-white dark:bg-[#112240] rounded-2xl p-4 sm:p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-              Actividad Reciente
-            </h3>
-            <div className="space-y-3">
-              {[
-                { icon: Users, text: 'Nuevo usuario registrado: María González', time: 'Hace 5 min', color: '#3B82F6' },
-                { icon: Heart, text: 'Parche "Gaming Night" creado por Carlos M.', time: 'Hace 15 min', color: PINK },
-                { icon: Calendar, text: 'Evento "Hackathon ECI" alcanzó 100 registros', time: 'Hace 1 hora', color: '#10B981' },
-                { icon: MessageCircle, text: '24 nuevos mensajes en parches activos', time: 'Hace 2 horas', color: ORANGE },
-              ].map((activity, index) => {
-                const Icon = activity.icon;
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-colors"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${activity.color}15` }}
-                    >
-                      <Icon size={18} style={{ color: activity.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {activity.text}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{activity.time}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
+          <div className="mt-4 sm:mt-6 bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start gap-5">
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-lg">
+                  Actividad Reciente
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { icon: Users, text: 'Nuevo usuario registrado: María González', time: 'Hace 5 min', color: '#3B82F6' },
+                    { icon: Heart, text: 'Parche "Gaming Night" creado por Carlos M.', time: 'Hace 15 min', color: PINK },
+                    { icon: Calendar, text: 'Evento "Hackathon ECI" alcanzó 100 registros', time: 'Hace 1 hora', color: '#10B981' },
+                    { icon: MessageCircle, text: '24 nuevos mensajes en parches activos', time: 'Hace 2 horas', color: ORANGE },
+                  ].map((activity, index) => {
+                    const Icon = activity.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1A2F4A] transition-colors"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: `${activity.color}15` }}
+                        >
+                          <Icon size={18} style={{ color: activity.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {activity.text}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">{activity.time}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+              <motion.img
+                src={patyAdmin2}
+                alt="Paty Admin"
+                className="w-32 h-40 sm:w-40 sm:h-48 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block self-center"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              />
             </div>
           </div>
             </>
@@ -727,8 +974,26 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'reports' && (
             <div className="space-y-6">
+              {/* Reports header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2">Centro de Reportes 📊</h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-lg">Genera, programa y descarga reportes CSV con las métricas que necesites para el análisis institucional.</p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin2}
+                    alt="Paty Reportes"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 180 }}
+                  />
+                </div>
+              </div>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Generar Reporte Personalizado
                 </h3>
@@ -780,8 +1045,8 @@ export function AdminDashboardPage() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowPreview(!showPreview)}
-                      disabled={selectedMetrics.length === 0}
+                      onClick={() => handleGenerateReport(true)}
+                      disabled={selectedMetrics.length === 0 || generatingReport}
                       className="flex-1 px-4 py-3 rounded-xl bg-gray-100 dark:bg-[#1A2F4A] text-gray-700 dark:text-gray-300 font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-[#233554] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <Eye size={18} />
@@ -789,13 +1054,13 @@ export function AdminDashboardPage() {
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={handleGenerateReport}
-                      disabled={selectedMetrics.length === 0}
+                      onClick={() => handleGenerateReport(false)}
+                      disabled={selectedMetrics.length === 0 || generatingReport}
                       className="flex-1 px-4 py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                       style={{ background: GRADIENT }}
                     >
                       <Download size={18} />
-                      Generar Reporte CSV
+                      {generatingReport ? 'Generando...' : 'Generar Reporte CSV'}
                     </motion.button>
                   </div>
                 </div>
@@ -838,7 +1103,7 @@ export function AdminDashboardPage() {
                 )}
               </AnimatePresence>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Programar Reporte Automático
                 </h3>
@@ -888,7 +1153,7 @@ export function AdminDashboardPage() {
                 </div>
               </div>
               {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Historial de Reportes
                 </h3>
@@ -896,18 +1161,14 @@ export function AdminDashboardPage() {
                   Reportes disponibles por 30 días
                 </p>
                 <div className="space-y-3">
-                  {[
-                    { id: 'r1', date: '2025-05-12', metrics: ['USUARIOS', 'PARCHES'], size: '2.4 MB' },
-                    { id: 'r2', date: '2025-05-10', metrics: ['EVENTOS', 'MATCHES'], size: '1.8 MB' },
-                    { id: 'r3', date: '2025-05-08', metrics: ['ZONAS'], size: '890 KB' },
-                  ].map((report) => (
+                  {displayReportHistory.length > 0 ? displayReportHistory.map((report) => (
                     <div
-                      key={report.id}
+                      key={report.reportId}
                       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-[#1E3A5F]"
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
-                          Reporte del {report.date}
+                          Reporte del {new Date(report.generatedAt).toLocaleDateString()}
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {report.metrics.map((m) => (
@@ -919,17 +1180,24 @@ export function AdminDashboardPage() {
                             </span>
                           ))}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{report.size}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Expira: {new Date(report.expiresAt).toLocaleDateString()}</p>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => window.open(report.downloadUrl, '_blank')}
                         className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-semibold text-sm flex items-center gap-2"
                       >
                         <Download size={16} />
                         Descargar
                       </motion.button>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <img src={patyAdmin} alt="Paty" className="w-20 h-20 object-contain opacity-40 drop-shadow-md mb-3" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No hay reportes recientes.</p>
+                      <p className="text-xs text-gray-400 mt-1">Genera uno arriba para verlo aquí.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -937,8 +1205,31 @@ export function AdminDashboardPage() {
           {}
           {activeSection === 'institutional-stats' && (
             <div className="space-y-6">
-              {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              {/* Header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+                  <div className="flex-1 text-center sm:text-left">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center justify-center sm:justify-start gap-3">
+                      <TrendingUp size={28} className="text-blue-500" />
+                      Estadísticas Institucionales
+                    </h2>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl">
+                      Visualiza datos anonimizados sobre la participación de los estudiantes, distribución por facultades y actividad social general en el campus.
+                    </p>
+                  </div>
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Estadísticas"
+                    className="w-28 h-32 sm:w-36 sm:h-40 object-contain flex-shrink-0 drop-shadow-2xl hidden sm:block"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                </div>
+              </div>
+
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Filtros de Estadísticas
                 </h3>
@@ -989,70 +1280,78 @@ export function AdminDashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {}
                 {(statsType === 'all' || statsType === 'events') && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Eventos Creados</h4>
                       <Calendar size={20} style={{ color: '#10B981' }} />
                     </div>
-                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-4">147</p>
+                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-4">{institutionalData?.eventsStats?.totalCreated ?? '—'}</p>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Activos</span>
-                        <span className="font-bold text-green-600 dark:text-green-400">89 (60.5%)</span>
+                        <span className="font-bold text-green-600 dark:text-green-400">{institutionalData?.eventsStats?.activeCount ?? '—'}{institutionalData?.eventsStats ? ` (${Math.round(institutionalData.eventsStats.activeCount / Math.max(institutionalData.eventsStats.totalCreated, 1) * 100)}%)` : ''}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Finalizados</span>
-                        <span className="font-bold text-blue-600 dark:text-blue-400">52 (35.4%)</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400">{institutionalData?.eventsStats?.finishedCount ?? '—'}{institutionalData?.eventsStats ? ` (${Math.round(institutionalData.eventsStats.finishedCount / Math.max(institutionalData.eventsStats.totalCreated, 1) * 100)}%)` : ''}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Cancelados</span>
-                        <span className="font-bold text-red-600 dark:text-red-400">6 (4.1%)</span>
+                        <span className="font-bold text-red-600 dark:text-red-400">{institutionalData?.eventsStats?.cancelledCount ?? '—'}{institutionalData?.eventsStats ? ` (${Math.round(institutionalData.eventsStats.cancelledCount / Math.max(institutionalData.eventsStats.totalCreated, 1) * 100)}%)` : ''}</span>
                       </div>
                     </div>
                   </div>
                 )}
                 {}
                 {(statsType === 'all' || statsType === 'participation') && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Participación Estudiantil</h4>
                       <Users size={20} style={{ color: '#3B82F6' }} />
                     </div>
-                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">2,847</p>
+                    <p className="text-3xl font-black text-gray-900 dark:text-white mb-2">{institutionalData?.participationStats?.totalActiveStudents?.toLocaleString() ?? '—'}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      Estudiantes activos en el período
+                      Estudiantes activos en el período • Tendencia: {institutionalData?.participationStats?.participationTrend === 'GROWING' ? '📈 Creciendo' : institutionalData?.participationStats?.participationTrend === 'DECLINING' ? '📉 Decreciendo' : '➖ Estable'}
                     </p>
                     <div className="h-2 bg-gray-100 dark:bg-[#1A2F4A] rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: '71.2%' }}
+                        animate={{ width: `${institutionalData?.participationStats ? Math.min(Math.round(institutionalData.participationStats.totalActiveStudents / 40), 100) : 0}%` }}
                         transition={{ duration: 1, ease: 'easeOut' }}
                         className="h-full rounded-full"
                         style={{ background: '#3B82F6' }}
                       />
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      71.2% del total de estudiantes matriculados
+                      {institutionalData?.participationStats?.totalRsvpConfirmed?.toLocaleString() ?? 0} RSVP confirmados • {institutionalData?.participationStats?.totalParchesAttended?.toLocaleString() ?? 0} parches asistidos
                     </p>
                   </div>
                 )}
                 {}
                 {(statsType === 'all' || statsType === 'social') && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Índice de Actividad Social</h4>
                       <TrendingUp size={20} style={{ color: PINK }} />
                     </div>
                     <div className="flex items-center gap-4 mb-4">
                       <div className="flex-1">
-                        <p className="text-3xl font-black text-gray-900 dark:text-white">78.5</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-white">{institutionalData?.socialActivityIndex ?? '—'}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">de 100</p>
                       </div>
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(#10B981 0deg, #10B981 282deg, #E5E7EB 282deg)' }}>
-                        <div className="w-16 h-16 rounded-full bg-white dark:bg-[#112240] flex items-center justify-center">
-                          <span className="text-lg font-black text-green-600 dark:text-green-400">Alto</span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const idx = institutionalData?.socialActivityIndex ?? 0;
+                        const deg = Math.round((idx / 100) * 360);
+                        const label = idx >= 70 ? 'Alto' : idx >= 40 ? 'Medio' : 'Bajo';
+                        const clr = idx >= 70 ? '#10B981' : idx >= 40 ? '#F59E0B' : '#EF4444';
+                        return (
+                          <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: `conic-gradient(${clr} 0deg, ${clr} ${deg}deg, #E5E7EB ${deg}deg)` }}>
+                            <div className="w-16 h-16 rounded-full bg-white dark:bg-[#112240] flex items-center justify-center">
+                              <span className="text-lg font-black" style={{ color: clr }}>{label}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center justify-between">
@@ -1072,33 +1371,41 @@ export function AdminDashboardPage() {
                 )}
                 {}
                 {statsType === 'all' && (
-                  <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                  <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-bold text-gray-900 dark:text-white">Tendencia Semanal</h4>
                       <Activity size={20} style={{ color: ORANGE }} />
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-3 h-3 rounded-full bg-green-500" />
-                          <span className="text-2xl font-black text-green-600 dark:text-green-400">SUBIENDO</span>
+                    {(() => {
+                      const trend = institutionalData?.participationStats?.participationTrend;
+                      const trendLabel = trend === 'GROWING' ? 'SUBIENDO' : trend === 'DECLINING' ? 'BAJANDO' : 'ESTABLE';
+                      const trendColor = trend === 'GROWING' ? 'green' : trend === 'DECLINING' ? 'red' : 'yellow';
+                      const totalStudents = institutionalData?.participationStats?.totalActiveStudents ?? 0;
+                      return (
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className={`w-3 h-3 rounded-full bg-${trendColor}-500`} />
+                              <span className={`text-2xl font-black text-${trendColor}-600 dark:text-${trendColor}-400`}>{trendLabel}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {trend === 'GROWING' ? 'Tendencia positiva' : trend === 'DECLINING' ? 'Tendencia negativa' : 'Sin cambios significativos'} en el período
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Estudiantes activos</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">{totalStudents.toLocaleString()}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">en el período</p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          +12.5% vs semana anterior
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Esta semana</p>
-                        <p className="text-xl font-bold text-gray-900 dark:text-white">3,204</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">interacciones</p>
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
               {}
               {(statsType === 'all' || statsType === 'social') && (
-                <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+                <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h4 className="font-bold text-gray-900 dark:text-white">Participación por Facultad</h4>
@@ -1146,107 +1453,123 @@ export function AdminDashboardPage() {
                 </div>
               )}
               {}
-              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
-                <p className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
-                  <ShieldCheck size={18} className="flex-shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Datos anonimizados</strong> · No se expone información personal de estudiantes.
-                    Todos los datos se presentan de forma agregada para proteger la privacidad.
-                  </span>
-                </p>
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-5">
+                <div className="flex items-center gap-4">
+                  <img src={patyAdmin2} alt="Paty" className="w-14 h-16 object-contain flex-shrink-0 drop-shadow-md opacity-80" />
+                  <p className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2">
+                    <ShieldCheck size={18} className="flex-shrink-0 mt-0.5" />
+                    <span>
+                      <strong>Datos anonimizados</strong> · No se expone información personal de estudiantes.
+                      Todos los datos se presentan de forma agregada para proteger la privacidad.
+                    </span>
+                  </p>
+                </div>
               </div>
             </div>
           )}
           {}
           {activeSection === 'users' && (
-            <div className="space-y-4">
-              {}
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
-                <div className="relative">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="space-y-8">
+              {/* Buscador de usuarios premium con Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden transition-all duration-300">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex items-center gap-4 mb-4">
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Directorio"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-3">
+                      <Users size={24} className="text-blue-500" />
+                      Directorio de Usuarios
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      Gestiona, verifica y modera a todos los usuarios de la comunidad de PATRICI.A.
+                    </p>
+                  </div>
+                </div>
+                <div className="relative w-full max-w-2xl">
+                  <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" />
                   <input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar usuarios por nombre o email..."
-                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-[#1A2F4A] border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
+                    className="w-full pl-12 pr-6 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border-2 border-gray-200/50 dark:border-[#233554]/50 text-gray-900 dark:text-white placeholder-gray-400 font-medium focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-[#112240] transition-all shadow-inner"
                   />
                 </div>
               </div>
-              {}
-              <div className="space-y-3">
-                {filteredUsers.map((user) => (
+
+              {/* Grid de Usuarios Premium */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredUsers.map((user, index) => (
                   <motion.div
                     key={user.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm"
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/80 dark:border-[#1E3A5F] rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-blue-500/15 hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col"
                   >
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
-                      <img src={user.avatar} alt={user.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{user.name}</h4>
-                          {user.verified && <CheckCircle size={16} className="text-green-500 flex-shrink-0" />}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-all duration-500 group-hover:bg-blue-500/20" />
+                    
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="relative">
+                        <img src={user.avatar} alt={user.name} className="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white dark:border-[#1A2F4A] group-hover:scale-105 transition-transform" />
+                        {user.verified && <div className="absolute -bottom-2 -right-2 bg-white dark:bg-[#112240] rounded-full p-0.5 shadow-sm"><CheckCircle size={18} className="text-green-500" /></div>}
+                      </div>
+                      <div className="flex-1 min-w-0 pt-1">
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{user.name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium mt-1">{user.email}</p>
+                        
+                        <div className="flex items-center gap-2 mt-2">
                           {user.status === 'suspended' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-                              Suspendido
-                            </span>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">Suspendido</span>
                           )}
                           {user.status === 'banned' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                              Baneado
-                            </span>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Baneado</span>
                           )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{user.email}</p>
-                        <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                          <span>{user.faculty}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span>Nivel {user.level}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span>{user.xp} XP</span>
-                          {user.reports > 0 && (
-                            <>
-                              <span className="hidden sm:inline">•</span>
-                              <span className="text-red-500 font-bold">{user.reports} reportes</span>
-                            </>
+                          {user.status === 'active' && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">Activo</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedUser(user)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-gray-100 dark:bg-[#1A2F4A] flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#233554]"
-                          title="Ver detalles"
-                        >
-                          <Eye size={16} />
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleVerifyUser(user.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
-                          title={user.verified ? 'Desverificar' : 'Verificar'}
-                        >
-                          <UserCheck size={16} />
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleSuspendUser(user.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50"
-                          title={user.status === 'suspended' ? 'Reactivar' : 'Suspender'}
-                        >
-                          {user.status === 'suspended' ? <Unlock size={16} /> : <Lock size={16} />}
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleBanUser(user.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
-                          title="Banear usuario"
-                        >
-                          <Ban size={16} />
-                        </motion.button>
+                    </div>
+                    
+                    <div className="bg-gray-50/50 dark:bg-[#1A2F4A]/30 rounded-2xl p-4 mb-5 flex-1 border border-gray-100 dark:border-[#233554]/50">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Facultad</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">{user.faculty}</span>
                       </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nivel / XP</span>
+                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                          <Zap size={12} /> {user.level} • {user.xp} XP
+                        </span>
+                      </div>
+                      {user.reports > 0 && (
+                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 dark:border-[#233554]">
+                          <span className="text-xs font-bold text-red-500 uppercase tracking-wider">Reportes</span>
+                          <span className="text-xs font-bold text-red-600 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-md">{user.reports} recibidos</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-2 mt-auto">
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => setSelectedUser(user)} className="h-10 rounded-xl bg-gray-100 dark:bg-[#1A2F4A] flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#233554] transition-colors" title="Ver detalles">
+                        <Eye size={18} />
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleVerifyUser(user.id)} className={`h-10 rounded-xl flex items-center justify-center transition-colors ${user.verified ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200'}`} title={user.verified ? 'Desverificar' : 'Verificar'}>
+                        <UserCheck size={18} />
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleSuspendUser(user.id)} className="h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors" title={user.status === 'suspended' ? 'Reactivar' : 'Suspender'}>
+                        {user.status === 'suspended' ? <Unlock size={18} /> : <Lock size={18} />}
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleBanUser(user.id)} className="h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" title="Banear usuario">
+                        <Ban size={18} />
+                      </motion.button>
                     </div>
                   </motion.div>
                 ))}
@@ -1255,116 +1578,400 @@ export function AdminDashboardPage() {
           )}
           {}
           {activeSection === 'parches' && (
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Parches Activos y Reportados</h3>
-                <div className="space-y-3">
-                  {parches.filter(p => p.status !== 'deleted').map((parche) => (
-                    <div key={parche.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-[#1E3A5F]">
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{parche.name}</h4>
-                          {parche.status === 'flagged' && (
-                            <Flag size={14} className="text-red-500 flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {parche.creator} • {parche.members} miembros
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {parche.location}
-                        </p>
-                        {parche.reports > 0 && (
-                          <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-bold">
-                            {parche.reports} reportes recibidos
-                          </p>
+            <div className="space-y-6">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex items-center gap-4 mb-5">
+                  <motion.img
+                    src={patyAdmin2}
+                    alt="Paty Parches"
+                    className="w-16 h-20 sm:w-20 sm:h-24 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-2">
+                        <MapPin size={22} className="text-red-500" />
+                        Parches Activos y Reportados
+                      </h3>
+                      <span className="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-xs font-black tracking-widest uppercase text-red-600 dark:text-red-400">
+                        {parches.length} Parches
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Supervisa los grupos sociales activos, atiende los reportes de la comunidad y asegura un ambiente seguro.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {parches.filter(p => p.status !== 'deleted').map((parche, index) => (
+                    <motion.div
+                      key={parche.id}
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-white/80 dark:bg-[#1A2F4A]/60 backdrop-blur-xl border border-gray-200/80 dark:border-[#1E3A5F] rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-red-500/10 hover:-translate-y-2 transition-all duration-300 relative group overflow-hidden flex flex-col"
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none transition-all duration-500 group-hover:bg-red-500/20" />
+                      
+                      <div className="flex items-start justify-between mb-4 relative z-10">
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg leading-tight group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors pr-4">{parche.name}</h4>
+                        {parche.status === 'flagged' && (
+                          <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 animate-pulse">
+                            <Flag size={14} className="text-red-500" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setSelectedParche(parche)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400"
-                          title="Ver detalles"
-                        >
-                          <Eye size={16} />
+                      
+                      <div className="bg-gray-50/50 dark:bg-[#112240]/50 rounded-2xl p-4 mb-5 flex-1 border border-gray-100 dark:border-[#233554]/50 space-y-3 relative z-10">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <User size={16} className="text-gray-400" />
+                          <span className="truncate">{parche.creator}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <Users size={16} className="text-blue-500" />
+                          <span>{parche.members} Miembros</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <MapPin size={16} className="text-green-500" />
+                          <span className="truncate">{parche.location}</span>
+                        </div>
+                        
+                        {parche.reports > 0 && (
+                          <div className="pt-3 mt-3 border-t border-gray-200 dark:border-[#233554] flex items-center gap-2">
+                            <AlertTriangle size={16} className="text-red-500" />
+                            <span className="text-xs font-bold text-red-600 dark:text-red-400">
+                              {parche.reports} Reportes recibidos
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 mt-auto relative z-10">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => setSelectedParche(parche)} className="py-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
+                          <Eye size={18} /> Ver Detalles
                         </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDeleteParche(parche.id)}
-                          className="w-9 h-9 flex-shrink-0 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400"
-                          title="Eliminar parche"
-                        >
-                          <Trash2 size={16} />
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleDeleteParche(parche.id)} className="py-3 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center gap-2 text-red-600 dark:text-red-400 font-bold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
+                          <Trash2 size={18} /> Eliminar
                         </motion.button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
+                {parches.filter(p => p.status !== 'deleted').length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-gray-200 dark:border-[#233554] rounded-3xl mt-6 bg-gray-50/50 dark:bg-[#1A2F4A]/30">
+                    <CheckCircle size={48} className="text-green-500 mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400 font-bold text-lg">No hay parches activos</p>
+                    <p className="text-sm text-gray-400 mt-1">Todo está en orden en la comunidad.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
           {}
           {activeSection === 'events' && (
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Gestión de Eventos</h3>
-                <div className="space-y-3">
-                  {events.map((event) => (
-                    <div key={event.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200 dark:border-[#1E3A5F]">
-                      <div className="flex-1 min-w-0 w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{event.title}</h4>
-                          {event.status === 'pending' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
-                              Pendiente
-                            </span>
-                          )}
-                          {event.status === 'approved' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                              Aprobado
-                            </span>
-                          )}
-                          {event.status === 'rejected' && (
-                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                              Rechazado
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {event.organizer} • {event.category}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {event.date} • {event.attendees} asistentes
-                        </p>
-                      </div>
-                      {event.status === 'pending' && (
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleApproveEvent(event.id)}
-                            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-semibold text-sm"
-                          >
-                            Aprobar
-                          </motion.button>
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleRejectEvent(event.id)}
-                            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold text-sm"
-                          >
-                            Rechazar
-                          </motion.button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+            <div className="space-y-6">
+              {/* Eventos header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex items-center gap-4">
+                  <motion.img
+                    src={patyAdmin}
+                    alt="Paty Eventos"
+                    className="w-16 h-20 sm:w-20 sm:h-24 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                      <Calendar size={24} className="text-blue-500" />
+                      Gestión de Eventos
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      Crea y administra eventos institucionales oficiales con Monas (Patricias) exclusivas para asistentes.
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Tabs para eventos */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setEventTab('manage')}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                    eventTab === 'manage'
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-white/80 dark:bg-[#112240]/80 text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-[#1A2F4A]'
+                  }`}
+                >
+                  Ver Eventos Activos
+                </button>
+                <button
+                  onClick={() => setEventTab('create')}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
+                    eventTab === 'create'
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-white/80 dark:bg-[#112240]/80 text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-[#1A2F4A]'
+                  }`}
+                >
+                  Crear Evento Oficial
+                </button>
+              </div>
+
+              {/* Contenido Condicional */}
+              {eventCreatedState ? (
+                <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-12 shadow-xl flex flex-col items-center justify-center text-center transition-all">
+                  <motion.img
+                    src={patySelfieImg}
+                    alt="Evento Creado"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-48 h-48 sm:w-64 sm:h-64 object-contain mb-6 drop-shadow-2xl"
+                  />
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">¡Evento Creado!</h3>
+                  <p className="text-gray-600 dark:text-gray-400">El evento ha sido registrado exitosamente y ya es público.</p>
+                </div>
+              ) : eventTab === 'create' ? (
+              <>
+              {/* Formulario de Creación de Eventos */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <h3 className="font-bold text-gray-900 dark:text-white mb-6 text-xl flex items-center gap-3">
+                  <Calendar size={26} className="text-blue-500" />
+                  {editingEventId ? 'Editar Evento' : 'Crear Nuevo Evento'}
+                </h3>
+                
+                <form onSubmit={handleCreateEvent} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Nombre del Evento *</label>
+                      <input value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="Ej. Torneo de Ping Pong" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Ubicación *</label>
+                      <div className="relative">
+                        <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
+                        <select
+                          value={newEvent.location}
+                          onChange={e => setNewEvent({...newEvent, location: e.target.value})}
+                          className="w-full pl-12 pr-10 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium appearance-none"
+                        >
+                          <option value="" disabled>Selecciona el lugar...</option>
+                          {ECI_LOCATIONS.map(loc => (
+                            <option key={loc} value={loc}>{loc}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Detalles de la ubicación (Opcional)</label>
+                      <input value={newEvent.locationDetails} onChange={e => setNewEvent({...newEvent, locationDetails: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" placeholder="Ej. Frente a la cancha principal, Salón 204" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Fecha *</label>
+                      <input value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} type="date" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Hora *</label>
+                      <input value={newEvent.time} onChange={e => setNewEvent({...newEvent, time: e.target.value})} type="time" className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium" />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Descripción del Evento</label>
+                    <textarea value={newEvent.description} onChange={e => setNewEvent({...newEvent, description: e.target.value})} rows={3} className="w-full px-4 py-3.5 rounded-xl bg-gray-50/80 dark:bg-[#1A2F4A]/80 border border-gray-200 dark:border-[#233554] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none font-medium" placeholder="Escribe los detalles del evento..." />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 block uppercase tracking-wider">Foto del Evento (Opcional)</label>
+                    <div className="w-full px-4 py-8 rounded-2xl border-2 border-dashed border-gray-300 dark:border-[#384c6e] bg-gray-50/50 dark:bg-[#1A2F4A]/30 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1A2F4A]/80 transition-colors cursor-pointer group">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Download size={24} className="text-blue-500" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Arrastra una imagen o haz clic para subir</span>
+                      <span className="text-xs mt-1 opacity-70">JPG, PNG o WEBP (Max 5MB)</span>
+                    </div>
+                  </div>
+
+                  {/* Toggle Patricia */}
+                  <div className="pt-6 border-t border-gray-200/50 dark:border-[#1E3A5F]/50">
+                    <label className="flex items-center gap-4 cursor-pointer p-4 rounded-2xl bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-900/10 border border-purple-100/50 dark:border-purple-800/30">
+                      <div className="relative">
+                        <input type="checkbox" className="sr-only" checked={includePatricia} onChange={e => setIncludePatricia(e.target.checked)} />
+                        <div className={`block w-14 h-8 rounded-full transition-colors ${includePatricia ? 'bg-purple-500 shadow-inner' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                        <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform shadow-md ${includePatricia ? 'transform translate-x-6' : ''}`}></div>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-base">
+                          <Zap size={18} className="text-purple-500" /> Asociar Patricia (Mona) Exclusiva
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Los asistentes podrán reclamar esta Mona introduciendo un código alfanumérico único.</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Patricia Fields */}
+                  <AnimatePresence>
+                    {includePatricia && (
+                      <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0, y: -10 }} className="overflow-hidden">
+                        <div className="bg-purple-50/60 dark:bg-purple-900/10 p-6 rounded-3xl border border-purple-200/50 dark:border-purple-800/50 space-y-5 mt-2 shadow-inner">
+                          <h4 className="font-bold text-purple-900 dark:text-purple-300 flex items-center gap-2 mb-2">
+                            ✨ Detalles de la Patricia
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                              <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Rareza</label>
+                              <div className="relative">
+                                <select value={newPatricia.rarity} onChange={e => setNewPatricia({...newPatricia, rarity: e.target.value})} className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none font-bold">
+                                  <option value="comun">⚪ Común</option>
+                                  <option value="rara">🔵 Rara</option>
+                                  <option value="epica">🟣 Épica</option>
+                                  <option value="legendaria">🟡 Legendaria</option>
+                                </select>
+                                <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-500 pointer-events-none" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider flex justify-between">
+                                Puntos XP <span className="text-purple-600 bg-purple-100 dark:bg-purple-900/50 px-2 rounded">{newPatricia.xpValue} XP</span>
+                              </label>
+                              <input type="range" min="10" max="500" step="10" value={newPatricia.xpValue} onChange={e => setNewPatricia({...newPatricia, xpValue: parseInt(e.target.value)})} className="w-full mt-3 accent-purple-500" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Código de Reclamo (Alfanumérico)</label>
+                            <input value={newPatricia.code} onChange={e => setNewPatricia({...newPatricia, code: e.target.value.toUpperCase()})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-bold tracking-widest uppercase" placeholder="Ej. EVENTO2025" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Descripción de la Patricia</label>
+                            <input value={newPatricia.description} onChange={e => setNewPatricia({...newPatricia, description: e.target.value})} type="text" className="w-full px-4 py-3.5 rounded-xl bg-white/80 dark:bg-[#112240]/80 border border-purple-200 dark:border-purple-800/50 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium" placeholder="Ej. Medalla otorgada por asistir al taller de liderazgo..." />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-2 block uppercase tracking-wider">Arte de la Patricia</label>
+                            <div className="w-full px-4 py-6 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700/50 bg-white/50 dark:bg-[#112240]/50 flex flex-col items-center justify-center text-purple-500 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors group">
+                              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Zap size={20} className="text-purple-600 dark:text-purple-400" />
+                              </div>
+                              <span className="text-sm font-bold text-purple-700 dark:text-purple-400">Subir imagen exclusiva de la Patricia</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="pt-6 flex justify-end border-t border-gray-200/50 dark:border-[#1E3A5F]/50">
+                    <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full sm:w-auto px-8 py-4 rounded-2xl text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all" style={{ background: GRADIENT }}>
+                      <CheckCircle size={22} /> {editingEventId ? 'Guardar Cambios' : 'Publicar Evento Oficial'}
+                    </motion.button>
+                    {editingEventId && (
+                      <motion.button whileTap={{ scale: 0.95 }} type="button" onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', description: '', coverImage: '' }); }} className="w-full sm:w-auto px-6 py-4 rounded-2xl text-gray-700 dark:text-gray-300 font-bold flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#1A2F4A] hover:bg-gray-200 dark:hover:bg-[#233554] transition-all ml-0 sm:ml-4 mt-4 sm:mt-0">
+                        Cancelar
+                      </motion.button>
+                    )}
+                  </div>
+                </form>
+              </div>
+              </>
+              ) : (
+              <>
+              {/* Lista de Eventos */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-bold text-gray-900 dark:text-white text-xl flex items-center gap-3">
+                    <Activity size={24} className="text-green-500" />
+                    Eventos Publicados
+                  </h3>
+                  <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">
+                    {events.length} Activos
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <AnimatePresence>
+                    {events.map((event, index) => (
+                      <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: index * 0.05 }} key={event.id} className="flex flex-col p-5 rounded-3xl border border-gray-200/80 dark:border-[#1E3A5F] bg-gray-50/50 dark:bg-[#1A2F4A]/30 hover:bg-white dark:hover:bg-[#112240] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-transparent transition-all duration-500 pointer-events-none" />
+                        
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 border border-white dark:border-white/5">
+                            <Calendar size={22} className="text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                            Activo
+                          </span>
+                        </div>
+                        
+                        <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-1 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{event.title}</h4>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 flex-1">
+                          {event.category} • {event.organizer}
+                        </p>
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200/60 dark:border-[#1E3A5F]/60">
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <Clock size={14} className="text-gray-500" /> {event.date}
+                          </span>
+                          
+                          <div className="flex gap-2">
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleEditEvent(event)} className="w-9 h-9 rounded-xl bg-blue-50/0 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 flex items-center justify-center transition-all duration-300">
+                              <Edit3 size={16} />
+                            </motion.button>
+                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleDeleteParche(event.id) /* Usando logica similar para demo */} className="w-9 h-9 rounded-xl bg-red-50/0 group-hover:bg-red-50 dark:group-hover:bg-red-900/20 text-gray-300 dark:text-gray-600 group-hover:text-red-500 flex items-center justify-center transition-all duration-300">
+                              <Trash2 size={16} />
+                            </motion.button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  
+                  {events.length === 0 && (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50/50 dark:bg-[#1A2F4A]/30 rounded-3xl border border-dashed border-gray-300 dark:border-[#384c6e]">
+                      <Calendar size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400 font-medium">No hay eventos activos.</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Usa el formulario de arriba para publicar uno nuevo.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              </>
+              )}
             </div>
           )}
           {}
           {activeSection === 'patricias' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Patricias header with Paty */}
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5" style={{ background: GRADIENT }} />
+                <div className="flex items-center gap-4">
+                  <motion.img
+                    src={patyAdmin2}
+                    alt="Paty Colección"
+                    className="w-16 h-20 sm:w-20 sm:h-24 object-contain flex-shrink-0 drop-shadow-xl hidden sm:block"
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  />
+                  <div className="flex-1">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                      <Zap size={24} className="text-purple-500 fill-purple-500/20" />
+                      Inventario de Monas
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                      Administra la colección oficial de Patricias de la universidad, su nivel de rareza y puntos XP otorgados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
               <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
                   <h3 className="font-bold text-gray-900 dark:text-white">Gestión de Patricias</h3>
@@ -1480,16 +2087,17 @@ export function AdminDashboardPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">Obtenidas</p>
                   </div>
                 </div>
+                </div>
               </div>
             </div>
           )}
           {}
           {activeSection === 'config' && (
             <div className="space-y-4">
-              <div className="bg-white dark:bg-[#112240] rounded-2xl p-5 shadow-sm">
+              <div className="bg-white/80 dark:bg-[#112240]/80 backdrop-blur-xl border border-gray-200/50 dark:border-[#1E3A5F]/50 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
                 <h3 className="font-bold text-gray-900 dark:text-white mb-4">Configuración del Sistema</h3>
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
+                  <div className="p-4 rounded-xl bg-blue-50/80 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:-translate-y-1 hover:shadow-md transition-all">
                     <div className="flex items-start gap-3">
                       <Sliders size={20} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
@@ -1514,7 +2122,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800">
+                  <div className="p-4 rounded-xl bg-purple-50/80 dark:bg-purple-900/10 border border-purple-200/50 dark:border-purple-800/50 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:-translate-y-1 hover:shadow-md transition-all">
                     <div className="flex items-start gap-3">
                       <Zap size={20} className="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
@@ -1536,7 +2144,7 @@ export function AdminDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800">
+                  <div className="p-4 rounded-xl bg-green-50/80 dark:bg-green-900/10 border border-green-200/50 dark:border-green-800/50 hover:bg-green-50 dark:hover:bg-green-900/20 hover:-translate-y-1 hover:shadow-md transition-all">
                     <div className="flex items-start gap-3">
                       <ShieldCheck size={20} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">

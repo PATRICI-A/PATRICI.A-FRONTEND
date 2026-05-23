@@ -1,3 +1,56 @@
+import imgTourCampus from '../assets/Tour por el campus.png';
+import imgEdificioA from '../assets/EDIFICIO A.png';
+import imgEdificioB from '../assets/EDIFICIO B.png';
+import imgEdificioC from '../assets/EDIFICIO C.png';
+import imgEdificioD from '../assets/EDIFICIO D.png';
+import imgEdificioE from '../assets/EDIFICIO E.png';
+import imgEdificioF from '../assets/EDIFICIO F.png';
+import imgEdificioG from '../assets/EDIFICIO G.png';
+import imgEdificioH from '../assets/EDIFICIO H.png';
+import imgEdificioI from '../assets/EDIFICIO I.png';
+import imgZenMaster from '../assets/ZEN MASTER.png';
+import imgConquistadorCampus from '../../Imagenes_monas/Legendarias/Conquistador del campus.png';
+import imgLeyendaCampus from '../../Imagenes_monas/Legendarias/Leyenda del Campus.png';
+import imgAnfitrion from '../../Imagenes_monas/Networking/Anfitrion.png';
+import imgCapitanEquipo from '../../Imagenes_monas/Networking/Capitan de Equipo.png';
+import imgConectorVeloz from '../../Imagenes_monas/Networking/Conector veloz.png';
+import imgIniciadorParche from '../../Imagenes_monas/Networking/Iniciador de parche.png';
+import imgNetworking25 from '../../Imagenes_monas/Networking/Networking 25.png';
+import imgNetworking5 from '../../Imagenes_monas/Networking/Networking 5.png';
+import imgOrganizadorElite from '../../Imagenes_monas/Networking/Organizador de elite.png';
+import imgPrimerContacto from '../../Imagenes_monas/Networking/Primer Contacto.png';
+import imgPrimerMensajero from '../../Imagenes_monas/Networking/Primer Mensajero.png';
+import imgMaratonUniversitaria from '../../Imagenes_monas/Zonas y actividad/Maraton Universitaria.png';
+import imgAmanecerProductivo from '../assets/AMANECER PRODUCTIVO.png';
+import imgAtletaDePatio from '../assets/ATLETA DE PATIO.png';
+import imgEmbajadorCampus from '../assets/EMBAJADOR DEL CAMPUS.png';
+import imgNetworking10 from '../assets/NETWORKING 10.png';
+import imgNetworking50 from '../assets/NETWORKING 50.png';
+import imgNoctambuloAcademico from '../assets/NOCTAMBULO ACADEMICO.png';
+export const ECI_LOCATIONS = [
+  'Cafetería Central',
+  'Cafetería Bloque A',
+  'Cafetería Bloque B',
+  'Auditorio Principal',
+  'Plaza Central',
+  'Biblioteca Central',
+  'Sala de Cómputo 1',
+  'Sala de Cómputo 2',
+  'Sala de Cómputo 3',
+  'Gimnasio Campus',
+  'Canchas Los Pinos',
+  'Sala de Bienestar',
+  'Laboratorio de Innovación',
+  'Edificio A',
+  'Edificio B',
+  'Edificio C',
+  'Edificio D',
+  'Edificio E',
+  'Edificio F',
+  'Entrada Principal',
+  'Zona Verde',
+  'Otro',
+];
 export interface MatchUser {
   id: string;
   name: string;
@@ -32,6 +85,8 @@ export interface Parche {
   tags: string[];
   admin: string;
   adminId: string;
+  coverImage?: string;
+  eventId?: string;
 }
 export interface Event {
   id: string;
@@ -66,6 +121,7 @@ export interface WellnessResource {
 }
 export interface ChatMessage {
   id: string;
+  chatId: string;
   sender: string;
   senderId: string;
   avatar: string;
@@ -94,16 +150,18 @@ export interface Mona {
   emoji: string;
   color: string;
   bgColor: string;
-  rarity: 'común' | 'raro' | 'épico' | 'legendario';
-  category: 'tecnología' | 'social' | 'deporte' | 'cultura' | 'bienestar' | 'academia' | 'especial';
+  rarity: 'común' | 'poco común' | 'raro' | 'épico' | 'legendario';
+  category: 'networking' | 'cafeterias' | 'edificios' | 'actividad' | 'eventos' | 'legendarias';
   unlocked: boolean;
-  condition: string;
   unlockedAt?: string;
   xp: number;
+  image?: string;
+  imgSrc?: string;
+  imgScale?: number;
 }
 export interface Notification {
   id: string;
-  type: 'chat' | 'event' | 'match' | 'parche_invitation' | 'event_reminder';
+  type: 'chat' | 'event' | 'match' | 'high_match' | 'parche_invitation' | 'event_reminder';
   title: string;
   message: string;
   avatar?: string;
@@ -113,14 +171,22 @@ export interface Notification {
   read: boolean;
   actionUrl?: string;
 }
-export interface Achievement {
+export interface CafeteriaPrize {
   id: string;
-  title: string;
-  description: string;
+  name: string;
   emoji: string;
-  date: string;
-  xp: number;
+  color: string;
 }
+
+export const CAFETERIA_PRIZES: CafeteriaPrize[] = [
+  { id: 'prize-cafe', name: 'Café Gratis', emoji: '☕', color: '#8B5CF6' },
+  { id: 'prize-empanada', name: 'Empanada de Carne', emoji: '🥟', color: '#F59E0B' },
+  { id: 'prize-jugo', name: 'Jugo Natural', emoji: '🧃', color: '#10B981' },
+  { id: 'prize-almuerzo', name: 'Almuerzo Completo', emoji: '🍱', color: '#EC4899' },
+  { id: 'prize-brownie', name: 'Brownie con Helado', emoji: '🍦', color: '#6366F1' },
+  { id: 'prize-papas', name: 'Papas Fritas', emoji: '🍟', color: '#EAB308' },
+  { id: 'prize-croissant', name: 'Croissant Relleno', emoji: '🥐', color: '#D97706' }
+];
 export const GRADIENT = 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)';
 export const PINK = '#1D4ED8';
 export const ORANGE = '#06B6D4';
@@ -129,7 +195,7 @@ export const TEAL_GRADIENT = 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)'
 export const GOLD = '#D97706';
 export const GOLD_LIGHT = '#F59E0B';
 export const GOLD_GRADIENT = 'linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%)';
-export interface QREnvelope {
+export interface EventEnvelope {
   code: string;
   monaIds: string[];
   label: string;
@@ -139,66 +205,66 @@ export interface QREnvelope {
   emoji: string;
   description: string;
 }
-export const QR_ENVELOPES: QREnvelope[] = [
+export const EVENT_ENVELOPES: EventEnvelope[] = [
   {
     code: 'PATRICIA-TECH-001',
-    monaIds: ['hackathon-hero', 'bug-hunter'],
-    label: 'Sobre Tech Avanzado',
-    theme: 'tecnología',
+    monaIds: ['patricia-primer-contacto', 'patricia-conector-veloz'],
+    label: 'Sobre Red Rápida',
+    theme: 'networking',
     color: '#3B82F6',
     gradient: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
     emoji: '⚡',
-    description: 'Monas exclusivas del mundo tecnológico universitario',
+    description: 'Patricias exclusivas para conexiones y parches',
   },
   {
     code: 'PATRICIA-SOCIAL-002',
-    monaIds: ['lider-nato', 'campus-star'],
-    label: 'Sobre Líder Social',
-    theme: 'social',
+    monaIds: ['patricia-networking-5', 'patricia-networking-10'],
+    label: 'Sobre Conexiones Pro',
+    theme: 'networking',
     color: '#06B6D4',
     gradient: 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)',
-    emoji: '👑',
-    description: 'Para los líderes natos del campus universitario',
+    emoji: '👥',
+    description: 'Construye tu red social estudiantil',
   },
   {
     code: 'PATRICIA-CULTURA-003',
-    monaIds: ['creator', 'culture-vulture', 'cinefilo'],
-    label: 'Sobre Cultural Élite',
-    theme: 'cultura',
+    monaIds: ['patricia-iniciador', 'patricia-organizador-elite'],
+    label: 'Sobre Organizador',
+    theme: 'networking',
     color: '#8B5CF6',
     gradient: 'linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%)',
-    emoji: '🎨',
-    description: 'Arte, música y experiencias culturales únicas',
+    emoji: '🔥',
+    description: 'Para los creadores de parches y eventos',
   },
   {
     code: 'PATRICIA-WELLNESS-004',
-    monaIds: ['healer', 'balance-pro', 'zen-master'],
-    label: 'Sobre Bienestar Pleno',
-    theme: 'bienestar',
+    monaIds: ['patricia-zen-master', 'patricia-noctambulo-academico'],
+    label: 'Sobre Exploración',
+    theme: 'actividad',
     color: '#10B981',
     gradient: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
-    emoji: '💚',
-    description: 'Equilibrio, salud mental y bienestar universitario',
+    emoji: '🧘',
+    description: 'Equilibrio, lugares icónicos y campus nocturno',
   },
   {
     code: 'PATRICIA-ACADEMIA-005',
-    monaIds: ['cum-laude', 'perfect-score', 'study-streak'],
-    label: 'Sobre Académico Elite',
-    theme: 'academia',
+    monaIds: ['patricia-primer-mensajero', 'patricia-amanecer-productivo'],
+    label: 'Sobre Esfuerzo',
+    theme: 'actividad',
     color: '#6366F1',
     gradient: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)',
-    emoji: '🎓',
-    description: 'El reconocimiento a la excelencia académica',
+    emoji: '🌅',
+    description: 'Reconocimiento a la actividad diaria del campus',
   },
   {
     code: 'PATRICIA-LEGEND-006',
-    monaIds: ['campus-legend', 'social-100', 'ai-whiz'],
+    monaIds: ['patricia-networking-50', 'patricia-embajador-campus', 'patricia-leyenda-campus'],
     label: '✨ Sobre Legendario',
-    theme: 'especial',
+    theme: 'legendarias',
     color: '#F59E0B',
     gradient: 'linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%)',
     emoji: '🌟',
-    description: '¡El sobre más exclusivo y raro de patrici.a!',
+    description: '¡El sobre con patricias más exclusivo de patrici.a!',
   },
 ];
 export const matchUsers: MatchUser[] = [
@@ -206,7 +272,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u2',
     name: 'Valentina R.',
     age: 20,
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     program: 'Ingeniería de Sistemas',
     semester: 6,
@@ -221,7 +287,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u3',
     name: 'Mateo S.',
     age: 21,
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     program: 'Ingeniería de Sistemas',
     semester: 7,
@@ -236,7 +302,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u4',
     name: 'Sofía M.',
     age: 20,
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Biomédica',
     program: 'Ingeniería Biomédica',
     semester: 5,
@@ -251,7 +317,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u5',
     name: 'Daniel C.',
     age: 22,
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     program: 'Ingeniería de Sistemas',
     semester: 8,
@@ -266,7 +332,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u6',
     name: 'Lucía T.',
     age: 19,
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería',
     program: 'Ingeniería de Sistemas',
     semester: 4,
@@ -281,7 +347,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u7',
     name: 'Andrés P.',
     age: 21,
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Civil',
     program: 'Ingeniería Civil',
     semester: 6,
@@ -296,7 +362,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u8',
     name: 'Carolina V.',
     age: 20,
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Administración de Empresas',
     program: 'Administración de Empresas',
     semester: 5,
@@ -311,7 +377,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u9',
     name: 'Sebastián L.',
     age: 22,
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Industrial',
     program: 'Ingeniería Industrial',
     semester: 7,
@@ -326,7 +392,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u10',
     name: 'Isabella G.',
     age: 19,
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Biomédica',
     program: 'Ingeniería Biomédica',
     semester: 3,
@@ -341,7 +407,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u11',
     name: 'Diego F.',
     age: 21,
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Electrónica',
     program: 'Ingeniería Electrónica',
     semester: 6,
@@ -356,7 +422,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u12',
     name: 'Camila H.',
     age: 20,
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Matemáticas',
     program: 'Matemáticas',
     semester: 5,
@@ -371,7 +437,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u13',
     name: 'Nicolás B.',
     age: 22,
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Civil',
     program: 'Ingeniería Civil',
     semester: 8,
@@ -386,7 +452,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u14',
     name: 'María José A.',
     age: 19,
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería',
     program: 'Ingeniería Ambiental',
     semester: 4,
@@ -401,7 +467,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u15',
     name: 'Juan Pablo M.',
     age: 21,
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Economía',
     program: 'Economía',
     semester: 7,
@@ -416,7 +482,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u16',
     name: 'Gabriela S.',
     age: 20,
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Industrial',
     program: 'Ingeniería Industrial',
     semester: 6,
@@ -431,7 +497,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u17',
     name: 'Felipe R.',
     age: 22,
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería',
     program: 'Ingeniería Mecánica',
     semester: 8,
@@ -446,7 +512,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u18',
     name: 'Laura K.',
     age: 19,
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Administración de Empresas',
     program: 'Administración de Empresas',
     semester: 3,
@@ -461,7 +527,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u19',
     name: 'Alejandro T.',
     age: 21,
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     program: 'Ingeniería de Sistemas',
     semester: 6,
@@ -476,7 +542,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u20',
     name: 'Valentina C.',
     age: 20,
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Biomédica',
     program: 'Ingeniería Biomédica',
     semester: 5,
@@ -491,7 +557,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u21',
     name: 'Roberto M.',
     age: 24,
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Maestría en Ingeniería de Sistemas',
     program: 'Maestría en Ingeniería de Sistemas',
     semester: 2,
@@ -506,7 +572,7 @@ export const matchUsers: MatchUser[] = [
     id: 'u22',
     name: 'Diana P.',
     age: 21,
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Civil e Ingeniería Ambiental',
     program: 'Ingeniería Civil e Ingeniería Ambiental',
     semester: 7,
@@ -520,6 +586,29 @@ export const matchUsers: MatchUser[] = [
 ];
 export const parches: Parche[] = [
   {
+    id: 'p-user',
+    name: 'El parche de Patri',
+    description: 'Mi propio parche para organizar las mejores reuniones del semestre. ¡Todos están invitados!',
+    category: 'Social',
+    emoji: '🥳',
+    coverColor: '#0EA5E9',
+    type: 'public',
+    members: 2,
+    maxMembers: 10,
+    memberAvatars: [
+      'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    ],
+    location: 'Cafetería Central',
+    time: '12:00 - 14:00',
+    date: 'Jueves',
+    joined: true,
+    trending: false,
+    tags: ['Amigos', 'Almuerzo'],
+    admin: 'Patricia S.',
+    adminId: 'u1',
+  },
+  {
     id: 'p1',
     name: 'Melómanos del Campus',
     description: 'Compartiendo vinilos, playlists y amor por la música 24/7. Todos los géneros bienvenidos.',
@@ -530,9 +619,9 @@ export const parches: Parche[] = [
     members: 14,
     maxMembers: 20,
     memberAvatars: [
-      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     ],
     location: 'Auditorio Central',
     time: '18:00 - 20:00',
@@ -554,8 +643,8 @@ export const parches: Parche[] = [
     members: 8,
     maxMembers: 12,
     memberAvatars: [
-      'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     ],
     location: 'Gimnasio Campus',
     time: '06:00 - 07:30',
@@ -576,9 +665,9 @@ export const parches: Parche[] = [
     members: 22,
     maxMembers: 30,
     memberAvatars: [
-      'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     ],
     location: 'Sala de Cómputo 3',
     time: '16:00 - 19:00',
@@ -600,8 +689,8 @@ export const parches: Parche[] = [
     members: 7,
     maxMembers: 10,
     memberAvatars: [
-      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     ],
     location: 'Biblioteca Central, Piso 3',
     time: '15:00 - 18:00',
@@ -622,8 +711,8 @@ export const parches: Parche[] = [
     members: 8,
     maxMembers: 10,
     memberAvatars: [
-      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     ],
     location: 'La Candelaria, Café',
     time: '10:00 - 12:00',
@@ -644,8 +733,8 @@ export const parches: Parche[] = [
     members: 10,
     maxMembers: 10,
     memberAvatars: [
-      'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+      'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+      'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     ],
     location: 'Canchas Los Pinos',
     time: '17:00 - 18:30',
@@ -790,48 +879,59 @@ export const vibraCategories = [
   { id: 'v6', name: 'Arte y Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
 ];
 export const monas: Mona[] = [
-  { id: 'tech-puppy', name: 'Tech Puppy', description: 'Para los que viven en el mundo digital', emoji: '🐾', category: 'tecnología', color: '#3B82F6', bgColor: '#EFF6FF', rarity: 'común', unlocked: true, condition: 'Únete a tu primer parche de tecnología', unlockedAt: 'Hace 3 semanas', xp: 50 },
-  { id: 'code-master', name: 'Code Master', description: 'Dominas el arte de programar', emoji: '💻', category: 'tecnología', color: '#1D4ED8', bgColor: '#DBEAFE', rarity: 'raro', unlocked: true, condition: 'Participa en 5 sesiones de coding', unlockedAt: 'Hace 1 semana', xp: 150 },
-  { id: 'bug-hunter', name: 'Bug Hunter', description: 'Ningún error se te escapa', emoji: '🐛', category: 'tecnología', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'común', unlocked: false, condition: 'Resuelve 10 retos de algoritmos en parches', xp: 75 },
-  { id: 'hackathon-hero', name: 'Hackathon Hero', description: '48 horas de pura innovación', emoji: '⚡', category: 'tecnología', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'épico', unlocked: false, condition: 'Participa en un hackathon universitario', xp: 300 },
-  { id: 'ai-whiz', name: 'AI Whiz', description: 'El futuro está en tus manos', emoji: '🤖', category: 'tecnología', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Crea y presenta un proyecto de IA en el campus', xp: 500 },
-  { id: 'social', name: 'Social Butterfly', description: 'El alma de cualquier parche', emoji: '🤝', category: 'social', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, condition: 'Invita a 5 amigos a un parche', unlockedAt: 'Hace 2 semanas', xp: 50 },
-  { id: 'pionera', name: 'Pionera', description: 'Siempre a la vanguardia', emoji: '🚀', category: 'social', color: '#1D4ED8', bgColor: '#EFF6FF', rarity: 'épico', unlocked: true, condition: 'Crea tu primer parche', unlockedAt: 'Hace 1 mes', xp: 250 },
-  { id: 'connector', name: 'Connector', description: 'Tu red social es tu superpoder', emoji: '🌐', category: 'social', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Conecta con 20 personas diferentes en el campus', xp: 120 },
-  { id: 'campus-star', name: 'Campus Star', description: 'Todos te conocen en el campus', emoji: '⭐', category: 'social', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: 'Sé el perfil más visitado de tu facultad', xp: 280 },
-  { id: 'lider-nato', name: 'Líder Nato', description: 'Naciste para guiar comunidades', emoji: '👑', category: 'social', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Administra 3 parches activos al mismo tiempo', xp: 600 },
-  { id: 'sport-buddy', name: 'Sport Buddy', description: 'Mente sana, cuerpo sano', emoji: '⚡', category: 'deporte', color: '#0EA5E9', bgColor: '#E0F2FE', rarity: 'común', unlocked: false, condition: 'Únete a 3 parches deportivos', xp: 70 },
-  { id: 'marathon-runner', name: 'Marathon', description: 'La distancia no te detiene', emoji: '🏃', category: 'deporte', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Completa 10 actividades físicas en parches', xp: 130 },
-  { id: 'mvp-campus', name: 'MVP Campus', description: 'El jugador más valioso del semestre', emoji: '🏆', category: 'deporte', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'épico', unlocked: false, condition: 'Gana un torneo inter-parches', xp: 300 },
-  { id: 'gym-addict', name: 'Gym Addict', description: 'El gimnasio es tu segundo hogar', emoji: '💪', category: 'deporte', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, condition: 'Asiste al gimnasio 20 veces con tu parche', xp: 70 },
-  { id: 'team-player', name: 'Team Player', description: 'Juntos siempre llegamos más lejos', emoji: '🤜', category: 'deporte', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'raro', unlocked: false, condition: 'Participa en 5 deportes diferentes', xp: 150 },
-  { id: 'bookworm', name: 'Bookworm', description: 'Los libros son tu mejor compañía', emoji: '📚', category: 'cultura', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'común', unlocked: true, condition: 'Únete a un club de lectura', unlockedAt: 'Hace 2 semanas', xp: 60 },
-  { id: 'melomano', name: 'Melómano', description: 'La música es tu idioma universal', emoji: '🎵', category: 'cultura', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: true, condition: 'Asiste a 5 eventos musicales en el campus', unlockedAt: 'Hace 3 días', xp: 260 },
-  { id: 'cinefilo', name: 'Cinéfilo', description: 'El cine lo es todo para ti', emoji: '🎬', category: 'cultura', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Organiza 3 noches de cine en parches', xp: 140 },
-  { id: 'culture-vulture', name: 'Culture Vulture', description: 'Devorador de experiencias culturales', emoji: '🦚', category: 'cultura', color: '#10B981', bgColor: '#ECFDF5', rarity: 'raro', unlocked: false, condition: 'Asiste a 5 eventos culturales universitarios', xp: 160 },
-  { id: 'creator', name: 'Creator', description: 'La creatividad no tiene límites', emoji: '🎨', category: 'cultura', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Organiza un evento comunitario con más de 20 asistentes', xp: 550 },
-  { id: 'happy-vibes', name: 'Happy Vibes', description: 'Tu energía positiva contagia a todos', emoji: '😊', category: 'bienestar', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: false, condition: 'Registra tu estado de ánimo 7 días seguidos', xp: 60 },
-  { id: 'sleep-champion', name: 'Sleep Champion', description: 'Descansar también es parte del éxito', emoji: '😴', category: 'bienestar', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'común', unlocked: false, condition: 'Completa 5 sesiones de descanso activo', xp: 50 },
-  { id: 'zen-master', name: 'Zen Master', description: 'Paz interior en el caos universitario', emoji: '🧘', category: 'bienestar', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Completa 3 talleres de mindfulness', xp: 130 },
-  { id: 'balance-pro', name: 'Balance Pro', description: 'Estudias, descansas y vives en equilibrio', emoji: '⚖️', category: 'bienestar', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: '30 días con hábitos saludables registrados', xp: 270 },
-  { id: 'healer', name: 'Healer', description: 'Apoyo incondicional para la comunidad', emoji: '💚', category: 'bienestar', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Completa el módulo de bienestar y apoya a 3 compañeros', xp: 500 },
-  { id: 'study-streak', name: 'Study Streak', description: 'La constancia es tu superpoder', emoji: '📖', category: 'academia', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'raro', unlocked: false, condition: 'Estudia en parches 14 días consecutivos', xp: 130 },
-  { id: 'honors', name: 'Honors', description: 'Reconocimiento al mérito académico', emoji: '🎓', category: 'academia', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'raro', unlocked: true, condition: 'Completa 10 sesiones de estudio en parches', unlockedAt: 'Hace 1 semana', xp: 150 },
-  { id: 'genio', name: 'Genio', description: 'Mente brillante del campus', emoji: '💡', category: 'academia', color: '#1D4ED8', bgColor: '#DBEAFE', rarity: 'épico', unlocked: true, condition: 'Alcanza nivel 10 en la plataforma', unlockedAt: 'Hace 2 semanas', xp: 280 },
-  { id: 'perfect-score', name: 'Perfect Score', description: 'La excelencia es tu estándar', emoji: '💯', category: 'academia', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, condition: 'Obtén 5/5 en la evaluación de un parche de estudio', xp: 320 },
-  { id: 'cum-laude', name: 'Cum Laude', description: 'La máxima distinción académica', emoji: '📜', category: 'academia', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Mantén promedio ≥ 4.5 y lidera 5 parches de estudio', xp: 600 },
-  { id: 'first-day', name: 'First Day', description: 'El primer paso siempre es el más importante', emoji: '🌱', category: 'especial', color: '#10B981', bgColor: '#ECFDF5', rarity: 'común', unlocked: true, condition: 'Completa tu registro en patrici.a', unlockedAt: 'Hace 1 mes', xp: 30 },
-  { id: 'night-owl', name: 'Night Owl', description: 'Las mejores ideas llegan en la madrugada', emoji: '🦉', category: 'especial', color: '#6366F1', bgColor: '#EEF2FF', rarity: 'raro', unlocked: false, condition: 'Participa en parches nocturnos 5 veces', xp: 180 },
-  { id: 'explorer', name: 'Explorer', description: 'Siempre buscando nuevas aventuras', emoji: '🧭', category: 'especial', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, condition: 'Únete a parches de 5 categorías diferentes', xp: 200 },
-  { id: 'social-100', name: 'Social 100', description: 'La élite social del campus', emoji: '🎊', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Conecta con 100 estudiantes en un semestre', xp: 700 },
-  { id: 'campus-legend', name: 'Campus Legend', description: '¡Eres parte de la historia de patrici.a!', emoji: '🌟', category: 'especial', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, condition: 'Completa el álbum al 100%', xp: 800 },
+  // 🤝 Networking (10 medallas)
+  { id: 'patricia-primer-contacto', name: 'Primer Contacto', description: 'Todo empieza con un "hola". Realizaste tu primera conexión en PATRICI.A y diste el primer paso para construir tu red universitaria. Este es el inicio de algo grande — cada amistad comienza con un simple gesto.', emoji: '🤝', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 50, image: imgPrimerContacto },
+  { id: 'patricia-networking-5', name: 'Networking 5', description: 'Ya no eres un desconocido en el campus. Con 5 conexiones activas, tu red social empieza a tomar forma. Cada persona que conoces abre puertas a nuevas experiencias, ideas y oportunidades que ni imaginabas.', emoji: '👥', category: 'networking', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 mes', xp: 150, image: imgNetworking5 },
+  { id: 'patricia-networking-10', name: 'Networking 10', description: 'Tu círculo crece y tu influencia también. Con 10 conexiones activas, eres un punto de encuentro entre diferentes grupos y facultades. La ECI se siente más pequeña cuando conoces a tanta gente increíble.', emoji: '🌐', category: 'networking', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 350, image: imgNetworking10 },
+  { id: 'patricia-networking-25', name: 'Networking 25', description: '25 conexiones no es solo un número — es una comunidad entera. Eres reconocido en pasillos, cafeterías y laboratorios. Tu red es tan fuerte que siempre hay alguien dispuesto a echarte una mano con un parcial o un café.', emoji: '🗣️', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 700, image: imgNetworking25 },
+  { id: 'patricia-iniciador', name: 'Iniciador de Parche', description: 'Las mejores historias empiezan cuando alguien dice "¿nos juntamos?". Creaste o te uniste a tu primer parche y ahora formas parte de algo más grande. Los parches son el alma de la vida universitaria.', emoji: '⚡', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 3 semanas', xp: 75, image: imgIniciadorParche },
+  { id: 'patricia-capitan', name: 'Capitán de Equipo', description: 'Liderar no es fácil, pero alguien tiene que hacerlo. Con 2 parches creados, demuestras que tienes la iniciativa y el carisma para reunir gente. Eres el motor que pone en marcha las mejores experiencias del campus.', emoji: '🏅', category: 'networking', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 200, image: imgCapitanEquipo },
+  { id: 'patricia-organizador-elite', name: 'Organizador Elite', description: '10 parches exitosos te convierten en una leyenda del networking. Eres el arquitecto social de la ECI — cada evento que organizas deja huella, cada grupo que creas se convierte en una comunidad que trasciende las aulas.', emoji: '🔥', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 500, image: imgOrganizadorElite },
+  { id: 'patricia-primer-mensajero', name: 'Primer Mensajero', description: 'Rompiste el hielo digital. Enviaste el primer mensaje en un parche y le diste vida a la conversación. A veces un simple "¿qué más?" es todo lo que se necesita para crear conexiones que duran toda la carrera.', emoji: '💬', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 semanas', xp: 100, image: imgPrimerMensajero },
+  { id: 'patricia-anfitrion', name: 'Anfitrión', description: 'Tu parche atrajo a alguien nuevo — eso habla de la energía que generas. Ser anfitrión es abrir las puertas de tu grupo, hacer sentir bienvenido al que llega y construir una comunidad donde todos quieren estar.', emoji: '🏠', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgAnfitrion },
+  { id: 'patricia-conector-veloz', name: 'Conector Veloz', description: '10 conexiones en menos de 30 días es impresionante. Eres un torbellino social, un fenómeno de la interacción que no pierde tiempo. Tu energía contagia y tu velocidad para hacer amigos no tiene rival en todo el campus.', emoji: '🚀', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 850, image: imgConectorVeloz },
+
+  // ☕ Cafeterías (4 medallas)
+  { id: 'patricia-explorador-cafeterias', name: 'Explorador de Cafeterías', description: '"Café con clase" — Has recorrido Central, Regio, Leyenda y Harvies. Conoces cada rincón gastronómico del campus y sabes exactamente dónde encontrar el mejor tinto, la empanada más crujiente y el almuerzo más contundente.', emoji: '☕', category: 'cafeterias', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Ayer', xp: 200 },
+  { id: 'patricia-fan-regio', name: 'Fan del Regio', description: '"Combo universitario" — 5 visitas al Regio te convierten en cliente VIP. Ya te conocen por nombre, ya sabes el menú de memoria y tu combo favorito está listo antes de que lo pidas. La fidelidad tiene sus recompensas.', emoji: '🥤', category: 'cafeterias', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 100 },
+  { id: 'patricia-cliente-frecuente', name: 'Cliente Frecuente', description: '"Mesa reservada" — 15 visitas a las cafeterías del campus. Ya tienes tu mesa favorita, tu horario preferido y esa rutina sagrada que combina estudio con un buen café. Las cafeterías son tu segundo hogar.', emoji: '🍽️', category: 'cafeterias', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 250 },
+  { id: 'patricia-ruta-cafe', name: 'Ruta del Café', description: '"Barista académico" — Has completado la ruta gastronómica definitiva visitando todas las cafeterías del campus. Eres un crítico culinario universitario con opiniones sobre cada menú, cada precio y cada sabor.', emoji: '🍩', category: 'cafeterias', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 450 },
+
+  // 🏛️ Edificios (10 medallas)
+  { id: 'patricia-edificio-a', name: 'Edificio A', description: '"Inicio de misión" — El Edificio A es donde todo comienza. Aquí se respira el primer día de clases, las bienvenidas y ese nerviosismo de estudiante nuevo que con el tiempo se transforma en orgullo escuelero.', emoji: '🅰️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75, image: imgEdificioA, imgScale: 1.4 },
+  { id: 'patricia-edificio-b', name: 'Edificio B', description: '"Ruta académica" — El Edificio B guarda secretos de generaciones enteras. Sus pasillos han visto madrugadas de estudio, celebraciones post-parcial y esas conversaciones de pasillo que definen la vida universitaria.', emoji: '🅱️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75, image: imgEdificioB, imgScale: 1.7 },
+  { id: 'patricia-edificio-c', name: 'Edificio C', description: '"Circuito completo" — El Edificio C es sinónimo de innovación. Laboratorios, proyectos y esas tardes interminables de prácticas que te forman como ingeniero. Aquí se forjan los profesionales del mañana.', emoji: '🅲', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioC },
+  { id: 'patricia-edificio-d', name: 'Edificio D', description: '"Modo ingeniero" — En el Edificio D la ingeniería cobra vida. Cada aula es un taller de ideas, cada laboratorio un campo de batalla intelectual. Aquí los problemas se resuelven con creatividad y código.', emoji: '🅳', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioD },
+  { id: 'patricia-edificio-e', name: 'Edificio E', description: '"En construcción" — El Edificio E representa la evolución constante de la ECI. Como un buen ingeniero, siempre está en proceso de mejora. Visitarlo es ser testigo del crecimiento del campus.', emoji: '🅔', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioE },
+  { id: 'patricia-edificio-f', name: 'Edificio F', description: '"Punto de encuentro" — El Edificio F es donde convergen caminos. Estudiantes de todas las carreras se cruzan aquí, creando esos encuentros casuales que terminan en amistades inesperadas y proyectos colaborativos.', emoji: '🅵', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioF },
+  { id: 'patricia-edificio-g', name: 'Edificio G', description: '"Zona de proyectos" — El Edificio G es el cuartel general de la creatividad. Aquí nacen los proyectos que cambian el rumbo de las carreras y se construyen los prototipos que algún día serán realidad.', emoji: '🅶', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioG },
+  { id: 'patricia-edificio-h', name: 'Edificio H', description: '"Nivel avanzado" — Llegar al Edificio H significa que ya dominas el mapa del campus. Este edificio alberga espacios que solo los más exploradores conocen y experiencias que pocos pueden contar.', emoji: '🅗', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioH },
+  { id: 'patricia-edificio-i', name: 'Edificio I', description: '"Destino final" — El Edificio I cierra el circuito. Visitarlo completa tu recorrido por la infraestructura de la ECI y te acerca un paso más a la patricia legendaria del Tour por el Campus.', emoji: 'ℹ️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgEdificioI },
+  { id: 'patricia-tour-campus', name: 'Tour por el Campus', description: '"Ingeniero en movimiento" — Has visitado todos los edificios del A al I. Conoces cada pasillo, cada escalera, cada rincón. Eres un mapa viviente de la ECI y tu conocimiento del campus no tiene rival.', emoji: '🏢', category: 'edificios', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 500, image: imgTourCampus, imgScale: 1.5 },
+
+  // 🌿 Lugares Emblemáticos y Actividad (5 medallas)
+  { id: 'patricia-zen-master', name: 'Zen Máster', description: '"Paz entre circuitos" — Encontraste calma en medio del caos académico visitando el Lago y el Centro de Reflexión. A veces el mejor debugging es sentarse junto al agua y dejar que la mente se resetee por completo.', emoji: '🧘', category: 'actividad', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Hace 1 semana', xp: 200, image: imgZenMaster },
+  { id: 'patricia-atleta-patio', name: 'Atleta de Patio', description: '"Dunk en el campus" — La cancha de baloncesto es tu refugio. Aquí se olvidan los parciales, se liberan tensiones y se forjan rivalidades amistosas que son la esencia de la vida deportiva universitaria.', emoji: '🏀', category: 'actividad', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 150, image: imgAtletaDePatio },
+  { id: 'patricia-maraton-universitaria', name: 'Maratón Universitaria', description: '"Sin perder el parcial" — Recorriste 5 zonas del campus en un solo día. Desde las aulas hasta las canchas, desde la biblioteca hasta las cafeterías — tu resistencia y velocidad son dignas de admiración.', emoji: '🏃', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 400, image: imgMaratonUniversitaria },
+  { id: 'patricia-noctambulo-academico', name: 'Noctámbulo Académico', description: '"Último en salir" — Cuando todos se van, tú sigues. El campus nocturno tiene una magia especial: pasillos vacíos, luces tenues y ese silencio perfecto para concentrarse. Eres el guardián de la noche escuelera.', emoji: '🦉', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300, image: imgNoctambuloAcademico },
+  { id: 'patricia-amanecer-productivo', name: 'Amanecer Productivo', description: '"Primera clase survivor" — 5 días seguidos ingresando antes de las 7 AM. Mientras el mundo duerme, tú ya estás conquistando el día. Tu disciplina y madrugada son una inspiración para toda la ECI.', emoji: '🌅', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300, image: imgAmanecerProductivo },
+
+  // 🎉 Eventos y Participación (2 medallas)
+  { id: 'patricia-asistente-vip', name: 'Asistente VIP', description: '"Siempre presente" — Asististe a un evento institucional y viviste la experiencia completa. Los eventos de la ECI son únicos: desde hackathones hasta festivales, cada uno deja una marca imborrable en tu paso por la universidad.', emoji: '🎟️', category: 'eventos', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
+  { id: 'patricia-invitado-especial', name: 'Invitado Especial', description: '"Figura pública" — 5 eventos y contando. Ya eres rostro conocido en cada inauguración, cada taller y cada celebración. Tu presencia eleva cualquier evento y tu entusiasmo es contagioso para todos.', emoji: '👑', category: 'eventos', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 500 },
+
+  // 👑 Medallas Legendarias (4 medallas)
+  { id: 'patricia-conquistador-campus', name: 'Conquistador del Campus', description: 'Has visitado cada lugar importante de la ECI. Desde los laboratorios más escondidos hasta las zonas verdes más serenas — el campus entero es tu territorio. Esta patricia legendaria corona tu dominio absoluto del espacio universitario.', emoji: '🗺️', category: 'legendarias', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1000, image: imgConquistadorCampus },
+  { id: 'patricia-leyenda-campus', name: 'Leyenda del Campus', description: '30 patricias coleccionadas. Eres una verdadera leyenda viviente de la ECI. Tu álbum es la envidia de todos, tu dedicación es inquebrantable y tu nombre quedará grabado en la historia digital de PATRICI.A para siempre.', emoji: '🌟', category: 'legendarias', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1500, image: imgLeyendaCampus },
+  { id: 'patricia-networking-50', name: 'Networking 50', description: '50 conexiones activas te convierten en el centro del universo social de la ECI. Conoces a medio campus, todos te buscan para proyectos y parches. Tu red de contactos es tan extensa que podrías organizar un evento masivo con una sola publicación.', emoji: '👑', category: 'legendarias', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1200, image: imgNetworking50 },
+  { id: 'patricia-embajador-campus', name: 'Embajador del Campus', description: 'Conectar estudiantes de múltiples carreras es un superpoder. Eres el puente entre facultades, el catalizador de proyectos interdisciplinarios y la persona que demuestra que la diversidad académica fortalece a toda la comunidad escuelera.', emoji: '🌍', category: 'legendarias', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1500, image: imgEmbajadorCampus },
 ];
 export const directChats: DirectChat[] = [
   {
     id: 'dc1',
     userId: 'u2',
     name: 'Mariana Malagón',
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     lastMessage: 'Me encantaron las fotos del último parche! 📸',
     lastTime: 'Ahora',
@@ -843,7 +943,7 @@ export const directChats: DirectChat[] = [
     id: 'dc2',
     userId: 'u3',
     name: 'Diego Fabian Andrade',
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     lastMessage: 'Claro! Te paso el repo en un rato 💻',
     lastTime: '10 min',
@@ -855,7 +955,7 @@ export const directChats: DirectChat[] = [
     id: 'dc3',
     userId: 'u4',
     name: 'Maria Jose Perez',
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Biomédica',
     lastMessage: 'Nos vemos en la biblio entonces! 📚',
     lastTime: '2h',
@@ -867,7 +967,7 @@ export const directChats: DirectChat[] = [
     id: 'dc4',
     userId: 'u5',
     name: 'David Santiago Cajamarca',
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     lastMessage: '¿Tienes el link del meet? 🎮',
     lastTime: '1d',
@@ -879,7 +979,7 @@ export const directChats: DirectChat[] = [
     id: 'dc5',
     userId: 'u6',
     name: 'Stiven Esneider Pardo',
-    avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Industrial',
     lastMessage: '¿Vamos al parche de estudio esta tarde?',
     lastTime: '3h',
@@ -891,7 +991,7 @@ export const directChats: DirectChat[] = [
     id: 'dc6',
     userId: 'u7',
     name: 'Juan David Gómez',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Civil',
     lastMessage: '¡El proyecto quedó increíble! 🏗️',
     lastTime: '1d',
@@ -901,114 +1001,353 @@ export const directChats: DirectChat[] = [
   },
 ];
 export const chatMessages: ChatMessage[] = [
+  // --- dc1: Mariana Malagón ---
   {
-    id: 'm1',
+    id: 'm_dc1_1',
+    chatId: 'dc1',
+    sender: 'Mariana Malagón',
+    senderId: 'u2',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Hola! Nos vemos mañana para organizar las monas?',
+    timestamp: '9:15 AM',
+    type: 'text',
+  },
+  {
+    id: 'm_dc1_2',
+    chatId: 'dc1',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'De una! Llevo mis repetidas ✨',
+    timestamp: '9:17 AM',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_dc1_3',
+    chatId: 'dc1',
+    sender: 'Mariana Malagón',
+    senderId: 'u2',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Me encantaron las fotos del último parche! 📸',
+    timestamp: '11:20 AM',
+    type: 'text',
+  },
+
+  // --- dc2: Diego Fabian Andrade ---
+  {
+    id: 'm_dc2_1',
+    chatId: 'dc2',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Diego! ¿Pudiste subir los cambios a la rama principal?',
+    timestamp: '10:05 AM',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_dc2_2',
+    chatId: 'dc2',
+    sender: 'Diego Fabian Andrade',
+    senderId: 'u3',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Claro! Te paso el repo en un rato 💻',
+    timestamp: '10:10 AM',
+    type: 'text',
+  },
+
+  // --- dc3: Maria Jose Perez ---
+  {
+    id: 'm_dc3_1',
+    chatId: 'dc3',
+    sender: 'Maria Jose Perez',
+    senderId: 'u4',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Hola! Vas a ir al campus hoy?',
+    timestamp: 'Ayer',
+    type: 'text',
+  },
+  {
+    id: 'm_dc3_2',
+    chatId: 'dc3',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Hola Majo, sí! En la tarde estaré por allá.',
+    timestamp: 'Ayer',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_dc3_3',
+    chatId: 'dc3',
+    sender: 'Maria Jose Perez',
+    senderId: 'u4',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Nos vemos en la biblio entonces! 📚',
+    timestamp: 'Ayer',
+    type: 'text',
+  },
+
+  // --- dc4: David Santiago Cajamarca ---
+  {
+    id: 'm_dc4_1',
+    chatId: 'dc4',
+    sender: 'David Santiago Cajamarca',
+    senderId: 'u5',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Qué más bro, ¿sale partida de Valorant hoy?',
+    timestamp: 'Hace 2 días',
+    type: 'text',
+  },
+  {
+    id: 'm_dc4_2',
+    chatId: 'dc4',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'De una, de cabeza! ¿A qué hora?',
+    timestamp: 'Hace 2 días',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_dc4_3',
+    chatId: 'dc4',
+    sender: 'David Santiago Cajamarca',
+    senderId: 'u5',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: '¿Tienes el link del meet? 🎮',
+    timestamp: 'Hace 2 días',
+    type: 'text',
+  },
+
+  // --- dc5: Stiven Esneider Pardo ---
+  {
+    id: 'm_dc5_1',
+    chatId: 'dc5',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Hola Stiven, ¿cómo vas con el informe de industrial?',
+    timestamp: 'Hace 3h',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_dc5_2',
+    chatId: 'dc5',
+    sender: 'Stiven Esneider Pardo',
+    senderId: 'u6',
+    avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Bien! Ya casi lo termino.',
+    timestamp: 'Hace 3h',
+    type: 'text',
+  },
+  {
+    id: 'm_dc5_3',
+    chatId: 'dc5',
+    sender: 'Stiven Esneider Pardo',
+    senderId: 'u6',
+    avatar: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: '¿Vamos al parche de estudio esta tarde?',
+    timestamp: 'Hace 3h',
+    type: 'text',
+  },
+
+  // --- dc6: Juan David Gómez ---
+  {
+    id: 'm_dc6_1',
+    chatId: 'dc6',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Hola Juan! Ya viste la maqueta final?',
+    timestamp: 'Ayer',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_dc6_2',
+    chatId: 'dc6',
+    sender: 'Juan David Gómez',
+    senderId: 'u7',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: '¡El proyecto quedó increíble! 🏗️',
+    timestamp: 'Ayer',
+    type: 'text',
+  },
+
+  // --- p1: Melómanos del Campus ---
+  {
+    id: 'm_p1_1',
+    chatId: 'p1',
+    sender: 'Carlos',
+    senderId: 'u5',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Hola a todos! Qué buena música hoy.',
+    timestamp: '4:15 PM',
+    type: 'text',
+  },
+  {
+    id: 'm_p1_2',
+    chatId: 'p1',
+    sender: 'Valentina R.',
+    senderId: 'u2',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: '¡Totalmente! Traje unos vinilos increíbles 🎶',
+    timestamp: '4:17 PM',
+    type: 'text',
+  },
+  {
+    id: 'm_p1_3',
+    chatId: 'p1',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Qué gran parche! ¿Alguien tiene el vinilo de Soda?',
+    timestamp: '4:20 PM',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_p1_4',
+    chatId: 'p1',
+    sender: 'Valentina R.',
+    senderId: 'u2',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: '¡Ya estoy en la mesa del fondo! 🔌',
+    timestamp: '4:22 PM',
+    type: 'text',
+  },
+
+  // --- p3: Hackers Uni ---
+  {
+    id: 'm_p3_1',
+    chatId: 'p3',
+    sender: 'Mateo S.',
+    senderId: 'u3',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Qué onda, ¿cómo van con los algoritmos de Python?',
+    timestamp: '2:15 PM',
+    type: 'text',
+  },
+  {
+    id: 'm_p3_2',
+    chatId: 'p3',
     sender: 'Diego Fabian',
     senderId: 'u3',
     avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Ahí vamos, batallando con las APIs jajaja',
+    timestamp: '2:18 PM',
+    type: 'text',
+  },
+  {
+    id: 'm_p3_3',
+    chatId: 'p3',
+    sender: 'Tú',
+    senderId: 'u1',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Sii, están retadores!',
+    timestamp: '2:20 PM',
+    type: 'text',
+    isMe: true,
+  },
+  {
+    id: 'm_p3_4',
+    chatId: 'p3',
+    sender: 'Mateo S.',
+    senderId: 'u3',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    content: 'Coffee & Python esta noche? ☕',
+    timestamp: '2:22 PM',
+    type: 'text',
+  },
+
+  // --- p4: Estudio en la Biblio ---
+  {
+    id: 'm1',
+    chatId: 'p4',
+    sender: 'Diego Fabian',
+    senderId: 'u3',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     content: '¡Hola equipo! Ya estoy en la mesa del fondo, la que tiene los enchufes libres. 🔌',
-    timestamp: '15:02',
+    timestamp: '3:02 PM',
     type: 'text',
   },
   {
     id: 'm2',
+    chatId: 'p4',
     sender: 'Mariana',
     senderId: 'u6',
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     content: 'Súper, llego en 5. ¿Alguien quiere un café? Paso por el Oxxo.',
-    timestamp: '15:05',
+    timestamp: '3:05 PM',
     type: 'text',
   },
   {
     id: 'm3',
+    chatId: 'p4',
     sender: 'Tú',
     senderId: 'u1',
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     content: '¡Yo! Un latte frío si se puede Mariana. Mil gracias! ✨',
-    timestamp: '15:07',
+    timestamp: '3:07 PM',
     type: 'text',
     isMe: true,
   },
   {
     id: 'm4',
+    chatId: 'p4',
     sender: 'Sistema',
     senderId: 'system',
     avatar: '',
     content: 'Stiven Esneider se unió al parche',
-    timestamp: '15:10',
+    timestamp: '3:10 PM',
     type: 'system',
   },
   {
     id: 'm5',
+    chatId: 'p4',
     sender: 'David Santiago',
     senderId: 'u5',
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     content: '¡Acá estamos!',
-    timestamp: '15:12',
+    timestamp: '3:12 PM',
     type: 'text',
   },
   {
     id: 'm6',
+    chatId: 'p4',
     sender: 'Carlos',
     senderId: 'u5',
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     content: 'Encontré el libro que necesitaban para cálculo 📚',
-    timestamp: '15:13',
+    timestamp: '3:13 PM',
     type: 'image',
     imageUrl: 'https://images.unsplash.com/photo-1763890965393-1cea435581ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400',
   },
   {
     id: 'm7',
+    chatId: 'p4',
     sender: 'Mateo',
     senderId: 'u3',
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     content: '¿Alguien ya terminó los ejercicios del capítulo 3? Estoy atascado en el ejercicio 7.',
-    timestamp: '15:20',
+    timestamp: '3:20 PM',
     type: 'text',
   },
   {
     id: 'm8',
+    chatId: 'p4',
     sender: 'Tú',
     senderId: 'u1',
     avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50',
-    content: 'Sí! Te lo explico cuando llegue, es más fácil con un diagrama 🙌',
-    timestamp: '15:21',
+    content: 'Alguien ya terminó los ejercicios?',
+    timestamp: '3:21 PM',
     type: 'text',
     isMe: true,
-  },
-];
-export const achievements: Achievement[] = [
-  {
-    id: 'a1',
-    title: 'Completaste 5 parches',
-    description: 'Has demostrado ser una líder natural en la comunidad.',
-    emoji: '🏆',
-    date: 'Hace 2 días',
-    xp: 200,
-  },
-  {
-    id: 'a2',
-    title: 'Colaboración de Impacto',
-    description: 'Ayudaste en el proyecto de sostenibilidad urbana.',
-    emoji: '🌿',
-    date: 'Hace 1 semana',
-    xp: 350,
-  },
-  {
-    id: 'a3',
-    title: '7 días de racha',
-    description: 'Una semana seguida conectada con tu comunidad.',
-    emoji: '🔥',
-    date: 'Hace 2 semanas',
-    xp: 150,
-  },
-  {
-    id: 'a4',
-    title: 'Mentora del Campus',
-    description: 'Ayudaste a 3 compañeros de primer semestre.',
-    emoji: '⭐',
-    date: 'Hace 3 semanas',
-    xp: 300,
   },
 ];
 export const interestOptions = [
@@ -1045,7 +1384,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank1',
     name: 'Alejandro V.',
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     xp: 5850,
     level: 18,
@@ -1056,7 +1395,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank2',
     name: 'Camila O.',
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Industrial',
     xp: 5200,
     level: 17,
@@ -1067,7 +1406,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank3',
     name: 'Santiago B.',
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     xp: 4800,
     level: 16,
@@ -1078,7 +1417,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'u1',
     name: 'Patricia S.',
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     xp: 3450,
     level: 14,
@@ -1090,7 +1429,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank5',
     name: 'Valentina R.',
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     xp: 3200,
     level: 13,
@@ -1101,7 +1440,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank6',
     name: 'Mateo S.',
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     xp: 2900,
     level: 12,
@@ -1112,7 +1451,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank7',
     name: 'Sofía M.',
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Biomédica',
     xp: 2700,
     level: 11,
@@ -1123,7 +1462,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank8',
     name: 'Daniel C.',
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería de Sistemas',
     xp: 2500,
     level: 10,
@@ -1134,7 +1473,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank9',
     name: 'Laura B.',
-    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Biomédica',
     xp: 2300,
     level: 9,
@@ -1145,7 +1484,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank10',
     name: 'Carlos A.',
-    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1525457136159-8878648a7ad0?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Civil',
     xp: 2100,
     level: 9,
@@ -1156,7 +1495,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank11',
     name: 'Andrea L.',
-    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Administración de Empresas',
     xp: 1900,
     level: 8,
@@ -1167,7 +1506,7 @@ export const rankingUsers: RankingUser[] = [
   {
     id: 'rank12',
     name: 'Pablo M.',
-    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     faculty: 'Ingeniería Industrial',
     xp: 1700,
     level: 7,
@@ -1182,18 +1521,18 @@ export const notifications: Notification[] = [
     type: 'chat',
     title: 'Nuevo mensaje de Sofía García',
     message: '¡Hey! ¿Vienes al parche de estudio mañana?',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     color: '#3B82F6',
     timestamp: 'Hace 5 min',
     read: false,
-    actionUrl: '/chats/chat1',
+    actionUrl: '/direct-chat/dc1',
   },
   {
     id: 'notif2',
     type: 'match',
     title: 'Nueva solicitud de conexión',
     message: 'Carlos Mendoza quiere conectar contigo (85% compatibilidad)',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     color: '#EC4899',
     timestamp: 'Hace 15 min',
     read: false,
@@ -1237,18 +1576,18 @@ export const notifications: Notification[] = [
     type: 'chat',
     title: 'Nuevo mensaje en grupo',
     message: 'Parche de Estudio: Alguien compartió apuntes de Cálculo',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     color: '#3B82F6',
     timestamp: 'Hace 5 horas',
     read: true,
-    actionUrl: '/chats',
+    actionUrl: '/chat',
   },
   {
     id: 'notif7',
     type: 'match',
     title: 'Nueva conexión aceptada',
     message: 'María Torres aceptó tu solicitud de conexión',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
     color: '#EC4899',
     timestamp: 'Ayer',
     read: true,
@@ -1264,5 +1603,38 @@ export const notifications: Notification[] = [
     timestamp: 'Ayer',
     read: true,
     actionUrl: '/parches',
+  },
+  {
+    id: 'notif9',
+    type: 'high_match',
+    title: 'Compatibilidad alta con Valentina R.',
+    message: 'Tienen un 98% de compatibilidad. Comparten intereses en Fotografia, Jazz y Diseno.',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+    color: '#F59E0B',
+    timestamp: 'Hace 10 min',
+    read: false,
+    actionUrl: '/user/u2',
+  },
+  {
+    id: 'notif10',
+    type: 'high_match',
+    title: 'Compatibilidad alta con Camila H.',
+    message: 'Tienen un 96% de compatibilidad. Comparten intereses en Musica y Jazz.',
+    avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+    color: '#F59E0B',
+    timestamp: 'Hace 30 min',
+    read: false,
+    actionUrl: '/user/u12',
+  },
+  {
+    id: 'notif11',
+    type: 'high_match',
+    title: 'Compatibilidad alta con Lucia T.',
+    message: 'Tienen un 94% de compatibilidad. Comparten intereses en Musica, Programacion y Fotografia.',
+    avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=faces&cs=tinysrgb&fit=crop&fm=jpg&w=400&h=500',
+    color: '#F59E0B',
+    timestamp: 'Hace 1 hora',
+    read: false,
+    actionUrl: '/user/u6',
   },
 ];

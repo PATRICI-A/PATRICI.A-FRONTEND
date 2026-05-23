@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sun, Moon, Calendar } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import { authService } from '../services/auth.service';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import patiLoginImg from '../assets/pati-login.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
@@ -23,16 +24,10 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [isBlocked, setIsBlocked] = useState(false);
   const emailValid = email.toLowerCase().endsWith('@mail.escuelaing.edu.co') && email.includes('@');
   const emailHintColor = !emailTouched || email.length === 0 ? (isDark ? 'text-gray-400' : 'text-gray-600') : emailValid ? (isDark ? 'text-green-400' : 'text-green-700') : 'text-red-400';
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isBlocked) {
-      setError('Cuenta bloqueada temporalmente por 15 minutos');
-      return;
-    }
     if (!email || !password) {
       setError('Por favor completa todos los campos');
       return;
@@ -47,38 +42,47 @@ export function LoginPage() {
     }
     setIsLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 1200));
-    const userRole = email.toLowerCase().includes('organizador') ? 'ORGANIZADOR' : 'ESTUDIANTE';
-    setFailedAttempts(0);
-    if (userRole === 'ORGANIZADOR') {
-      localStorage.setItem('organizerSession', JSON.stringify({
-        email,
-        name: email.split('@')[0],
-        role: 'ORGANIZADOR'
-      }));
+    try {
+      const data = await authService.login({ email, password });
+      const u = data.user as any;
+      if (u?.role === 'ORGANIZADOR') {
+        localStorage.setItem('organizerSession', JSON.stringify({ email, name: u.name ?? email.split('@')[0], role: 'ORGANIZADOR' }));
+        navigate('/organizer/dashboard');
+        return;
+      }
+      login({
+        id: u?.id ?? u?.userId ?? 'u1',
+        name: u?.name ?? u?.fullName ?? email.split('@')[0],
+        email: u?.email ?? email,
+        avatar: u?.avatar ?? u?.profilePicture ?? '',
+        faculty: u?.faculty ?? u?.facultad ?? '',
+        program: u?.program ?? u?.programa ?? '',
+        semester: u?.semester ?? u?.semestre ?? 1,
+        interests: u?.interests ?? u?.intereses ?? [],
+        bio: u?.bio ?? '',
+        socialImpact: u?.socialImpact ?? 0,
+        xp: u?.xp ?? 0,
+        level: u?.level ?? 1,
+        activeParches: u?.activeParches ?? 0,
+        streak: u?.streak ?? 0,
+        rankFaculty: u?.rankFaculty ?? 0,
+        monas: u?.monas ?? [],
+      });
+      navigate('/home');
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        setError('Correo o contraseña incorrectos');
+      } else if (status === 404) {
+        setError('Usuario no encontrado');
+      } else if (status === 0 || !status) {
+        setError('No se pudo conectar con el servidor. Verifica tu conexión.');
+      } else {
+        setError('Ocurrió un error. Intenta de nuevo.');
+      }
+    } finally {
       setIsLoading(false);
-      navigate('/organizer/dashboard');
-      return;
     }
-    login({
-      id: 'u1',
-      name: 'Patricia S.',
-      email: email,
-      avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
-      faculty: 'Ingeniería en Sistemas',
-      semester: 6,
-      interests: ['Programación', 'Fotografía', 'Música', 'Diseño', 'Gaming'],
-      bio: 'Estudiante de sistemas apasionada por el diseño y la tecnología.',
-      socialImpact: 1240,
-      xp: 3450,
-      level: 14,
-      activeParches: 8,
-      streak: 12,
-      rankFaculty: 4,
-      monas: ['tech-puppy', 'honors', 'social', 'pionera', 'genio'],
-    });
-    setIsLoading(false);
-    navigate('/home');
   };
   return (
     <div className="min-h-screen transition-colors duration-300 flex flex-col relative">
