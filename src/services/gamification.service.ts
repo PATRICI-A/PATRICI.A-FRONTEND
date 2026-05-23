@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { monas as initialMonas, rankingUsers } from '../types/mockData';
+import { monas as initialMonas } from '../types/mockData';
 
 // ──────────────────────────────────────────────
 // Dedicated Axios instance for the Gamification Service
@@ -12,10 +12,20 @@ const gamificationApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach token automatically from localStorage
+// Attach token + user-id automatically from localStorage
 gamificationApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('patricia-token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  try {
+    const raw = localStorage.getItem('patricia-user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      const userId = user.studentId || user.id;
+      if (userId) config.headers['X-User-Id'] = userId;
+    }
+  } catch { /* ignore */ }
+
   return config;
 });
 
@@ -166,20 +176,6 @@ function saveLocalGamification() {
   } catch { /* ignore */ }
 }
 
-function getLocalRanking(tipo: string = 'WEEKLY'): RankingEntryResponse[] {
-  initLocalGamification();
-  const list = rankingUsers.map((u, index) => ({
-    position: index + 1,
-    studentId: u.id,
-    displayName: u.name,
-    levelName: `Nivel ${u.level}`,
-    monasThisPeriod: tipo === 'WEEKLY' ? u.streak * 2 : u.streak * 5,
-    totalMonas: Math.round(u.xp / 100)
-  })).sort((a, b) => b.monasThisPeriod - a.monasThisPeriod);
-
-  return list.map((item, idx) => ({ ...item, position: idx + 1 }));
-}
-
 function logFallback(endpoint: string, error: any) {
   console.warn(
     `[Gamification Fallback] La llamada a backend ${endpoint} falló (${error?.response?.status || 'Error de Red'}). ` +
@@ -278,7 +274,7 @@ export async function getRanking(tipo: 'WEEKLY' | 'MONTHLY' | 'SEMESTER' = 'WEEK
     return res.data;
   } catch (error) {
     logFallback(`GET /gamificacion/ranking?tipo=${tipo}`, error);
-    return getLocalRanking(tipo);
+    return [];
   }
 }
 
@@ -289,13 +285,10 @@ export async function getMyRankingPosition(tipo: 'WEEKLY' | 'MONTHLY' | 'SEMESTE
     return res.data;
   } catch (error) {
     logFallback(`GET /gamificacion/ranking/mi-posicion?tipo=${tipo}`, error);
-    initLocalGamification();
-    const rank = getLocalRanking(tipo);
-    const pos = rank.findIndex(r => r.studentId === 'u1') + 1;
     return {
-      position: localOptIn ? (pos || 4) : null,
-      monasThisPeriod: localOptIn ? 5 : 0,
-      rankingOptIn: localOptIn,
+      position: null,
+      monasThisPeriod: 0,
+      rankingOptIn: false,
       periodStart: new Date().toISOString().split('T')[0],
       periodEnd: new Date().toISOString().split('T')[0],
       rankingType: tipo
