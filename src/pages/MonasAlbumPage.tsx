@@ -44,6 +44,40 @@ const mapApiRarityToMock = (rarity: string): 'común' | 'poco común' | 'raro' |
   };
   return map[rarity] ?? 'común';
 };
+const getUnlockRequirement = (mona: Mona): string => {
+  if (mona.targetCount && mona.targetCount > 0) {
+    switch (mona.category) {
+      case 'networking':  return `Conecta con ${mona.targetCount} ${mona.targetCount === 1 ? 'persona' : 'personas'} en la app`;
+      case 'edificios':   return `Visita ${mona.targetCount} ${mona.targetCount === 1 ? 'lugar' : 'lugares'} del campus`;
+      case 'actividad':   return `Completa ${mona.targetCount} ${mona.targetCount === 1 ? 'actividad' : 'actividades'} comunitaria${mona.targetCount === 1 ? '' : 's'}`;
+      case 'legendarias': return 'Completa logros especiales en la comunidad';
+      default:            return 'Participa activamente en la comunidad';
+    }
+  }
+  const n = mona.name.toLowerCase();
+  if (n.includes('primer') || n.includes('contacto')) return 'Realiza tu primera conexión en la app';
+  if (n.includes('inici') || n.includes('parche')) return 'Únete o crea parches en la app';
+  if (n.includes('capit') || n.includes('organiz')) return 'Crea y lidera parches exitosos';
+  if (n.includes('anfitri')) return 'Atrae nuevos miembros a tu parche';
+  if (n.includes('conector') || n.includes('veloz')) return 'Conecta rápido con varias personas';
+  if (n.includes('mensaj')) return 'Participa activamente en los chats';
+  if (n.includes('tour') || n.includes('conquistador')) return 'Visita todos los lugares del campus';
+  if (n.includes('leyenda') || n.includes('50') || n.includes('embaj')) return 'Completa logros especiales';
+  if (n.includes('amanecer') || n.includes('madrug')) return 'Ingresa antes de 7 AM varios días';
+  if (n.includes('noct') || n.includes('noche')) return 'Visita el campus en horario nocturno';
+  if (n.includes('marat')) return 'Recorre múltiples zonas en un día';
+  if (n.includes('atleta') || n.includes('cancha')) return 'Visita zonas deportivas del campus';
+  if (n.includes('zen') || n.includes('reflex') || n.includes('master')) return 'Visita zonas de bienestar del campus';
+  if (n.includes('edificio')) return 'Explora los edificios del campus';
+  if (n.includes('networking')) return 'Conecta con personas en la app';
+  switch (mona.category) {
+    case 'networking':  return 'Conecta con personas en la app';
+    case 'edificios':   return 'Explora los edificios del campus';
+    case 'actividad':   return 'Participa en actividades comunitarias';
+    case 'legendarias': return 'Completa logros especiales';
+    default:            return 'Participa activamente en la comunidad';
+  }
+};
 import imgPrimerChoque from '../assets/PrimerChoque-1.png';
 import imgParcheIniciado from '../assets/ParcheIniciado-1.png';
 import imgCapitanNato from '../assets/CapitanNato.png';
@@ -215,7 +249,6 @@ function MonaCardUnlocked({ mona, onClick }: { mona: Mona; onClick: () => void }
   );
 }
 function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; onClick: () => void }) {
-  const slotNumber = String(index + 1).padStart(2, '0');
   const cfg = R[mona.rarity];
   const isLegendary = mona.rarity === 'legendario';
   
@@ -274,8 +307,8 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
           </div>
 
           {/* Información inferior */}
-          <div className="w-full px-2 pb-2 pt-1.5 text-center z-10 opacity-80" style={{ background: 'rgba(0,0,0,0.6)' }}>
-            <p className="text-[10px] sm:text-[11px] font-black leading-tight line-clamp-2 drop-shadow-md text-white/50" style={{ minHeight: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+          <div className="w-full px-2.5 pb-3 pt-1.5 text-center z-10 opacity-80" style={{ background: 'rgba(0,0,0,0.6)' }}>
+            <p className="text-[10px] sm:text-[11px] font-black leading-tight truncate drop-shadow-md text-white/50">
               {mona.name}
             </p>
             {mona.currentCount !== undefined && mona.targetCount !== undefined && mona.targetCount > 0 && (
@@ -292,7 +325,7 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
                 <p className="text-[8px] font-bold mt-0.5 drop-shadow-sm text-white/40">{mona.currentCount}/{mona.targetCount}</p>
               </div>
             )}
-            <p className="text-[9px] sm:text-[10px] font-bold mt-0.5 drop-shadow-sm text-white/40">Nº {slotNumber}</p>
+            <p className="text-[8px] font-medium text-white/30 leading-tight px-1">{getUnlockRequirement(mona)}</p>
           </div>
         </div>
       </div>
@@ -825,32 +858,33 @@ export function MonasAlbumPage() {
     setLoading(true);
     getMonas()
       .then((apiMonas) => {
-        const mapped = apiMonas
-          .filter((apiMona) => initialMonas.some((m) => m.id === apiMona.monaId))
-          .map((apiMona) => {
-          const visual = initialMonas.find((m) => m.id === apiMona.monaId);
+        const mapped = initialMonas.map((visual) => {
+          const apiMona = apiMonas.find(m => m.monaId === visual.id);
           return {
-            id: apiMona.monaId,
-            name: apiMona.name,
-            description: apiMona.description,
-            emoji: visual?.emoji || '✨',
-            category: visual?.category || 'networking',
-            color: visual?.color || '#3B82F6',
-            bgColor: visual?.bgColor || '#DBEAFE',
-            rarity: mapApiRarityToMock(apiMona.rarity),
-            unlocked: apiMona.unlocked,
-            unlockedAt: apiMona.earnedAt || undefined,
-            xp: visual?.xp || 100,
-            image: visual?.image,
-            currentCount: apiMona.currentCount,
-            targetCount: apiMona.targetCount,
-            progressPercentage: apiMona.progressPercentage,
+            id: visual.id,
+            name: apiMona?.name || visual.name,
+            description: apiMona?.description || visual.description,
+            emoji: visual.emoji,
+            category: visual.category,
+            color: visual.color,
+            bgColor: visual.bgColor,
+            rarity: apiMona ? mapApiRarityToMock(apiMona.rarity) : visual.rarity,
+            unlocked: apiMona?.unlocked || false,
+            unlockedAt: apiMona?.earnedAt || undefined,
+            xp: visual.xp,
+            image: visual.image,
+            imgSrc: visual.imgSrc,
+            imgScale: visual.imgScale,
+            currentCount: apiMona?.currentCount,
+            targetCount: apiMona?.targetCount,
+            progressPercentage: apiMona?.progressPercentage,
           } as Mona;
         });
         setCollection(mapped);
       })
       .catch((err) => {
         console.error('Error loading monas:', err);
+        setCollection(initialMonas.map(m => ({ ...m, unlocked: false, unlockedAt: undefined }) as Mona));
       })
       .finally(() => {
         setLoading(false);
@@ -993,7 +1027,7 @@ export function MonasAlbumPage() {
           }}
         />
         {}
-        <div className="w-[90%] max-w-[1400px] mx-auto flex items-center justify-between mb-6">
+        <div className="w-full px-4 md:w-4/6 max-w-[1200px] mx-auto flex items-center justify-between mb-6">
           <button onClick={() => navigate('/home')} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}>
             <ArrowLeft size={18} style={{ color: isDark ? '#fff' : '#1e293b' }} />
           </button>
@@ -1013,17 +1047,17 @@ export function MonasAlbumPage() {
           </div>
         )}
       </div>
-      <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto flex flex-col gap-6 relative z-10">
+      <div className="w-full px-4 md:w-4/6 max-w-[1200px] mx-auto flex flex-col gap-6 relative z-10">
             {/* ROW 1: Stats, Mascot & QR */}
             <div className="flex flex-col md:flex-row w-full justify-between items-center gap-10 md:gap-6 xl:gap-12 relative z-20 mt-4 md:mt-12 mb-8 md:mb-12">
               
               {/* Bloque 1: Estadísticas (Cuadrado 2x2) */}
-              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 grid grid-cols-2 gap-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-white/5 w-full md:flex-1 md:max-w-[400px] aspect-square content-center justify-items-center relative z-20 order-2 md:order-1">
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 grid grid-cols-2 gap-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-white/5 w-full md:flex-1 md:max-w-[400px] aspect-square content-center justify-items-center relative z-20 order-2 md:order-1">
                 
                 {/* 1. Porcentaje */}
                 <div className="flex flex-col items-center justify-center w-full">
-                  <div className="relative mx-auto flex justify-center" style={{ width: 130, height: 130 }}>
-                    <svg width={130} height={130} viewBox="0 0 130 130" className="drop-shadow-lg">
+                  <div className="relative mx-auto flex justify-center" style={{ width: 110, height: 110 }}>
+                    <svg width={110} height={110} viewBox="0 0 130 130" className="drop-shadow-lg">
                       <circle cx={65} cy={65} r={RADIUS} fill="none" stroke={isDark ? "rgba(255,255,255,0.05)" : "#F1F5F9"} strokeWidth={10} />
                       <motion.circle
                         cx={65} cy={65} r={RADIUS}
@@ -1062,23 +1096,23 @@ export function MonasAlbumPage() {
 
                 {/* 2. Monas */}
                 <div className="flex flex-col items-center justify-center w-full">
-                  <Library size={36} className="text-blue-500 mb-3" />
-                  <span className="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white leading-none">{unlockedCount}/{totalMonas}</span>
-                  <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-2">Monas</span>
+                  <Library size={28} className="text-blue-500 mb-2" />
+                  <span className="text-2xl xl:text-3xl font-black text-slate-800 dark:text-white leading-none">{unlockedCount}/{totalMonas}</span>
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Monas</span>
                 </div>
 
                 {/* 3. XP Total */}
                 <div className="flex flex-col items-center justify-center w-full mt-2 md:mt-0">
-                  <Star size={36} className="text-blue-500 mb-3" />
-                  <span className="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white leading-none">{totalXP.toLocaleString()}</span>
-                  <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-2">XP Total</span>
+                  <Star size={28} className="text-blue-500 mb-2" />
+                  <span className="text-2xl xl:text-3xl font-black text-slate-800 dark:text-white leading-none">{totalXP.toLocaleString()}</span>
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">XP Total</span>
                 </div>
 
                 {/* 4. Códigos */}
                 <div className="flex flex-col items-center justify-center w-full mt-2 md:mt-0">
-                  <Gift size={36} className="text-blue-500 mb-3" />
-                  <span className="text-3xl xl:text-4xl font-black text-slate-800 dark:text-white leading-none">{scannedCount}</span>
-                  <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-2">Códigos</span>
+                  <Gift size={28} className="text-blue-500 mb-2" />
+                  <span className="text-2xl xl:text-3xl font-black text-slate-800 dark:text-white leading-none">{scannedCount}</span>
+                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Códigos</span>
                 </div>
               </div>
 
@@ -1100,53 +1134,53 @@ export function MonasAlbumPage() {
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-28 h-28 md:w-32 md:h-32 rounded-[2rem] flex items-center justify-center bg-gradient-to-tr from-orange-600 to-orange-400 shadow-[0_8px_30px_rgba(249,115,22,0.4)] transition-shadow mb-6 group-hover:shadow-[0_12px_40px_rgba(249,115,22,0.6)]"
+                  className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] flex items-center justify-center bg-gradient-to-tr from-orange-600 to-orange-400 shadow-[0_8px_30px_rgba(249,115,22,0.4)] transition-shadow mb-4 group-hover:shadow-[0_12px_40px_rgba(249,115,22,0.6)]"
                 >
-                  <Gift size={48} className="text-white" />
+                  <Gift size={36} className="text-white" />
                 </motion.div>
-                <span className="text-xl md:text-2xl font-black text-orange-500 text-center leading-tight group-hover:scale-105 transition-transform">Ingresar<br/>Código</span>
+                <span className="text-lg md:text-xl font-black text-orange-500 text-center leading-tight group-hover:scale-105 transition-transform">Ingresar<br/>Código</span>
               </div>
             </div>
 
             {/* ROW 2: Progreso de Nivel Universitario y XP */}
-            <div className="w-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-200/50 dark:border-white/5 flex flex-col lg:flex-row gap-8 items-stretch">
+            <div className="w-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-200/50 dark:border-white/5 flex flex-col lg:flex-row gap-6 items-stretch">
               
               {/* Bloque 1: Nivel de Usuario */}
-              <div className="flex-1 flex flex-col md:flex-row items-center gap-6 p-6 rounded-[2rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5">
+              <div className="flex-1 flex flex-col md:flex-row items-center gap-4 p-4 rounded-[2rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5">
                 <div className="relative flex-shrink-0">
-                  <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-blue-600 to-cyan-500 flex flex-col items-center justify-center shadow-[0_8px_25px_rgba(59,130,246,0.3)] dark:shadow-[0_8px_25px_rgba(6,182,212,0.15)]">
-                    <span className="text-[10px] font-black text-cyan-200 tracking-wider uppercase mb-0.5">Nivel</span>
-                    <span className="text-4xl font-black text-white leading-none">{currentLevel}</span>
+                  <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-tr from-blue-600 to-cyan-500 flex flex-col items-center justify-center shadow-[0_8px_25px_rgba(59,130,246,0.3)] dark:shadow-[0_8px_25px_rgba(6,182,212,0.15)]">
+                    <span className="text-[9px] font-black text-cyan-200 tracking-wider uppercase mb-0.5">Nivel</span>
+                    <span className="text-3xl font-black text-white leading-none">{currentLevel}</span>
                   </div>
                   <motion.div 
-                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-md"
+                    className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-md"
                     animate={{ scale: [1, 1.15, 1] }}
                     transition={{ repeat: Infinity, duration: 2.5 }}
                   >
-                    <Award size={12} className="text-white" />
+                    <Award size={10} className="text-white" />
                   </motion.div>
                 </div>
                 
                 <div className="text-center md:text-left">
-                  <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-tight flex items-center justify-center md:justify-start gap-2">
+                  <h3 className="text-xl font-black text-slate-800 dark:text-white leading-tight flex items-center justify-center md:justify-start gap-2">
                     Nivel Universitario
                   </h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 leading-relaxed max-w-[320px]">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 leading-relaxed max-w-[280px]">
                     Tu estatus en PATRICI.A. Colecciona láminas y asiste a parches para subir tu rango académico.
                   </p>
                 </div>
               </div>
 
               {/* Bloque 2: Progreso de Nivel (Barra) */}
-              <div className="flex-[1.5] flex flex-col justify-between p-6 rounded-[2rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">PROGRESO DEL NIVEL</span>
-                  <span className="text-xs font-bold text-blue-500 bg-blue-500/10 dark:bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/10">{totalXP % 500} / 500 XP</span>
+              <div className="flex-[1.5] flex flex-col justify-between p-4 rounded-[2rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">PROGRESO DEL NIVEL</span>
+                  <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 dark:bg-blue-500/20 px-2 py-0.5 rounded-full border border-blue-500/10">{totalXP % 500} / 500 XP</span>
                 </div>
                 
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-xs font-black text-slate-400 dark:text-slate-500">Lvl {currentLevel}</span>
-                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full h-4 overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">Lvl {currentLevel}</span>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
                     <motion.div 
                       className="h-full rounded-full bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                       initial={{ width: 0 }}
@@ -1154,22 +1188,22 @@ export function MonasAlbumPage() {
                       transition={{ type: 'spring', stiffness: 80, damping: 15 }}
                     />
                   </div>
-                  <span className="text-xs font-black text-slate-400 dark:text-slate-500">Lvl {currentLevel + 1}</span>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-slate-500">Lvl {currentLevel + 1}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div className="p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-white/5 flex items-center gap-2.5">
-                    <Rocket size={16} className="text-blue-500" />
+                <div className="grid grid-cols-2 gap-3 mt-1">
+                  <div className="p-2 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-white/5 flex items-center gap-2">
+                    <Rocket size={14} className="text-blue-500" />
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block leading-none">XP TOTAL</span>
-                      <span className="text-sm font-black text-slate-800 dark:text-white mt-0.5 block">{totalXP} XP</span>
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 block leading-none">XP TOTAL</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-white mt-0.5 block">{totalXP} XP</span>
                     </div>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-white/5 flex items-center gap-2.5">
-                    <Library size={16} className="text-cyan-500" />
+                  <div className="p-2 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-white/5 flex items-center gap-2">
+                    <Library size={14} className="text-cyan-500" />
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block leading-none">COLECCIÓN</span>
-                      <span className="text-sm font-black text-slate-800 dark:text-white mt-0.5 block">{unlockedCount}/{totalMonas} ({completionPct}%)</span>
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 block leading-none">COLECCIÓN</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-white mt-0.5 block">{unlockedCount}/{totalMonas} ({completionPct}%)</span>
                     </div>
                   </div>
                 </div>
@@ -1178,7 +1212,7 @@ export function MonasAlbumPage() {
             </div>
 
       </div>
-      <div className="mt-5 w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto">
+      <div className="mt-5 w-full px-4 md:w-4/6 max-w-[1200px] mx-auto">
         <div className="flex gap-3 overflow-x-auto pb-4 px-1 scrollbar-hide snap-x">
           {CATEGORIES.map(cat => {
             const prog = catProgress(cat.id);
@@ -1189,15 +1223,15 @@ export function MonasAlbumPage() {
                 onClick={() => handleCategoryChange(cat.id)}
                 className={`flex-shrink-0 flex flex-col items-center justify-center gap-1 rounded-full transition-all snap-center hover:scale-105 ${isActive ? 'shadow-lg' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                 style={{
-                  width: '90px',
-                  height: '90px',
+                  width: '75px',
+                  height: '75px',
                   background: isActive ? cat.color : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
                   border: `2px solid ${isActive ? cat.color : isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
                   boxShadow: isActive ? `0 8px 24px ${cat.color}66` : 'none',
                 }}
               >
-                <div className="flex items-center justify-center mb-0.5" style={{ filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none' }}>
-                  <EmojiIcon emoji={cat.emoji} size={24} color={isActive ? '#FFFFFF' : cat.color} strokeWidth={isActive ? 2 : 1.5} />
+                <div className="flex items-center justify-center" style={{ filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none' }}>
+                  <EmojiIcon emoji={cat.emoji} size={20} color={isActive ? '#FFFFFF' : cat.color} strokeWidth={isActive ? 2 : 1.5} />
                 </div>
                 <span className="text-[10px] font-black leading-tight text-center px-1" style={{ color: isActive ? '#FFFFFF' : isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>{cat.label}</span>
                 <span className="text-[9px] font-bold" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{prog.done}/{prog.total}</span>
@@ -1208,7 +1242,7 @@ export function MonasAlbumPage() {
       </div>
       {}
       <div
-        className="mt-6 relative select-none w-full md:w-[95%] max-w-[1500px] mx-auto px-4 md:px-0"
+        className="mt-6 relative select-none w-full px-4 md:w-4/6 max-w-[1200px] mx-auto"
         style={{ perspective: '1500px' }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
@@ -1279,7 +1313,7 @@ export function MonasAlbumPage() {
               >
                 
                 {/* === MOBILE GRID (1 column wrapper) === */}
-                <div className="md:hidden w-full grid grid-cols-3 sm:grid-cols-4 gap-4">
+                <div className="md:hidden w-full grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {pageMonas.map((mona, i) => (
                     <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setSelectedMona={setSelectedMona} />
                   ))}
@@ -1292,7 +1326,7 @@ export function MonasAlbumPage() {
 
                 {/* === DESKTOP SPREAD (2 columns wrapper) === */}
                 {/* Left Page */}
-                <div className="hidden md:grid w-1/2 pr-12 grid-cols-3 gap-6 auto-rows-max">
+                <div className="hidden md:grid w-1/2 pr-8 grid-cols-3 gap-4 auto-rows-max">
                   {pageMonas.slice(0, 9).map((mona, i) => (
                     <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setSelectedMona={setSelectedMona} />
                   ))}
@@ -1304,7 +1338,7 @@ export function MonasAlbumPage() {
                 </div>
 
                 {/* Right Page */}
-                <div className="hidden md:grid w-1/2 pl-12 grid-cols-3 gap-6 auto-rows-max">
+                <div className="hidden md:grid w-1/2 pl-8 grid-cols-3 gap-4 auto-rows-max">
                   {pageMonas.slice(9, 18).map((mona, i) => (
                     <MonaSlotRender key={mona.id} mona={mona} i={i + 9} albumPage={albumPage} monasPerPage={monasPerPage} setSelectedMona={setSelectedMona} />
                   ))}
@@ -1367,7 +1401,7 @@ export function MonasAlbumPage() {
       </div>{}
       {}
       {totalAlbumPages > 1 && (
-        <div className="px-4 mt-6 flex items-center justify-between w-full md:w-[90%] max-w-[1400px] mx-auto">
+        <div className="px-4 mt-6 flex items-center justify-between w-full md:w-4/6 max-w-[1200px] mx-auto">
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => goToPage(-1)} disabled={albumPage === 0}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-white disabled:opacity-30"
             style={{ background: albumPage > 0 ? GOLD_GRADIENT : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
@@ -1498,6 +1532,7 @@ export function MonasAlbumPage() {
                       <div className="w-full text-center z-10 bg-black/40 rounded-2xl py-4 px-3 border border-white/5">
                         <p className="text-xl font-black mb-1 text-white/40">???</p>
                         <p className="text-xs uppercase tracking-widest text-white/20">{selectedMona.category}</p>
+                        <p className="text-[10px] font-medium text-white/30 leading-tight mt-2">{getUnlockRequirement(selectedMona)}</p>
                       </div>
                     </>
                   )}
@@ -1552,7 +1587,8 @@ export function MonasAlbumPage() {
                       <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
                         <Lock size={24} className="text-white/30" />
                       </div>
-                      <h3 className="text-white/70 font-black text-xl mb-2">Mona Bloqueada</h3>
+                      <h3 className="text-white/70 font-black text-xl mb-1">Mona Bloqueada</h3>
+                      <p className="text-white/30 text-xs font-medium leading-relaxed mb-3 px-2">{getUnlockRequirement(selectedMona)}</p>
                       {selectedMona.currentCount !== undefined && selectedMona.targetCount !== undefined && selectedMona.targetCount > 0 ? (
                         <div className="w-full mb-4">
                           <div className="flex items-center justify-between mb-1">
@@ -1570,9 +1606,6 @@ export function MonasAlbumPage() {
                           </div>
                         </div>
                       ) : null}
-                      <p className="text-white/40 text-xs leading-relaxed px-2">
-                        Sigue participando en la comunidad para desbloquear esta mona automáticamente.
-                      </p>
                     </div>
                   )}
                   {/* Hint to flip back */}

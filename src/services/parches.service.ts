@@ -131,148 +131,9 @@ function cleanImageUrl(url: string | null | undefined): string {
   return url;
 }
 
-// ──────────────────────────────────────────────
-// Interactive High-Fidelity Mock Fallback Layer
-// ──────────────────────────────────────────────
-
-let localParchesList: any[] = [];
-
-function getLocalParchesList(): any[] {
-  if (localParchesList.length > 0) return localParchesList;
-
-  try {
-    const cached = sessionStorage.getItem('patricia-mock-parches');
-    if (cached) {
-      localParchesList = JSON.parse(cached);
-      return localParchesList;
-    }
-  } catch { /* ignore */ }
-
-  // Initial seed
-  localParchesList = [
-    {
-      id: 'p-user',
-      name: 'El parche de Patri',
-      description: 'Mi propio parche para organizar las mejores reuniones del semestre. ¡Todos están invitados!',
-      category: 'SOCIAL',
-      lugar: 'ED_A',
-      type: 'PUBLIC',
-      status: 'ACTIVE',
-      maximumQuota: 10,
-      actualMembers: 2,
-      ownerId: 'u1',
-      date: '2026-05-28',
-      hour: '12:00:00',
-      imageUrl: '',
-      joined: true,
-      membersList: [
-        { id: 'm1', parcheId: 'p-user', studentId: 'u1', unionDate: '2026-05-22' },
-        { id: 'm2', parcheId: 'p-user', studentId: 'u2', unionDate: '2026-05-22' }
-      ]
-    },
-    {
-      id: 'p1',
-      name: 'Melómanos del Campus',
-      description: 'Compartiendo vinilos, playlists y amor por la música 24/7. Todos los géneros bienvenidos.',
-      category: 'MUSIC',
-      lugar: 'ED_G',
-      type: 'PUBLIC',
-      status: 'ACTIVE',
-      maximumQuota: 20,
-      actualMembers: 14,
-      ownerId: 'u2',
-      date: '2026-05-29',
-      hour: '18:00:00',
-      imageUrl: '',
-      joined: true,
-      membersList: [
-        { id: 'm-v', parcheId: 'p1', studentId: 'u2', unionDate: '2026-05-22' }
-      ]
-    },
-    {
-      id: 'p2',
-      name: 'Gym Buddies',
-      description: 'Rutina mañanera 6AM. Cardio, pesas y motivación. Comenzamos la semana con energía.',
-      category: 'SPORT',
-      lugar: 'ED_B',
-      type: 'PUBLIC',
-      status: 'ACTIVE',
-      maximumQuota: 8,
-      actualMembers: 5,
-      ownerId: 'u3',
-      date: '2026-05-27',
-      hour: '06:00:00',
-      imageUrl: '',
-      joined: false,
-      membersList: []
-    },
-    {
-      id: 'p3',
-      name: 'Tarde de Algoritmia',
-      description: 'Resolviendo retos de código, LeetCode y preparándonos para maratones de programación.',
-      category: 'TECHNOLOGY',
-      lugar: 'ED_A',
-      type: 'PUBLIC',
-      status: 'ACTIVE',
-      maximumQuota: 15,
-      actualMembers: 9,
-      ownerId: 'u4',
-      date: '2026-05-28',
-      hour: '14:00:00',
-      imageUrl: '',
-      joined: true,
-      membersList: []
-    },
-    {
-      id: 'p4',
-      name: 'Club de Lectura Nocturna',
-      description: 'Debatiendo sobre realismo mágico, clásicos y nuevas lecturas bajo las estrellas del campus.',
-      category: 'CULTURE',
-      lugar: 'ED_D',
-      type: 'PRIVATE',
-      status: 'ACTIVE',
-      maximumQuota: 12,
-      actualMembers: 8,
-      ownerId: 'u5',
-      date: '2026-05-30',
-      hour: '19:30:00',
-      imageUrl: '',
-      joined: false,
-      membersList: []
-    },
-    {
-      id: 'p5',
-      name: 'Coffee & English',
-      description: 'Club de conversación informal para mejorar el inglés. Café, risas y cero timidez.',
-      category: 'SOCIAL',
-      lugar: 'ED_F',
-      type: 'PUBLIC',
-      status: 'ACTIVE',
-      maximumQuota: 25,
-      actualMembers: 18,
-      ownerId: 'u6',
-      date: '2026-05-27',
-      hour: '10:00:00',
-      imageUrl: '',
-      joined: false,
-      membersList: []
-    }
-  ];
-
-  saveLocalParchesList();
-  return localParchesList;
-}
-
-function saveLocalParchesList() {
-  try {
-    sessionStorage.setItem('patricia-mock-parches', JSON.stringify(localParchesList));
-  } catch { /* ignore */ }
-}
-
 function logFallback(endpoint: string, error: any) {
   console.warn(
-    `[Fallback] La llamada a backend ${endpoint} falló (${error?.response?.status || 'Error de Red'}). ` +
-    `Se activó el sistema de fallback mockeado para una experiencia interactiva sin errores.`
+    `[Fallback] La llamada a backend ${endpoint} falló (${error?.response?.status || 'Error de Red'}).`
   );
 }
 
@@ -290,18 +151,7 @@ export async function searchParches(params?: SearchParcheParams): Promise<Parche
     }));
   } catch (error) {
     logFallback('GET /parches', error);
-    let list = getLocalParchesList();
-    if (params?.nombre) {
-      const q = params.nombre.toLowerCase();
-      list = list.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
-    }
-    if (params?.categoria && params.categoria !== 'Todos') {
-      list = list.filter(p => p.category.toUpperCase() === params.categoria?.toUpperCase());
-    }
-    return list.map(p => ({
-      ...p,
-      imageUrl: cleanImageUrl(p.imageUrl)
-    }));
+    return [];
   }
 }
 
@@ -321,27 +171,7 @@ export async function createParche(
     };
   } catch (error) {
     logFallback('POST /parches', error);
-    const list = getLocalParchesList();
-    const newParche = {
-      id: `p-mock-${Date.now()}`,
-      name: data.name,
-      description: data.description,
-      lugar: data.lugar,
-      category: data.category,
-      type: data.type,
-      status: 'ACTIVE' as const,
-      maximumQuota: data.maximumQuota,
-      actualMembers: 1,
-      ownerId: userId || 'u1',
-      date: data.date,
-      hour: data.hour,
-      imageUrl: cleanImageUrl(data.imageUrl),
-      joined: true,
-      membersList: [{ id: `m-${Date.now()}`, parcheId: `p-mock-${Date.now()}`, studentId: userId || 'u1', unionDate: new Date().toISOString() }]
-    };
-    list.push(newParche);
-    saveLocalParchesList();
-    return newParche;
+    throw error;
   }
 }
 
@@ -356,48 +186,7 @@ export async function getParcheById(id: string): Promise<ParcheDetailResponse> {
     };
   } catch (error) {
     logFallback(`GET /parches/${id}`, error);
-    const list = getLocalParchesList();
-    // Only use an exact match — never fall back to list[0] to avoid
-    // returning a parche the current user owns when navigating to a stranger's parche
-    const found = list.find(p => p.id === id);
-    if (!found) {
-      // Return a generic stub for unknown parches
-      return {
-        id,
-        name: 'Parche',
-        description: '',
-        category: 'SOCIAL',
-        type: 'PUBLIC',
-        status: 'ACTIVE',
-        maximumQuota: 10,
-        actualMembers: 0,
-        ownerId: 'unknown',
-        date: '',
-        hour: '',
-        imageUrl: '',
-        place: { displayName: 'Campus', code: 'CAMPUS' },
-        event: null,
-        members: []
-      };
-    }
-    return {
-      id: found.id,
-      name: found.name,
-      description: found.description,
-      category: found.category,
-      type: found.type,
-      status: found.status || 'ACTIVE',
-      maximumQuota: found.maximumQuota,
-      actualMembers: found.actualMembers,
-      ownerId: found.ownerId,
-      date: found.date,
-      hour: found.hour,
-      imageUrl: cleanImageUrl(found.imageUrl),
-      place: { displayName: found.lugar || 'Lugar Campus', code: found.lugar || 'CAMPUS' },
-      event: null,
-      // Only return real members — never inject the owner automatically
-      members: found.membersList || []
-    };
+    throw error;
   }
 }
 
@@ -415,20 +204,7 @@ export async function updateParche(
     };
   } catch (error) {
     logFallback(`PATCH /parches/${id}`, error);
-    const list = getLocalParchesList();
-    const found = list.find(p => p.id === id);
-    if (found) {
-      if (data.description !== undefined) found.description = data.description;
-      if (data.lugar !== undefined) found.lugar = data.lugar;
-      if (data.category !== undefined) found.category = data.category;
-      if (data.date !== undefined) found.date = data.date;
-      if (data.hour !== undefined) found.hour = data.hour;
-      if (data.maximumQuota !== undefined) found.maximumQuota = data.maximumQuota;
-      if (data.type !== undefined) found.type = data.type;
-      if (data.imageUrl !== undefined) found.imageUrl = cleanImageUrl(data.imageUrl);
-      saveLocalParchesList();
-    }
-    return found || list[0];
+    throw error;
   }
 }
 
@@ -438,9 +214,7 @@ export async function archiveParche(id: string): Promise<void> {
     await hangoutApi.delete(`/parches/${id}`);
   } catch (error) {
     logFallback(`DELETE /parches/${id}`, error);
-    const list = getLocalParchesList();
-    localParchesList = list.filter(p => p.id !== id);
-    saveLocalParchesList();
+    throw error;
   }
 }
 
@@ -454,17 +228,9 @@ export async function getMyParches(): Promise<ParcheResponse[]> {
     }));
   } catch (error) {
     logFallback('GET /parches/me', error);
-    const list = getLocalParchesList();
-    return list.filter(p => p.joined).map(p => ({
-      ...p,
-      imageUrl: cleanImageUrl(p.imageUrl)
-    }));
+    return [];
   }
 }
-
-// ──────────────────────────────────────────────
-// Options endpoints (for form selects)
-// ──────────────────────────────────────────────
 
 /** GET /parches/opciones/lugares */
 export async function getAvailablePlaces(): Promise<PlaceResponse[]> {
@@ -473,13 +239,7 @@ export async function getAvailablePlaces(): Promise<PlaceResponse[]> {
     return res.data;
   } catch (error) {
     logFallback('GET /parches/opciones/lugares', error);
-    return [
-      { displayName: 'Cafetería Central', code: 'ED_A' },
-      { displayName: 'Biblioteca Central', code: 'ED_B' },
-      { displayName: 'Auditorio Central', code: 'ED_G' },
-      { displayName: 'Bloque F - Zonas Verdes', code: 'ED_F' },
-      { displayName: 'Bloque D - Talleres', code: 'ED_D' }
-    ];
+    return [];
   }
 }
 
@@ -490,10 +250,7 @@ export async function getAvailableEvents(): Promise<EventResponse[]> {
     return res.data;
   } catch (error) {
     logFallback('GET /parches/opciones/eventos', error);
-    return [
-      { id: 'ev1', name: 'Semana de la Ingeniería', description: 'Charlas y concursos tecnológicos', date: '2026-05-25', hour: '09:00:00', place: 'Bloque B' },
-      { id: 'ev2', name: 'Torneo Relámpago Fútbol', description: 'Cancha central - ven a apoyar a tu equipo', date: '2026-05-26', hour: '14:00:00', place: 'Canchas' }
-    ];
+    return [];
   }
 }
 
@@ -504,16 +261,7 @@ export async function getAvailableCategories(): Promise<CategoryResponse[]> {
     return res.data;
   } catch (error) {
     logFallback('GET /parches/opciones/categorias', error);
-    return [
-      { id: 'c1', name: 'MUSIC' },
-      { id: 'c2', name: 'SPORT' },
-      { id: 'c3', name: 'TECHNOLOGY' },
-      { id: 'c4', name: 'STUDY' },
-      { id: 'c5', name: 'CULTURE' },
-      { id: 'c6', name: 'SOCIAL' },
-      { id: 'c7', name: 'FOOD' },
-      { id: 'c8', name: 'WELLNESS' }
-    ];
+    return [];
   }
 }
 
@@ -528,30 +276,7 @@ export async function joinParche(parcheId: string): Promise<MemberResponse> {
     return res.data;
   } catch (error) {
     logFallback(`POST /parches/${parcheId}/miembros`, error);
-    const list = getLocalParchesList();
-    const found = list.find(p => p.id === parcheId);
-    let userId = 'u1';
-    try {
-      const raw = localStorage.getItem('patricia-user');
-      if (raw) {
-        const user = JSON.parse(raw);
-        userId = user.studentId || user.id || 'u1';
-      }
-    } catch { /* ignore */ }
-
-    if (found) {
-      found.joined = true;
-      found.actualMembers += 1;
-      if (!found.membersList) found.membersList = [];
-      found.membersList.push({ id: `m-${Date.now()}`, parcheId, studentId: userId, unionDate: new Date().toISOString() });
-      saveLocalParchesList();
-    }
-    return {
-      id: `member-${Date.now()}`,
-      parcheId,
-      studentId: userId,
-      unionDate: new Date().toISOString()
-    };
+    throw error;
   }
 }
 
@@ -561,28 +286,7 @@ export async function leaveParche(parcheId: string, newOwnerId?: string): Promis
     await hangoutApi.post(`/parches/${parcheId}/miembros/leave`, newOwnerId ? { newOwnerId } : {});
   } catch (error) {
     logFallback(`POST /parches/${parcheId}/miembros/leave`, error);
-    const list = getLocalParchesList();
-    const found = list.find(p => p.id === parcheId);
-    let userId = 'u1';
-    try {
-      const raw = localStorage.getItem('patricia-user');
-      if (raw) {
-        const user = JSON.parse(raw);
-        userId = user.studentId || user.id || 'u1';
-      }
-    } catch { /* ignore */ }
-
-    if (found) {
-      found.joined = false;
-      found.actualMembers = Math.max(0, found.actualMembers - 1);
-      if (found.membersList) {
-        found.membersList = found.membersList.filter((m: any) => m.studentId !== userId);
-      }
-      if (newOwnerId) {
-        found.ownerId = newOwnerId;
-      }
-      saveLocalParchesList();
-    }
+    throw error;
   }
 }
 
@@ -602,14 +306,7 @@ export async function sendInvitation(
     return res.data;
   } catch (error) {
     logFallback(`POST /parches/${parcheId}/invitaciones/${studentId}`, error);
-    return {
-      id: `inv-${Date.now()}`,
-      parcheId,
-      invitedStudentId: studentId,
-      status: 'PENDING',
-      sentAt: new Date().toISOString(),
-      respondedAt: null
-    };
+    throw error;
   }
 }
 
@@ -620,14 +317,7 @@ export async function acceptInvitation(invitationId: string): Promise<Invitation
     return res.data;
   } catch (error) {
     logFallback(`POST /invitaciones/${invitationId}/aceptar`, error);
-    return {
-      id: invitationId,
-      parcheId: 'p1',
-      invitedStudentId: 'u1',
-      status: 'ACCEPTED',
-      sentAt: new Date().toISOString(),
-      respondedAt: new Date().toISOString()
-    };
+    throw error;
   }
 }
 
@@ -638,14 +328,7 @@ export async function rejectInvitation(invitationId: string): Promise<Invitation
     return res.data;
   } catch (error) {
     logFallback(`POST /invitaciones/${invitationId}/rechazar`, error);
-    return {
-      id: invitationId,
-      parcheId: 'p1',
-      invitedStudentId: 'u1',
-      status: 'REJECTED',
-      sentAt: new Date().toISOString(),
-      respondedAt: new Date().toISOString()
-    };
+    throw error;
   }
 }
 
@@ -661,13 +344,6 @@ export async function respondInvitation(
     return res.data;
   } catch (error) {
     logFallback(`PATCH /invitaciones/${invitationId}`, error);
-    return {
-      id: invitationId,
-      parcheId: 'p1',
-      invitedStudentId: 'u1',
-      status: answer,
-      sentAt: new Date().toISOString(),
-      respondedAt: new Date().toISOString()
-    };
+    throw error;
   }
 }

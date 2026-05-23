@@ -194,8 +194,7 @@ export async function getMonas(): Promise<MonaResponse[]> {
     return res.data;
   } catch (error) {
     logFallback('GET /gamificacion/monas', error);
-    initLocalGamification();
-    return localMonas;
+    return [];
   }
 }
 
@@ -206,10 +205,7 @@ export async function getMonaById(monaId: string): Promise<MonaResponse> {
     return res.data;
   } catch (error) {
     logFallback(`GET /gamificacion/monas/${monaId}`, error);
-    initLocalGamification();
-    const found = localMonas.find(m => m.monaId === monaId);
-    if (!found) throw new Error('Mona not found');
-    return found;
+    throw error;
   }
 }
 
@@ -220,31 +216,7 @@ export async function redeemEventCode(eventCode: string): Promise<EarnedBadgeRes
     return res.data;
   } catch (error) {
     logFallback('POST /gamificacion/monas/evento', error);
-    initLocalGamification();
-    
-    // Simulate unlocking a random COMMON mona that is currently locked
-    const locked = localMonas.filter(m => !m.unlocked);
-    const targetMona = locked[Math.floor(Math.random() * locked.length)] || localMonas[0];
-    
-    targetMona.unlocked = true;
-    targetMona.earnedAt = new Date().toISOString().split('T')[0];
-    targetMona.currentCount = 1;
-    targetMona.progressPercentage = 1.0;
-
-    if (localStats) {
-      localStats.totalMonas += 1;
-      localStats.totalBadgesEarned += 1;
-      localStats.totalXp += 150;
-    }
-    
-    saveLocalGamification();
-
-    return {
-      badgeId: targetMona.monaId,
-      badgeName: targetMona.name,
-      earnedAt: new Date().toISOString(),
-      xpAwarded: 150
-    };
+    throw error;
   }
 }
 
