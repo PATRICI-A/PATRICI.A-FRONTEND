@@ -12,6 +12,28 @@ chatApi.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Some backend services authorize chat actions using the current user id header.
+  try {
+    const storedUser = localStorage.getItem('patricia-user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser) as { studentId?: string; id?: string };
+      const headerUserId = parsedUser.studentId || parsedUser.id;
+      if (headerUserId) {
+        config.headers['X-User-Id'] = headerUserId;
+      }
+    }
+  } catch {
+    // ignore malformed local user cache
+  }
+
+  if (!config.headers['X-User-Id']) {
+    const fallbackUserId = localStorage.getItem('patricia_user_id');
+    if (fallbackUserId) {
+      config.headers['X-User-Id'] = fallbackUserId;
+    }
+  }
+
   return config;
 });
 
