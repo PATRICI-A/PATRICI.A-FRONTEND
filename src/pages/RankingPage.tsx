@@ -205,10 +205,10 @@ export function RankingPage() {
     ]).then(([apiRank, apiPos]) => {
       const mapped = apiRank.map(apiUser => ({
         id: apiUser.studentId,
-        name: apiUser.displayName,
-        levelName: apiUser.levelName,
+        name: apiUser.studentName,
+        levelName: undefined,
         totalMonas: apiUser.totalMonas,
-        monasThisPeriod: apiUser.monasThisPeriod,
+        monasThisPeriod: 0,
         isCurrentUser: apiUser.studentId === currentUser?.id
       }));
       setRankingList(mapped);
