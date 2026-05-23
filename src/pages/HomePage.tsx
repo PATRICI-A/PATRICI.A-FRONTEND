@@ -1071,14 +1071,6 @@ export function HomePage() {
           )}
         </div>
       </section>
-      {}
-      <button
-        onClick={() => navigate('/parches/create')}
-        className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"
-        style={{ background: GRADIENT }}
-      >
-        <Plus size={28} />
-      </button>
     </div>
   );
 }

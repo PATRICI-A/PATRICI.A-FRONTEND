@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle, Edit, Trash2, X, Plus, Check, Crown } from 'lucide-react';
 import { parches, matchUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { LuxuryDrawer } from '../components/layout/LuxuryDrawer';
 import logoImg from '../assets/logo_nuevo_patricia.png';
+import patySelfieImg from '../assets/PATY SELFIE.png';
 function ParcheDetailSkeleton() {
   return (
     <div className="min-h-screen animate-pulse">
@@ -45,6 +46,13 @@ export function ParchemDetailPage() {
   const [reportDescription, setReportDescription] = useState('');
   const [reportDescriptionError, setReportDescriptionError] = useState('');
   const [reportCaseNumber, setReportCaseNumber] = useState('');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [invitedFriends, setInvitedFriends] = useState<string[]>([]);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const isOwner = currentUser?.id === parche.adminId || currentUser?.name === parche.admin;
+
   const reportReasons = ['Contenido inapropiado', 'Acoso', 'Spam', 'Información falsa', 'Otro'];
   const handleNextStep = () => {
     if (!reportCategory) return;
@@ -64,6 +72,17 @@ export function ParchemDetailPage() {
     setReportDescriptionError('');
     setReportCaseNumber('');
   };
+  
+  const handleLeave = () => {
+    if (isOwner && parche.members > 1) {
+      setShowTransferModal(true);
+    } else if (isOwner && parche.members <= 1) {
+      setShowDeleteConfirm(true);
+    } else {
+      setJoined(false);
+    }
+  };
+
   const members = matchUsers.slice(0, Math.min(4, parche?.members ?? 0));
   const isFull = (parche?.members ?? 0) >= (parche?.maxMembers ?? 1);
   if (!id || !parche) return <ParcheDetailSkeleton />;
@@ -137,105 +156,131 @@ export function ParchemDetailPage() {
           </div>
         </div>
       </header>
-      {}
-      <div className="relative h-56 mt-[57px]" style={{ background: parche.coverColor }}>
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white z-10"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <div className="absolute top-4 right-4 flex gap-2 z-10">
+      {/* Background Cover */}
+      <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto mt-[57px] pt-6">
+        <div className="relative h-64 md:h-72 w-full rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)]" style={{ background: parche.coverImage ? `url(${parche.coverImage}) center/cover no-repeat` : parche.coverColor }}>
+          {/* Overlay gradient so text is readable over image */}
+          {parche.coverImage && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />}
           <button
-            onClick={() => setReminder(!reminder)}
-            className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-colors active:scale-90"
-            style={{ color: reminder ? GOLD_LIGHT : 'white' }}
+            onClick={() => navigate(-1)}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white z-10"
           >
-            <Bell size={16} />
+            <ArrowLeft size={18} />
           </button>
-          <button
-            onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition-transform relative"
-          >
-            <Share2 size={16} />
-            {shareToast && (
-              <motion.div
-                initial={{ opacity: 0, y: 4, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute top-11 right-0 whitespace-nowrap text-[10px] font-bold text-white px-3 py-1.5 rounded-xl pointer-events-none flex items-center gap-1.5"
-                style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
-              >
-                <Link2 size={9} /> Enlace copiado
-              </motion.div>
-            )}
-          </button>
-          <div className="relative">
+          <div className="absolute top-4 right-4 flex gap-2 z-10">
             <button
-              onClick={() => setShowReportMenu(prev => !prev)}
-              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition-transform"
+              onClick={() => setReminder(!reminder)}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center transition-colors active:scale-90"
+              style={{ color: reminder ? GOLD_LIGHT : 'white' }}
             >
-              <MoreVertical size={16} />
+              <Bell size={16} />
             </button>
-            <AnimatePresence>
-              {showReportMenu && (
+            <button
+              onClick={handleShare}
+              className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition-transform relative"
+            >
+              <Share2 size={16} />
+              {shareToast && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                  className="absolute top-11 right-0 rounded-2xl shadow-2xl overflow-hidden z-20"
-                  style={{ background: isDark ? '#112240' : 'white', border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`, minWidth: 180 }}
+                  initial={{ opacity: 0, y: 4, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute top-11 right-0 whitespace-nowrap text-[10px] font-bold text-white px-3 py-1.5 rounded-xl pointer-events-none flex items-center gap-1.5"
+                  style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
                 >
-                  <button
-                    onClick={() => { setShowReportMenu(false); setReportStep(1); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
-                  >
-                    <Flag size={15} />
-                    Reportar parche
-                  </button>
+                  <Link2 size={9} /> Enlace copiado
                 </motion.div>
               )}
-            </AnimatePresence>
-          </div>
-        </div>
-        {}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2">
-          <span className="px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1.5">
-            {parche.type === 'private'
-              ? <><Lock size={10} /> Privado</>
-              : <><Globe size={10} /> Público</>}
-          </span>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-5">
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)' }}
-                >
-                  <EmojiIcon emoji={parche.emoji} size={20} color="white" strokeWidth={2} />
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold">
-                  {parche.category.toUpperCase()}
-                </span>
-                {parche.trending && (
-                  <span
-                    className="px-2 py-0.5 rounded-full text-[10px] font-black text-white flex items-center gap-0.5"
-                    style={{ background: GOLD_GRADIENT }}
+            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowReportMenu(prev => !prev)}
+                className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white active:scale-90 transition-transform"
+              >
+                <MoreVertical size={16} />
+              </button>
+              <AnimatePresence>
+                {showReportMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -4 }}
+                    className="absolute top-11 right-0 rounded-2xl shadow-2xl overflow-hidden z-20"
+                    style={{ background: isDark ? '#112240' : 'white', border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}`, minWidth: 180 }}
                   >
-                    <Sparkles size={8} /> TOP
-                  </span>
+                    <button
+                      onClick={() => { setShowReportMenu(false); setReportStep(1); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                    >
+                      <Flag size={15} />
+                      Reportar parche
+                    </button>
+                    {isOwner && (
+                      <>
+                        <div className="h-px bg-gray-100 dark:bg-white/5 my-1" />
+                        <button
+                          onClick={() => { setShowReportMenu(false); navigate(`/parches/${parche.id}/edit`); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+                        >
+                          <Edit size={15} />
+                          Editar parche
+                        </button>
+                        <button
+                          onClick={() => { setShowReportMenu(false); setShowDeleteConfirm(true); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                        >
+                          <Trash2 size={15} />
+                          Eliminar parche
+                        </button>
+                      </>
+                    )}
+                  </motion.div>
                 )}
-              </div>
-              <h1 className="text-white text-xl font-bold">{parche.name}</h1>
+              </AnimatePresence>
             </div>
-            <div className="flex -space-x-2">
-              {parche.memberAvatars.slice(0, 3).map((av, i) => (
-                <img key={i} src={av} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/50" />
-              ))}
-              <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm border-2 border-white/50 flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">+{parche.members - 3}</span>
+          </div>
+          {}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <span className="px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1.5">
+              {parche.type === 'private'
+                ? <><Lock size={10} /> Privado</>
+                : <><Globe size={10} /> Público</>}
+            </span>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-5">
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)' }}
+                  >
+                    <EmojiIcon emoji={parche.emoji} size={20} color="white" strokeWidth={2} />
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold">
+                    {parche.category.toUpperCase()}
+                  </span>
+                  {parche.trending && (
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-black text-white flex items-center gap-0.5"
+                      style={{ background: GOLD_GRADIENT }}
+                    >
+                      <Sparkles size={8} /> TOP
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-white text-xl font-bold flex items-center gap-2">
+                  {parche.name}
+                  {isOwner && <Crown size={20} className="text-yellow-400 drop-shadow-md fill-yellow-400" />}
+                </h1>
+              </div>
+              <div className="flex -space-x-2">
+                {parche.memberAvatars.slice(0, 3).map((av, i) => (
+                  <img key={i} src={av} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/50" />
+                ))}
+                <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm border-2 border-white/50 flex items-center justify-center">
+                  <span className="text-white text-[10px] font-bold">+{parche.members - 3}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -244,9 +289,9 @@ export function ParchemDetailPage() {
       {}
       {showReportMenu && <div className="fixed inset-0 z-10" onClick={() => setShowReportMenu(false)} />}
       {}
-      <div className="px-4 py-4">
-        {}
-        <div className="flex flex-wrap gap-2 mb-4">
+      <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto py-8 flex flex-col gap-6 relative z-10">
+        {/* Info Chips */}
+        <div className="flex flex-wrap gap-3">
           {[
             { icon: MapPin, text: parche.location },
             { icon: Calendar, text: parche.date },
@@ -255,71 +300,87 @@ export function ParchemDetailPage() {
           ].map(chip => (
             <div
               key={chip.text}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#112240] shadow-sm text-xs text-gray-600 dark:text-gray-300"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 font-bold text-xs text-gray-600 dark:text-gray-300 uppercase tracking-widest"
             >
-              <chip.icon size={12} style={{ color: PINK }} />
+              <chip.icon size={14} style={{ color: PINK }} />
               {chip.text}
             </div>
           ))}
         </div>
-        {}
-        <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 mb-4 shadow-sm">
-          <h3 className="text-gray-800 dark:text-white font-semibold mb-2">Sobre este parche</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{parche.description}</p>
-          <div className="flex gap-2 mt-3 flex-wrap">
+
+        {/* Sobre este parche */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+          <h3 className="text-xl font-black text-gray-900 dark:text-white mb-4">Sobre este parche</h3>
+          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 leading-relaxed font-medium">{parche.description}</p>
+          <div className="flex gap-2 mt-5 flex-wrap">
             {parche.tags.map(tag => (
-              <span key={tag} className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ color: PINK, background: 'rgba(29,78,216,0.1)' }}>
+              <span key={tag} className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ color: PINK, background: 'rgba(29,78,216,0.1)' }}>
                 #{tag}
               </span>
             ))}
           </div>
         </div>
-        {}
-        <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 mb-4 shadow-sm">
-          <h3 className="text-gray-800 dark:text-white font-semibold mb-3">Organizado por</h3>
-          <div className="flex items-center gap-3">
-            <img src={parche.memberAvatars[0]} alt={parche.admin} className="w-10 h-10 rounded-full object-cover" />
+
+        {/* Organizado por */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+          <h3 className="text-xl font-black text-gray-900 dark:text-white mb-5">Organizado por</h3>
+          <div className="flex items-center gap-4">
+            <img src={parche.memberAvatars[0]} alt={parche.admin} className="w-14 h-14 rounded-full object-cover shadow-sm" />
             <div>
-              <p className="font-medium text-gray-800 dark:text-white text-sm">{parche.admin}</p>
-              <p className="text-xs text-gray-400">Admin del parche</p>
+              <p className="font-bold text-gray-900 dark:text-white text-base">{parche.admin}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">ADMIN DEL PARCHE</p>
             </div>
             <button
               onClick={() => navigate(`/user/${parche.adminId}`)}
-              className="ml-auto px-3 py-1.5 rounded-full text-xs font-medium border transition-all hover:bg-blue-50 active:scale-95"
+              className="ml-auto px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all hover:bg-blue-50/50 dark:hover:bg-blue-900/10 active:scale-95"
               style={{ color: PINK, borderColor: PINK }}
             >
               Ver perfil
             </button>
           </div>
         </div>
-        {}
-        <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 mb-4 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-gray-800 dark:text-white font-semibold">Miembros ({parche.members})</h3>
-            <button className="text-xs font-medium flex items-center gap-1" style={{ color: PINK }}>
-              <UserPlus size={12} /> Invitar
-            </button>
+
+        {/* Miembros */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-black text-gray-900 dark:text-white">Miembros ({parche.members})</h3>
+            </div>
+            {joined && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate(`/chat/${parche.id}`)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-xs font-black uppercase tracking-widest shadow-[0_4px_15px_rgba(59,130,246,0.4)] transition-all"
+                style={{ background: GRADIENT }}
+              >
+                <MessageCircle size={16} strokeWidth={2.5} />
+                Chat del Parche
+              </motion.button>
+            )}
           </div>
-          <div className="space-y-3">
+          <div className="flex flex-col gap-2">
             {members.map(member => (
               <button
                 key={member.id}
                 onClick={() => navigate(`/user/${member.id}`)}
-                className="w-full flex items-center gap-3 text-left hover:bg-gray-50 dark:hover:bg-[#172A45] rounded-xl p-2 -mx-2 transition-colors active:scale-[0.98]"
+                className="w-full flex flex-col md:flex-row items-start md:items-center gap-4 text-left hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-2xl p-3 transition-colors active:scale-[0.99] border border-transparent hover:border-gray-100 dark:hover:border-white/5"
               >
-                <div className="relative">
-                  <img src={member.avatar} alt={member.name} className="w-9 h-9 rounded-full object-cover" />
-                  {member.online && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#112240]" style={{ background: ORANGE }} />
-                  )}
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                  <div className="relative">
+                    <img src={member.avatar} alt={member.name} className="w-12 h-12 rounded-full object-cover shadow-sm" />
+                    {member.online && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-900" style={{ background: ORANGE }} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 dark:text-white truncate">{member.name}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 truncate mt-0.5">{member.faculty}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800 dark:text-white">{member.name}</p>
-                  <p className="text-xs text-gray-400">{member.faculty}</p>
-                </div>
-                <div className="flex gap-1">
+                <div className="flex gap-2 ml-[4.5rem] md:ml-auto">
                   {member.interests.slice(0, 2).map(interest => (
-                    <span key={interest} className="text-xs px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-[#172A45] text-blue-500 dark:text-gray-400">
+                    <span key={interest} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                       {interest}
                     </span>
                   ))}
@@ -327,19 +388,20 @@ export function ParchemDetailPage() {
               </button>
             ))}
             {parche.members > 4 && (
-              <button className="w-full py-2 text-xs font-medium text-center hover:opacity-80 active:scale-95" style={{ color: PINK }}>
+              <button className="w-full py-4 mt-2 text-[10px] font-black uppercase tracking-widest text-center hover:opacity-80 active:scale-95 transition-opacity" style={{ color: PINK }}>
                 Ver todos los {parche.members} miembros
               </button>
             )}
           </div>
         </div>
-        {}
-        <div className="bg-white dark:bg-[#112240] rounded-2xl p-4 mb-6 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800 dark:text-white">Capacidad</h3>
-            <span className="text-xs text-gray-400">{parche.members}/{parche.maxMembers}</span>
+
+        {/* Capacidad */}
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-black text-gray-900 dark:text-white">Capacidad</h3>
+            <span className="font-black text-2xl text-gray-900 dark:text-white leading-none">{parche.members}<span className="text-sm text-gray-400">/{parche.maxMembers}</span></span>
           </div>
-          <div className="h-2 bg-gray-100 dark:bg-[#172A45] rounded-full overflow-hidden">
+          <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
             <motion.div
               className="h-full rounded-full"
               style={{ background: isFull ? GOLD_GRADIENT : GRADIENT }}
@@ -348,28 +410,41 @@ export function ParchemDetailPage() {
               transition={{ duration: 0.8, ease: 'easeOut' }}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {isFull ? '⚠️ Parche lleno' : `${parche.maxMembers - parche.members} espacios disponibles`}
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-3 text-right">
+            {isFull ? '⚠️ Parche lleno' : `${parche.maxMembers - parche.members} ESPACIOS DISPONIBLES`}
           </p>
         </div>
-        {}
-        <div className="flex gap-3">
+
+        {/* Paty Mascot Callout */}
+        <div className="flex items-center gap-4 bg-blue-50/50 dark:bg-slate-800/50 p-4 rounded-[2rem] border border-blue-100/50 dark:border-white/5 shadow-sm mt-2 relative overflow-hidden">
+          <img src={patySelfieImg} alt="Paty" className="w-20 h-20 object-contain drop-shadow-md z-10" />
+          <div className="z-10 relative">
+            <p className="font-black text-gray-900 dark:text-white text-sm">¡Tip de Paty!</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium leading-relaxed">
+              Comparte este parche e invita a más personas para llenarlo más rápido.
+            </p>
+          </div>
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-xl" />
+        </div>
+
+        {/* Acciones */}
+        <div className="flex gap-4">
           {joined ? (
             <>
               <motion.button
                 whileTap={{ scale: 0.96 }}
-                onClick={() => navigate(`/chat/${parche.id}`)}
-                className="flex-1 py-4 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 shadow-lg transition-all"
+                onClick={() => setShowInviteModal(true)}
+                className="flex-1 py-4.5 rounded-[1.5rem] text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(59,130,246,0.3)] transition-all"
                 style={{ background: GRADIENT }}
               >
-                <MessageCircle size={18} />
-                Ir al Chat
+                <UserPlus size={20} strokeWidth={2.5} />
+                Invitar Amigos
               </motion.button>
               <button
-                onClick={() => setJoined(false)}
-                className="w-14 h-14 rounded-2xl bg-white dark:bg-[#112240] shadow-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors active:scale-95"
+                onClick={handleLeave}
+                className="w-16 h-16 rounded-[1.5rem] bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors active:scale-95"
               >
-                <LogOut size={18} />
+                <LogOut size={22} />
               </button>
             </>
           ) : (
@@ -377,16 +452,16 @@ export function ParchemDetailPage() {
               whileTap={{ scale: 0.96 }}
               onClick={() => !isFull && setJoined(true)}
               disabled={isFull}
-              className="flex-1 py-4 rounded-2xl text-white font-black flex items-center justify-center gap-2 shadow-xl transition-all disabled:opacity-60"
+              className="flex-1 py-4.5 rounded-[1.5rem] text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
               style={{
                 background: isFull ? 'rgba(156,163,175,0.4)' : GOLD_GRADIENT,
-                boxShadow: isFull ? 'none' : '0 8px 24px rgba(217,119,6,0.45)',
+                boxShadow: isFull ? 'none' : '0 8px 30px rgba(217,119,6,0.4)',
               }}
             >
               {isFull ? (
-                <><AlertCircle size={18} /> Parche lleno</>
+                <><AlertCircle size={20} strokeWidth={2.5} /> Parche lleno</>
               ) : (
-                <><Sparkles size={18} /> Unirme al Parche</>
+                <><Sparkles size={20} strokeWidth={2.5} /> Unirme al Parche</>
               )}
             </motion.button>
           )}
@@ -543,6 +618,89 @@ export function ParchemDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Modals for Invite, Transfer, Delete */}
+      <AnimatePresence>
+        {/* Invite Modal */}
+        {showInviteModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-[#0D1B2E] rounded-3xl p-6 shadow-2xl" style={{ border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}` }}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">Invitar amigos</h3>
+                <button onClick={() => setShowInviteModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
+              </div>
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-2 mb-4">
+                {matchUsers.slice(0, 5).map(friend => {
+                  const isInvited = invitedFriends.includes(friend.id);
+                  return (
+                    <button key={friend.id} onClick={() => setInvitedFriends(prev => isInvited ? prev.filter(id => id !== friend.id) : [...prev, friend.id])} className="w-full flex items-center gap-3 p-2 rounded-xl transition-all" style={{ background: isInvited ? 'rgba(29,78,216,0.1)' : 'transparent' }}>
+                      <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-full object-cover" />
+                      <span className="flex-1 text-sm font-medium text-left text-gray-800 dark:text-gray-200">{friend.name}</span>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: isInvited ? GRADIENT : (isDark ? '#1E293B' : '#E5E7EB') }}>
+                        {isInvited ? <Check size={12} color="white" /> : <Plus size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button onClick={() => { setShowInviteModal(false); setInvitedFriends([]); }} className="w-full py-3 rounded-2xl text-white font-bold" style={{ background: GRADIENT }}>
+                Enviar Invitaciones ({invitedFriends.length})
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Transfer Ownership Modal */}
+        {showTransferModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-[#0D1B2E] rounded-3xl p-6 shadow-2xl" style={{ border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}` }}>
+              <div className="mb-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-3">
+                  <Users size={28} className="text-blue-500" />
+                </div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">Transferir Liderazgo</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Antes de salir, debes transferir el liderazgo del parche a otro miembro.</p>
+              </div>
+              <div className="space-y-2 mb-5 max-h-48 overflow-y-auto">
+                {matchUsers.slice(0, Math.min(4, parche.members)).filter(m => m.id !== currentUser?.id).map(member => (
+                  <button key={member.id} onClick={() => { setJoined(false); setShowTransferModal(false); navigate('/parches'); }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-left transition-colors">
+                    <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{member.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Hacer capitán</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setShowTransferModal(false)} className="w-full py-3 rounded-2xl font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800">
+                Cancelar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Delete Confirm Modal */}
+        {showDeleteConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-sm bg-white dark:bg-[#0D1B2E] rounded-3xl p-6 shadow-2xl text-center" style={{ border: `1px solid ${isDark ? '#1E3A5F' : '#E5E7EB'}` }}>
+              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={28} className="text-red-500" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">¿Eliminar parche?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Esta acción no se puede deshacer. Todos los miembros serán notificados.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800">
+                  Cancelar
+                </button>
+                <button onClick={() => navigate('/parches')} className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 hover:bg-red-600">
+                  Eliminar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
