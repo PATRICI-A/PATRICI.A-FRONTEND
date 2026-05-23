@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import {
@@ -8,40 +8,71 @@ import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { GRADIENT, PINK, TEAL, GOLD_LIGHT } from '../types/mockData';
 import { format, subDays } from 'date-fns';
+import { getAdminAnalytics } from '../services/analytics.service';
+import type { AdminAnalyticsResponse } from '../services/analytics.service';
+
 type MetricType = 'USUARIOS' | 'PARCHES' | 'EVENTOS' | 'MATCHES' | 'ZONAS';
+
+const METRIC_MAP: Record<MetricType, string> = {
+  USUARIOS: 'USERS', PARCHES: 'PARCHES', EVENTOS: 'EVENTS', MATCHES: 'MATCHES', ZONAS: 'ZONES',
+};
+
 export function AnalyticsDashboardPage() {
   const navigate = useNavigate();
   const { isDark } = useApp();
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 7), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [metricType, setMetricType] = useState<MetricType>('USUARIOS');
-  const usuariosData = [
-    { date: '10 May', value: 1240 },
-    { date: '11 May', value: 1380 },
-    { date: '12 May', value: 1520 },
-    { date: '13 May', value: 1450 },
-  ];
-  const parchesData = [12, 8, 15, 9, 11, 7, 13];
-  const topEventos = [
-    { name: 'Hackathon ECI 2025', participantes: 120 },
-    { name: 'Festival de Música', participantes: 450 },
-    { name: 'Taller Bienestar Mental', participantes: 34 },
-    { name: 'After-Study Rooftop', participantes: 89 },
-    { name: 'Feria de Emprendimiento', participantes: 280 },
-    { name: 'Taller Muralismo', participantes: 25 },
-    { name: 'Gaming Night', participantes: 62 },
-    { name: 'Club de Lectura', participantes: 18 },
-    { name: 'Fútbol Los Pinos', participantes: 28 },
-    { name: 'Sesión de Yoga', participantes: 41 },
-  ];
-  const campusZones = [
-    { name: 'Biblioteca', activity: 92, color: '#EF4444' },
-    { name: 'Cafetería', activity: 85, color: '#F59E0B' },
-    { name: 'Bloque A', activity: 68, color: '#3B82F6' },
-    { name: 'Bloque B', activity: 55, color: '#06B6D4' },
-    { name: 'Bloque C', activity: 72, color: '#8B5CF6' },
-    { name: 'Zona Deportiva', activity: 48, color: '#10B981' },
-  ];
+  const [adminData, setAdminData] = useState<AdminAnalyticsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    getAdminAnalytics({ startDate, endDate, metricType: METRIC_MAP[metricType] as any })
+      .then(setAdminData)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [startDate, endDate, metricType]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Datos reales o fallback a mock
+  const usuariosData = adminData?.activeUsers?.timeSeries
+    ? Object.entries(adminData.activeUsers.timeSeries).map(([date, value]) => ({ date, value }))
+    : [{ date: '10 May', value: 1240 }, { date: '11 May', value: 1380 }, { date: '12 May', value: 1520 }, { date: '13 May', value: 1450 }];
+
+  const parchesTimeSeries = adminData?.parcheStats?.timeSeries
+    ? Object.values(adminData.parcheStats.timeSeries)
+    : [12, 8, 15, 9, 11, 7, 13];
+
+  const topEventos = adminData?.topEvents?.length
+    ? adminData.topEvents.map(e => ({ name: e.eventName, participantes: e.rsvpCount }))
+    : [
+        { name: 'Hackathon ECI 2025', participantes: 120 },
+        { name: 'Festival de Música', participantes: 450 },
+        { name: 'Taller Bienestar Mental', participantes: 34 },
+        { name: 'After-Study Rooftop', participantes: 89 },
+        { name: 'Feria de Emprendimiento', participantes: 280 },
+      ];
+
+  const campusZonesColors = ['#EF4444', '#F59E0B', '#3B82F6', '#06B6D4', '#8B5CF6', '#10B981'];
+  const campusZones = adminData?.campusHeatmap?.zones
+    ? Object.entries(adminData.campusHeatmap.zones).map(([name, val], i) => ({
+        name, activity: Math.round(Object.values(val as Record<string, number>).reduce((a, b) => a + b, 0) / Math.max(Object.values(val as Record<string, number>).length, 1)),
+        color: campusZonesColors[i % campusZonesColors.length],
+      }))
+    : [
+        { name: 'Biblioteca', activity: 92, color: '#EF4444' },
+        { name: 'Cafetería', activity: 85, color: '#F59E0B' },
+        { name: 'Bloque A', activity: 68, color: '#3B82F6' },
+        { name: 'Bloque B', activity: 55, color: '#06B6D4' },
+        { name: 'Zona Deportiva', activity: 48, color: '#10B981' },
+      ];
+
+  const matchSuccessRate = adminData?.matchSuccessRate != null
+    ? Math.round(adminData.matchSuccessRate * 100)
+    : 78;
+
   const hasGeoData = metricType === 'ZONAS' && campusZones.length > 0;
   return (
     <div className="min-h-screen relative" style={{ background: 'transparent' }}>
@@ -140,7 +171,7 @@ export function AnalyticsDashboardPage() {
               </div>
             </div>
             <div className="flex items-end gap-2 h-32">
-              {parchesData.map((val, idx) => (
+              {parchesTimeSeries.map((val, idx) => (
                 <motion.div key={idx} initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ delay: idx * 0.1 }} className="flex-1 rounded-t-lg" style={{ background: GRADIENT, height: `${(val / 15) * 100}%`, transformOrigin: 'bottom' }} />
               ))}
             </div>
@@ -184,9 +215,9 @@ export function AnalyticsDashboardPage() {
               </div>
             </div>
             <div className="text-center py-6">
-              <div className="text-6xl font-black mb-2" style={{ color: '#F97316' }}>78%</div>
+              <div className="text-6xl font-black mb-2" style={{ color: '#F97316' }}>{matchSuccessRate}%</div>
               <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: isDark ? '#112240' : '#E5E2D8' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: '78%' }} transition={{ duration: 1 }} className="h-full rounded-full" style={{ background: 'linear-gradient(135deg, #F97316 0%, #FB923C 100%)' }} />
+                <motion.div initial={{ width: 0 }} animate={{ width: `${matchSuccessRate}%` }} transition={{ duration: 1 }} className="h-full rounded-full" style={{ background: 'linear-gradient(135deg, #F97316 0%, #FB923C 100%)' }} />
               </div>
               <p className="text-xs mt-3" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>+5% vs promedio general</p>
             </div>

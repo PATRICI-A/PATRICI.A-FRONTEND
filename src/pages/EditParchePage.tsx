@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Image as ImageIcon, Ticket, Save, CheckCircle } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, events, parches, ECI_LOCATIONS } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE, events, ECI_LOCATIONS } from '../types/mockData';
+import { updateParche, getParcheById, type ParcheDetailResponse } from '../services/parches.service';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 
 const categories = [
@@ -20,28 +21,42 @@ export function EditParchePage() {
   const navigate = useNavigate();
   const { id } = useParams();
   
-  const parche = parches.find(p => p.id === id);
+  const [parche, setParche] = useState<ParcheDetailResponse | null>(null);
 
-  const [description, setDescription] = useState(parche?.description || '');
-  const [category, setCategory] = useState(parche?.category || '');
-  const [isPublic, setIsPublic] = useState(parche?.type === 'public');
-  const [location, setLocation] = useState(parche?.location || '');
-  const [date, setDate] = useState(parche?.date || '');
-  const [time, setTime] = useState(parche?.time || '');
-  const [maxMembers, setMaxMembers] = useState(String(parche?.maxMembers || 10));
-  const [coverImage, setCoverImage] = useState<string | null>(parche?.coverImage || null);
-  const [eventId, setEventId] = useState<string>(parche?.eventId || '');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
+  const [location, setLocation] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [maxMembers, setMaxMembers] = useState('10');
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string>('');
   
   const [isLoading, setIsLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Fallback if parche is not found
   useEffect(() => {
-    if (!parche) {
-      navigate('/parches');
+    if (id) {
+      getParcheById(id)
+        .then(res => {
+          setParche(res);
+          setDescription(res.description || '');
+          setCategory(res.category || '');
+          setIsPublic(res.type === 'PUBLIC');
+          setLocation(res.place?.displayName || '');
+          setDate(res.date || '');
+          setTime(res.hour || '');
+          setMaxMembers(String(res.maximumQuota || 10));
+          setCoverImage(res.imageUrl || null);
+          setEventId(res.event?.id || '');
+        })
+        .catch(() => {
+          navigate('/parches');
+        });
     }
-  }, [parche, navigate]);
+  }, [id, navigate]);
 
   if (!parche) return null;
 
@@ -57,23 +72,40 @@ export function EditParchePage() {
   };
 
   const handleSave = async () => {
-    if (!category) return;
+    if (!category || !parche) return;
     
     // Business rule: max members cannot be less than current members
     const newMax = parseInt(maxMembers);
-    if (newMax < parche.members) {
-      setErrorMsg(`El cupo máximo no puede ser menor a los miembros actuales (${parche.members})`);
+    const actualMembers = parche.actualMembers || parche.members.length;
+    if (newMax < actualMembers) {
+      setErrorMsg(`El cupo máximo no puede ser menor a los miembros actuales (${actualMembers})`);
       return;
     }
     setErrorMsg('');
     setIsLoading(true);
     
-    // Simulate save
-    await new Promise(r => setTimeout(r, 1500));
-    setSaved(true);
-    setIsLoading(false);
-    
-    setTimeout(() => navigate(`/parches/${parche.id}`), 1500);
+    try {
+      const formattedTime = time ? (time.length === 5 ? `${time}:00` : time) : "00:00:00";
+      const formattedDate = date || new Date().toISOString().split('T')[0];
+      await updateParche(parche.id, {
+        description,
+        category,
+        type: isPublic ? 'PUBLIC' : 'PRIVATE',
+        lugar: location,
+        date: formattedDate,
+        hour: formattedTime,
+        maximumQuota: newMax,
+        imageUrl: coverImage || undefined,
+        eventId: eventId || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => navigate(`/parches/${parche.id}`), 1500);
+    } catch (e) {
+      setErrorMsg('Error al guardar los cambios');
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const selectedCategory = categories.find(c => c.id === category);
@@ -293,7 +325,7 @@ export function EditParchePage() {
                   type="number"
                   value={maxMembers}
                   onChange={e => setMaxMembers(e.target.value)}
-                  min={parche.members} // No less than current members
+                  min={parche.actualMembers || parche.members?.length || 1} // No less than current members
                   max="100"
                   className="w-full pl-8 pr-3 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all"
                 />

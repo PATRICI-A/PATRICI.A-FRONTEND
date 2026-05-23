@@ -84,6 +84,7 @@ export interface UpdateProfileData {
   interests?: string[];
 }
 
+
 export type CareerEnum =
   | 'CIVIL_ENGINEERING'
   | 'ELECTRICAL_ENGINEERING'
@@ -166,6 +167,7 @@ export const profileService = {
       return null;
     }
   },
+
 
   async getBatchProfiles(ids: string[]): Promise<BatchProfileResponse[]> {
     if (ids.length === 0) return [];

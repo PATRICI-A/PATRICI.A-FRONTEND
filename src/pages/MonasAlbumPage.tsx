@@ -23,7 +23,7 @@ import {
   Music, Mountain, BookOpen, Pizza, Gamepad2, Palette,
   Calendar, Tent, Code2, Smile, Users as UsersIcon, PartyPopper,
   Info, Handshake, Network, Award, Map, MapPin, Building2, MessageCircle,
-  Home, Rocket, Crown, Shield,
+  Home, Rocket, Crown, Shield, Loader2,
 } from 'lucide-react';
 import {
   monas as initialMonas, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD,
@@ -32,6 +32,18 @@ import {
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
+import { getMonas, redeemEventCode } from '../services/gamification.service';
+
+const mapApiRarityToMock = (rarity: string): 'común' | 'poco común' | 'raro' | 'épico' | 'legendario' => {
+  const map: Record<string, 'común' | 'poco común' | 'raro' | 'épico' | 'legendario'> = {
+    COMMON: 'común',
+    UNCOMMON: 'poco común',
+    RARE: 'raro',
+    EPIC: 'épico',
+    LEGENDARY: 'legendario'
+  };
+  return map[rarity] ?? 'común';
+};
 import imgPrimerChoque from '../assets/PrimerChoque-1.png';
 import imgParcheIniciado from '../assets/ParcheIniciado-1.png';
 import imgCapitanNato from '../assets/CapitanNato.png';
@@ -356,38 +368,76 @@ function EventCodeModal({
   const [codeInput, setCodeInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [foundEnvelope, setFoundEnvelope] = useState<EventEnvelope | null>(null);
-  const [collection] = useState<Mona[]>([...initialMonas]);
+  const [collection, setCollection] = useState<Mona[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   
+  useEffect(() => {
+    getMonas().then(apiMonas => {
+      const mapped = apiMonas.map(apiMona => {
+        const visual = initialMonas.find(m => m.id === apiMona.monaId);
+        return {
+          id: apiMona.monaId,
+          name: apiMona.name,
+          description: apiMona.description,
+          emoji: visual?.emoji || '✨',
+          category: visual?.category || 'networking',
+          color: visual?.color || '#3B82F6',
+          bgColor: visual?.bgColor || '#DBEAFE',
+          rarity: mapApiRarityToMock(apiMona.rarity),
+          unlocked: apiMona.unlocked,
+          unlockedAt: apiMona.earnedAt || undefined,
+          xp: visual?.xp || 100,
+          image: visual?.image,
+        } as Mona;
+      });
+      setCollection(mapped);
+    });
+  }, []);
+
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
-  const handleValidate = (code: string) => {
+  const handleValidate = async (code: string) => {
     const normalized = code.trim().toUpperCase();
     if (!normalized) return;
     setStep('validating');
-    setTimeout(() => {
-      const envelope = EVENT_ENVELOPES.find(e => e.code.toUpperCase() === normalized);
-      if (!envelope) {
-        setErrorMsg('Código de evento inválido. Intenta con otro código.');
-        setStep('error');
-        return;
-      }
-      if (usedCodes.includes(normalized)) {
-        setErrorMsg('Este código ya fue ingresado anteriormente. Cada código es de un solo uso.');
-        setStep('error');
-        return;
-      }
-      const monas = envelope.monaIds
-        .map(id => collection.find(m => m.id === id))
-        .filter((m): m is Mona => m !== undefined);
-      setFoundEnvelope(envelope);
+    
+    try {
+      const res = await redeemEventCode(normalized);
+      
+      const unlockedMona = collection.find(m => m.id === res.badgeId) || {
+        id: res.badgeId,
+        name: res.badgeName,
+        description: 'Mona desbloqueada mediante código de evento',
+        emoji: '🎁',
+        category: 'eventos',
+        color: '#EC4899',
+        bgColor: '#FCE7F3',
+        rarity: 'común',
+        unlocked: true,
+        xp: res.xpAwarded || 150
+      };
+
+      const mockEnvelope: EventEnvelope = {
+        code: normalized,
+        label: 'Sobre de Evento',
+        description: 'Contiene tu mona desbloqueada',
+        emoji: '🎁',
+        color: '#EC4899',
+        gradient: 'linear-gradient(135deg, #EC4899, #F43F5E)',
+        monaIds: [res.badgeId],
+        theme: 'normal'
+      };
+
       setStep('success');
-      setTimeout(() => onSuccess(envelope, monas), 800);
-    }, 1400);
+      setTimeout(() => onSuccess(mockEnvelope, [unlockedMona as Mona]), 800);
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.message || 'Código de evento inválido o ya utilizado.');
+      setStep('error');
+    }
   };
 
   return (
@@ -846,7 +896,8 @@ function RouletteModal({ onClose, prizes, onFinish }: { onClose: () => void, pri
 export function MonasAlbumPage() {
   const navigate = useNavigate();
   const { isDark } = useApp();
-  const [collection, setCollection] = useState<Mona[]>([...initialMonas]);
+  const [collection, setCollection] = useState<Mona[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('todas');
   const [selectedMona, setSelectedMona] = useState<Mona | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -855,6 +906,41 @@ export function MonasAlbumPage() {
   const [usedEventCodes, setUsedEventCodes] = useState<string[]>([]);
   const [showRewardModal, setShowRewardModal] = useState<typeof CAFETERIA_PRIZES[0] | null>(null);
   const [claimedRewards, setClaimedRewards] = useState<(typeof CAFETERIA_PRIZES[0])[]>([]);
+
+  const fetchMonas = () => {
+    setLoading(true);
+    getMonas()
+      .then((apiMonas) => {
+        const mapped = apiMonas.map((apiMona) => {
+          const visual = initialMonas.find((m) => m.id === apiMona.monaId);
+          return {
+            id: apiMona.monaId,
+            name: apiMona.name,
+            description: apiMona.description,
+            emoji: visual?.emoji || '✨',
+            category: visual?.category || 'networking',
+            color: visual?.color || '#3B82F6',
+            bgColor: visual?.bgColor || '#DBEAFE',
+            rarity: mapApiRarityToMock(apiMona.rarity),
+            unlocked: apiMona.unlocked,
+            unlockedAt: apiMona.earnedAt || undefined,
+            xp: visual?.xp || 100,
+            image: visual?.image,
+          } as Mona;
+        });
+        setCollection(mapped);
+      })
+      .catch((err) => {
+        console.error('Error loading monas:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchMonas();
+  }, []);
   
   useEffect(() => {
     if (selectedMona) setIsFlipped(false);
@@ -954,6 +1040,7 @@ export function MonasAlbumPage() {
       )
     );
     setPendingEnvelope(null);
+    fetchMonas();
   };
   const claimReward = (reward: typeof CAFETERIA_PRIZES[0]) => {
     setClaimedRewards(prev => [...prev, reward]);
@@ -974,6 +1061,17 @@ export function MonasAlbumPage() {
     setShowWelcomeModal(true);
   };
   const availableEventCodes = EVENT_ENVELOPES.filter(e => !usedEventCodes.includes(e.code.toUpperCase())).length;
+
+  if (loading && collection.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center relative">
+        <DoodleBackground isDark={isDark} opacity={0.6} />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500 mb-4 animate-pulse" />
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Cargando Álbum...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-32 relative overflow-x-hidden">
       {}

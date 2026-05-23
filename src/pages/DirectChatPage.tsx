@@ -8,8 +8,9 @@ import {
   UserCheck, Search, AlertCircle, Eraser, User, Flag,
   ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
-import { directChats, chatMessages, GOLD_LIGHT } from '../types/mockData';
+import { directChats, matchUsers, GOLD_LIGHT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
+import { chatService, type MessageResponse } from '../services/chat.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
@@ -24,14 +25,28 @@ export function DirectChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { currentUser, isDark } = useApp();
-  const chat = directChats.find(c => c.id === id) || directChats[0];
-  const [messages, setMessages] = useState<typeof chatMessages>([]);
+  const friendId = id || 'u2';
+  const matchedProfile = matchUsers.find(u => u.id === friendId) || 
+                         directChats.find(c => c.userId === friendId) || 
+                         directChats[0];
+
+  const chat = {
+    id: friendId,
+    userId: friendId,
+    name: matchedProfile?.name || `Estudiante ${friendId.slice(0, 4)}`,
+    avatar: matchedProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+    faculty: matchedProfile?.faculty || 'Facultad de Ingeniería',
+    online: (matchedProfile as any)?.online || false,
+    accentColor: (matchedProfile as any)?.accentColor || '#06B6D4',
+  };
+
+  const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [mutedChats, setMutedChats] = useState<string[]>([]);
-  const [reportingMessage, setReportingMessage] = useState<typeof chatMessages[0] | null>(null);
+  const [reportingMessage, setReportingMessage] = useState<MessageResponse | null>(null);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
@@ -42,53 +57,46 @@ export function DirectChatPage() {
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
   const accentColor = chat.accentColor;
 
-  // reiniciar mensajes al cambiar de chat
+  const getSenderAvatar = (senderId: string) => {
+    if (senderId === currentUser?.id || senderId === 'u1') {
+      return currentUser?.avatar || 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?w=50';
+    }
+    const matched = matchUsers.find(u => u.id === senderId) || 
+                    directChats.find(c => c.userId === senderId);
+    return matched?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50';
+  };
+
+  // reiniciar y cargar mensajes del backend de Azure
   useEffect(() => {
-    const currentChat = directChats.find(c => c.id === id) || directChats[0];
-    setMessages(chatMessages.filter(m => m.chatId === currentChat.id));
+    const loadMessages = async () => {
+      try {
+        const response = await chatService.fetchFriendMessages(friendId, 0, 100);
+        setMessages(response.content);
+      } catch (error) {
+        console.error('Error al cargar mensajes del chat privado:', error);
+      }
+    };
+
+    loadMessages();
     setInput('');
     setShowEmojis(false);
     setShowAttachments(false);
     setShowContextMenu(false);
-  }, [id]);
+  }, [friendId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const newMsg = {
-      id: `m_${Date.now()}`,
-      chatId: chat.id,
-      sender: 'Tú',
-      senderId: 'u1',
-      avatar: currentUser?.avatar || '',
-      content: input.trim(),
-      timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
-      type: 'text' as const,
-      isMe: true,
-    };
-    chatMessages.push(newMsg); // Mutar arreglo global
-    setMessages(prev => [...prev, newMsg]);
-    setInput('');
-    setShowEmojis(false);
-    if (Math.random() > 0.5) {
-      setTimeout(() => {
-        const replies = ['¡Genial! 🙌', 'Sí, me parece perfecto', '¿A qué hora nos vemos?', '👍👍', '¡Perfecto!', 'Ok, dale 😊'];
-        const replyMsg = {
-          id: `m_${Date.now()}`,
-          chatId: chat.id,
-          sender: chat.name,
-          senderId: chat.userId,
-          avatar: chat.avatar,
-          content: replies[Math.floor(Math.random() * replies.length)],
-          timestamp: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
-          type: 'text' as const,
-        };
-        chatMessages.push(replyMsg); // Mutar arreglo global
-        setMessages(prev => [...prev, replyMsg]);
-      }, 2000 + Math.random() * 2000);
+  const handleSend = async () => {
+    if (!input.trim() || !friendId) return;
+    try {
+      const responseMsg = await chatService.sendFriendMessage(friendId, input.trim());
+      setMessages(prev => [...prev, responseMsg]);
+      setInput('');
+      setShowEmojis(false);
+    } catch (error) {
+      console.error('Error al enviar mensaje privado:', error);
     }
   };
   const handleContextAction = (action: string) => {
@@ -307,16 +315,12 @@ export function DirectChatPage() {
           </div>
           <div className="space-y-3">
             {messages.map((msg, i) => {
-              if (msg.type === 'system') {
-                return (
-                  <div key={msg.id} className="flex justify-center">
-                    <span className="text-xs text-white/50 bg-black/25 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5">
-                      <User size={10} /> {msg.content}
-                    </span>
-                  </div>
-                );
-              }
-              const isMe = msg.isMe || msg.senderId === 'u1';
+              const currentUserId = currentUser?.id || 'u1';
+              const isMe = msg.senderId === currentUserId;
+              const showAvatar = !isMe && (i === 0 || messages[i - 1].senderId !== msg.senderId);
+              const avatarUrl = getSenderAvatar(msg.senderId);
+              const timestamp = new Date(msg.sentAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
               return (
                 <motion.div
                   key={msg.id}
@@ -328,11 +332,11 @@ export function DirectChatPage() {
                 >
                   {!isMe && (
                     <div className="w-8 flex-shrink-0 mt-auto">
-                      <img src={msg.avatar} alt={msg.sender} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" />
+                      {showAvatar && <img src={avatarUrl} alt={msg.senderName} className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20" />}
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col relative`}>
-                    {!isMe && msg.senderId !== 'u1' && hoveredMessageId === msg.id && (
+                    {!isMe && msg.senderId !== currentUserId && hoveredMessageId === msg.id && (
                       <motion.button
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -350,9 +354,9 @@ export function DirectChatPage() {
                         <Flag size={12} className="text-white" />
                       </motion.button>
                     )}
-                    {msg.type === 'image' ? (
+                    {msg.type === 'IMAGE' ? (
                       <div className={`rounded-2xl overflow-hidden ${isMe ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
-                        <img src={msg.imageUrl} alt="Imagen" className="w-56 h-36 object-cover" />
+                        <img src={msg.imageUrl || ''} alt="Imagen" className="w-56 h-36 object-cover" />
                         {msg.content && (
                           <div
                             className="px-3 py-2 text-sm"
@@ -374,14 +378,14 @@ export function DirectChatPage() {
                         {msg.content}
                       </div>
                     )}
-                    {isMe && (
-                      <div className="flex items-center gap-1 mt-0.5 mr-1">
-                        <span className="text-[10px] text-white/50">{msg.timestamp}</span>
+                    <div className="flex items-center gap-1 mt-0.5 mr-1">
+                      <span className="text-[10px] text-white/50">{timestamp}</span>
+                      {isMe && (
                         <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
                           <path d="M1 5L4 8L8 2M6 5L9 8L13 2" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -523,7 +527,7 @@ export function DirectChatPage() {
                   }}
                 >
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    De: {reportingMessage.sender}
+                    De: {reportingMessage.senderName}
                   </p>
                   <p className="text-gray-800 dark:text-white">
                     "{reportingMessage.content}"
