@@ -56,29 +56,33 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
 
   const directChatList = useMemo(() => {
     const currentUserId = currentUser?.id || 'u1';
-    return connections.map(conn => {
-      const friendId = conn.requesterId === currentUserId ? conn.addresseeId : conn.requesterId;
-      const matchedProfile = matchUsers.find(u => u.id === friendId) || 
-                             directChats.find(c => c.userId === friendId);
+    const safeConnections = Array.isArray(connections) ? connections : [];
 
-      const msgs = chatMessages.filter(m => m.chatId === friendId);
-      const hasMsgs = msgs.length > 0;
-      const lastMsg = hasMsgs ? msgs[msgs.length - 1] : null;
+    return safeConnections
+      .filter(conn => conn && (conn.requesterId || conn.addresseeId))
+      .map(conn => {
+        const friendId = conn.requesterId === currentUserId ? conn.addresseeId : conn.requesterId;
+        const matchedProfile = matchUsers.find(u => u.id === friendId) || 
+                               directChats.find(c => c.userId === friendId);
 
-      return {
-        id: friendId,
-        userId: friendId,
-        name: matchedProfile?.name || `Estudiante ${friendId.slice(0, 4)}`,
-        avatar: matchedProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-        faculty: matchedProfile?.faculty || 'Facultad de Ingeniería',
-        lastMessage: lastMsg ? lastMsg.content : (matchedProfile as any)?.lastMessage || 'Conexión aceptada 🤝',
-        lastTime: lastMsg ? lastMsg.timestamp : (matchedProfile as any)?.lastTime || 'Ahora',
-        unread: (matchedProfile as any)?.unread || 0,
-        online: (matchedProfile as any)?.online || false,
-        accentColor: (matchedProfile as any)?.accentColor || '#06B6D4',
-        chatType: 'direct' as const,
-      };
-    });
+        const msgs = chatMessages.filter(m => m.chatId === friendId);
+        const hasMsgs = msgs.length > 0;
+        const lastMsg = hasMsgs ? msgs[msgs.length - 1] : null;
+
+        return {
+          id: friendId || '',
+          userId: friendId || '',
+          name: matchedProfile?.name || `Estudiante ${(friendId || '').slice(0, 4)}`,
+          avatar: matchedProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+          faculty: matchedProfile?.faculty || 'Facultad de Ingeniería',
+          lastMessage: lastMsg ? lastMsg.content : (matchedProfile as any)?.lastMessage || 'Conexión aceptada 🤝',
+          lastTime: lastMsg ? lastMsg.timestamp : (matchedProfile as any)?.lastTime || 'Ahora',
+          unread: (matchedProfile as any)?.unread || 0,
+          online: (matchedProfile as any)?.online || false,
+          accentColor: (matchedProfile as any)?.accentColor || '#06B6D4',
+          chatType: 'direct' as const,
+        };
+      });
   }, [chatMessages, connections, currentUser]);
 
   const allChats = useMemo(() => {
