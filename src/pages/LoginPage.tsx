@@ -43,10 +43,8 @@ export function LoginPage() {
     setError('');
     try {
       const { user, tokens } = await authService.login({ email, password });
-      const isOrganizer = tokens.accessToken && (
-        email.toLowerCase().includes('organizador') ||
-        user.email.toLowerCase().includes('organizador')
-      );
+      const isOrganizer = email.toLowerCase().includes('organizador') ||
+        (tokens.accessToken && user.email.toLowerCase().includes('organizador'));
       if (isOrganizer) {
         localStorage.setItem('organizerSession', JSON.stringify({ email, name: user.name, role: 'ORGANIZADOR' }));
         login(user);
@@ -56,14 +54,16 @@ export function LoginPage() {
       login(user);
       navigate('/home');
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { message?: string }; status?: number }; message?: string };
-      console.error('[Login error]', axiosErr);
-      if (axiosErr.response?.status === 401) {
+      const axiosErr = err as { response?: { data?: { message?: string }; status?: number } };
+      const status = axiosErr.response?.status;
+      if (status === 401) {
         setError('Correo o contraseña incorrectos.');
-      } else if (!axiosErr.response) {
-        setError('No se pudo conectar al servidor. Revisa tu conexión o CORS.');
+      } else if (status === 404) {
+        setError('Usuario no encontrado.');
+      } else if (!status) {
+        setError('No se pudo conectar con el servidor. Verifica tu conexión.');
       } else {
-        setError(`Error ${axiosErr.response.status}: ${axiosErr.response?.data?.message ?? 'Inténtalo de nuevo.'}`);
+        setError(axiosErr.response?.data?.message ?? 'Ocurrió un error. Intenta de nuevo.');
       }
     } finally {
       setIsLoading(false);
