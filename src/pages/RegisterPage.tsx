@@ -11,7 +11,9 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
-import { authService, decodeTokenToUser } from '../services/auth.service';
+import { authService } from '../services/auth.service';
+import { profileService } from '../services/profileService';
+import type { CareerEnum } from '../services/profileService';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
@@ -130,11 +132,23 @@ const pregradoPrograms = [
   'Ingeniería en Biotecnología',
 ];
 
-const EXISTING_EMAILS = [
-  'test@mail.escuelaing.edu.co',
-  'patricia@mail.escuelaing.edu.co',
-  'demo@mail.escuelaing.edu.co',
-];
+const CAREER_MAP: Record<string, CareerEnum> = {
+  'Ingeniería Civil': 'CIVIL_ENGINEERING',
+  'Ingeniería Eléctrica': 'ELECTRICAL_ENGINEERING',
+  'Ingeniería de Sistemas': 'SYSTEMS_ENGINEERING',
+  'Ingeniería Industrial': 'INDUSTRIAL_ENGINEERING',
+  'Ingeniería Electrónica': 'ELECTRONIC_ENGINEERING',
+  'Economía': 'ECONOMICS',
+  'Administración de Empresas': 'BUSINESS_ADMINISTRATION',
+  'Matemáticas': 'MATHEMATICS',
+  'Ingeniería Mecánica': 'MECHANICAL_ENGINEERING',
+  'Ingeniería Biomédica': 'BIOMEDICAL_ENGINEERING',
+  'Ingeniería Ambiental': 'ENVIRONMENTAL_ENGINEERING',
+  'Ingeniería Estadística': 'STATISTICAL_ENGINEERING',
+  'Ingeniería de Inteligencia Artificial': 'AI_ENGINEERING',
+  'Ingeniería de Ciberseguridad': 'CYBERSECURITY_ENGINEERING',
+  'Ingeniería en Biotecnología': 'BIOTECHNOLOGY_ENGINEERING',
+};
 const maestriaPrograms = [
   'Maestría en Ingeniería Civil',
   'Maestría en Ingeniería de Sistemas',
@@ -424,13 +438,9 @@ export function RegisterPage() {
   };
   const handleResend = async () => {
     if (resendCooldown > 0) return;
-    try {
-      await authService.resendOtp(email);
-    } catch {
-      // ignore errors on resend silently
-    }
     setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
     setOtpStatus('idle'); setOtpAttempts(0); setResendCooldown(RESEND_COOLDOWN); setErrors({});
+    authService.resendOtp(email).catch(() => {});
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
   };
   const handleVerifyOtp = async () => {
@@ -446,9 +456,7 @@ export function RegisterPage() {
     }
     setIsLoading(true);
     try {
-      const tokens = await authService.verifyOtp(email, full);
-      const user = decodeTokenToUser(tokens.accessToken);
-      login(user);
+      await authService.verifyOtp(email, full);
       setOtpStatus('idle'); setErrors({});
       setStep(3);
     } catch (err: unknown) {
@@ -471,23 +479,52 @@ export function RegisterPage() {
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1) {
-      if (EXISTING_EMAILS.includes(email.toLowerCase())) {
-        setShowEmailExistsModal(true);
-        return;
+      setIsLoading(true);
+      try {
+        await authService.initVerification(email, password);
+        setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
+        setOtpAttempts(0); setOtpStatus('idle'); setResendCooldown(0);
+        setStep(2);
+        setTimeout(() => codeRefs.current[0]?.focus(), 300);
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 409) {
+          setShowEmailExistsModal(true);
+        } else {
+          setErrors({ email: `Error ${status ?? 'de red'} al enviar el código. Intenta de nuevo.` });
+        }
+      } finally {
+        setIsLoading(false);
       }
-      setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
-      setOtpAttempts(0); setOtpStatus('idle'); setResendCooldown(0);
-      setStep(2);
-      setTimeout(() => codeRefs.current[0]?.focus(), 300);
     } else if (step === 3) {
       const errs: Record<string, string> = {};
       if (!program)  errs.program  = 'Selecciona tu programa';
       if (!semester) errs.semester = 'Selecciona tu semestre';
       if (!/^\d{10}$/.test(studentId)) errs.studentId = 'El código estudiantil debe tener exactamente 10 dígitos';
       if (Object.keys(errs).length) { setErrors(errs); return; }
-      setErrors({}); setStep(4);
+      setErrors({});
+      setIsLoading(true);
+      try {
+        const career = CAREER_MAP[program] ?? 'SYSTEMS_ENGINEERING';
+        const created = await profileService.createStudent({
+          name: `${firstName} ${lastName}`,
+          email,
+          password,
+          gender,
+          career,
+          semester: parseInt(semester),
+          studentCarnet: studentId,
+          dateOfBirth: birthDate,
+        });
+        localStorage.setItem('patricia_user_id', created.id);
+        setStep(4);
+      } catch {
+        setErrors({ program: 'Error al guardar tu perfil. Intenta de nuevo.' });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
   const handleBack = () => { if (step === 1) navigate('/'); else setStep(s => s - 1); };
@@ -496,20 +533,42 @@ export function RegisterPage() {
       setErrors({ interests: `Selecciona al menos ${MIN_INTERESTS} intereses` }); return;
     }
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    login({
-      id: 'u1',
-      name: `${firstName} ${lastName}`,
-      email,
-      avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200',
-      faculty: program,
-      semester: parseInt(semester),
-      interests: selectedInterests,
-      bio: '', socialImpact: 0, xp: 0, level: 1, activeParches: 0,
-      streak: 0, rankFaculty: 0, monas: [],
-    });
-    setIsLoading(false);
-    navigate('/home');
+    try {
+      const userId = localStorage.getItem('patricia_user_id');
+      if (userId) {
+        try {
+          const catalog = await profileService.getTagsCatalog();
+          const labelToId = new Map<string, string>();
+          for (const cat of catalog) {
+            for (const tag of cat.tags) {
+              labelToId.set(tag.name, tag.id);
+            }
+          }
+          const tagIds = selectedInterests
+            .map(key => { const [, label] = key.split('::'); return labelToId.get(label); })
+            .filter((id): id is string => Boolean(id));
+          await Promise.all(tagIds.map(tagId => profileService.addTag(userId, tagId)));
+        } catch {
+          // non-blocking: tags can be updated from profile settings
+        }
+      }
+      login({
+        id: userId ?? 'u1',
+        name: `${firstName} ${lastName}`,
+        email,
+        avatar: '',
+        faculty: program,
+        semester: parseInt(semester),
+        interests: selectedInterests,
+        bio: '', socialImpact: 0, xp: 0, level: 1, activeParches: 0,
+        streak: 0, rankFaculty: 0, monas: [],
+      });
+      navigate('/home');
+    } catch {
+      setErrors({ interests: 'Error al completar el registro. Intenta de nuevo.' });
+    } finally {
+      setIsLoading(false);
+    }
   };
   const inputBase = `w-full py-3 sm:py-3.5 rounded-xl border transition-all focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 bg-white dark:bg-[#112240]`;
   const inputBorder = (field: string, forceErr?: boolean) => {
@@ -693,11 +752,11 @@ export function RegisterPage() {
                 </div>
                 <div className="mt-8 space-y-3">
                   <motion.button
-                    onClick={handleNext} disabled={!step1Valid} whileTap={step1Valid ? { scale: 0.97 } : {}}
+                    onClick={handleNext} disabled={!step1Valid || isLoading} whileTap={step1Valid && !isLoading ? { scale: 0.97 } : {}}
                     className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all flex items-center justify-center gap-2 shadow-lg"
-                    style={{ background: step1Valid ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'), opacity: step1Valid ? 1 : 0.6, cursor: step1Valid ? 'pointer' : 'not-allowed' }}
+                    style={{ background: step1Valid && !isLoading ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'), opacity: step1Valid && !isLoading ? 1 : 0.6, cursor: step1Valid && !isLoading ? 'pointer' : 'not-allowed' }}
                   >
-                    Continuar <ArrowRight size={18} />
+                    {isLoading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enviando código...</> : <>Continuar <ArrowRight size={18} /></>}
                   </motion.button>
                   <p className="text-center text-sm text-gray-900 dark:text-white">
                     ¿Ya tienes cuenta?{' '}
@@ -862,11 +921,11 @@ export function RegisterPage() {
                   </div>
                 </div>
                 <div className="mt-8">
-                  <motion.button onClick={handleNext} disabled={!step3Valid} whileTap={step3Valid ? { scale: 0.97 } : {}}
+                  <motion.button onClick={handleNext} disabled={!step3Valid || isLoading} whileTap={step3Valid && !isLoading ? { scale: 0.97 } : {}}
                     className="w-full py-4 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg"
-                    style={{ background: step3Valid ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'), opacity: step3Valid ? 1 : 0.6, cursor: step3Valid ? 'pointer' : 'not-allowed' }}
+                    style={{ background: step3Valid && !isLoading ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'), opacity: step3Valid && !isLoading ? 1 : 0.6, cursor: step3Valid && !isLoading ? 'pointer' : 'not-allowed' }}
                   >
-                    Continuar <ArrowRight size={18} />
+                    {isLoading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Guardando perfil...</> : <>Continuar <ArrowRight size={18} /></>}
                   </motion.button>
                 </div>
               </motion.div>

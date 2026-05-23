@@ -1,6 +1,7 @@
 import api from './http';
 import { jwtDecode } from 'jwt-decode';
 import type { User } from '../store/AppContext';
+import { profileService } from './profileService';
 
 export interface LoginPayload {
   email: string;
@@ -51,6 +52,7 @@ export function clearAuth() {
   localStorage.removeItem('patricia-token');
   localStorage.removeItem('patricia-refresh-token');
   localStorage.removeItem('patricia-logged-in');
+  localStorage.removeItem('patricia_user_id');
 }
 
 export const authService = {
@@ -59,6 +61,13 @@ export const authService = {
     localStorage.setItem('patricia-token', data.accessToken);
     localStorage.setItem('patricia-refresh-token', data.refreshToken);
     const user = decodeTokenToUser(data.accessToken);
+    localStorage.setItem('patricia_user_id', user.id);
+    try {
+      const profileUser = await profileService.getUserByEmail(payload.email);
+      localStorage.setItem('patricia_user_id', profileUser.id);
+    } catch {
+      // non-blocking
+    }
     return { tokens: data, user };
   },
 
@@ -71,6 +80,12 @@ export const authService = {
     const { data } = await api.post<TokenResponse>('/auth/verify-otp', { email, otp });
     localStorage.setItem('patricia-token', data.accessToken);
     localStorage.setItem('patricia-refresh-token', data.refreshToken);
+    try {
+      const profileUser = await profileService.getUserByEmail(email);
+      localStorage.setItem('patricia_user_id', profileUser.id);
+    } catch {
+      // non-blocking
+    }
     return data;
   },
 
