@@ -1,86 +1,169 @@
-import api from './http';
-import type { ChatMessage, DirectChat, Parche } from '../types/mockData';
+import axios from 'axios';
 
-export interface SendMessagePayload {
+// Dedicated axios instance for the chat microservice
+const chatApi = axios.create({
+  baseURL: 'https://patricia-chat-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  timeout: 15000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+chatApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('patricia-token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// ─── OpenAPI Types ─────────────────────────────────────────────────────────────
+
+export type ConnectionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'BLOCKED';
+export type MessageType = 'TEXT' | 'IMAGE';
+
+export interface ConnectionResponse {
+  id: string; // uuid
+  requesterId: string; // uuid
+  addresseeId: string; // uuid
+  status: ConnectionStatus;
+  createdAt: string; // date-time
+  updatedAt: string; // date-time
+}
+
+export interface MessageResponse {
+  id: string; // uuid
+  parcheId: string | null; // uuid
+  senderId: string; // uuid
+  receiverId: string | null; // uuid
+  senderName: string;
   content: string;
-  type: 'text' | 'image' | 'system';
-  imageUrl?: string;
+  type: MessageType;
+  imageUrl: string | null;
+  sentAt: string; // date-time
 }
 
-export interface ReportMessagePayload {
-  reason: string;
-  description: string;
+export interface PageableObject {
+  pageNumber: number;
+  pageSize: number;
+  paged: boolean;
+  unpaged: boolean;
+  offset: number;
+  sort: Array<{
+    direction: string;
+    nullHandling: string;
+    ascending: boolean;
+    property: string;
+    ignoreCase: boolean;
+  }>;
 }
+
+export interface PageMessageResponse {
+  totalPages: number;
+  totalElements: number;
+  pageable: PageableObject;
+  numberOfElements: number;
+  first: boolean;
+  last: boolean;
+  size: number;
+  content: MessageResponse[];
+  number: number;
+  sort: Array<{
+    direction: string;
+    nullHandling: string;
+    ascending: boolean;
+    property: string;
+    ignoreCase: boolean;
+  }>;
+  empty: boolean;
+}
+
+// ─── API endpoints ─────────────────────────────────────────────────────────────
 
 export const chatService = {
   /**
-   * Obtiene la lista de chats directos activos del usuario
+   * GET /api/parches/{parcheId}/messages
+   * Retrieves a paginated list of chat messages for a specific Parche.
    */
-  async fetchDirectChats(): Promise<DirectChat[]> {
-    const { data } = await api.get<DirectChat[]>('/chats/direct');
+  async fetchParcheMessages(parcheId: string, page = 0, size = 20): Promise<PageMessageResponse> {
+    const { data } = await chatApi.get<PageMessageResponse>(`/api/parches/${parcheId}/messages`, {
+      params: { page, size }
+    });
     return data;
   },
 
   /**
-   * Obtiene la lista de parches (grupos) a los que se ha unido el usuario
+   * GET /api/friends/{friendId}/messages
+   * Retrieves a paginated list of chat messages for a private chat with a friend.
    */
-  async fetchJoinedParches(): Promise<Parche[]> {
-    const { data } = await api.get<Parche[]>('/parches/joined');
+  async fetchFriendMessages(friendId: string, page = 0, size = 20): Promise<PageMessageResponse> {
+    const { data } = await chatApi.get<PageMessageResponse>(`/api/friends/${friendId}/messages`, {
+      params: { page, size }
+    });
     return data;
   },
 
   /**
-   * Obtiene el historial de mensajes de un chat específico (sea directo o grupal)
-   * @param chatId ID del chat/parche
+   * POST /api/parches/{parcheId}/messages
+   * Sends a new chat message to a specific Parche group.
    */
-  async fetchMessages(chatId: string): Promise<ChatMessage[]> {
-    const { data } = await api.get<ChatMessage[]>(`/chats/${chatId}/messages`);
+  async sendParcheMessage(parcheId: string, content: string, imageUrl?: string): Promise<MessageResponse> {
+    const { data } = await chatApi.post<MessageResponse>(`/api/parches/${parcheId}/messages`, {
+      content,
+      type: imageUrl ? 'IMAGE' : 'TEXT',
+      imageUrl: imageUrl || null
+    });
     return data;
   },
 
   /**
-   * Envía un mensaje nuevo a un chat específico
-   * @param chatId ID del chat/parche
-   * @param payload Datos del mensaje (contenido, tipo, url opcional de imagen)
+   * POST /api/friends/{friendId}/messages
+   * Sends a new private message to a specific friend.
    */
-  async sendMessage(chatId: string, payload: SendMessagePayload): Promise<ChatMessage> {
-    const { data } = await api.post<ChatMessage>(`/chats/${chatId}/messages`, payload);
+  async sendFriendMessage(friendId: string, content: string, imageUrl?: string): Promise<MessageResponse> {
+    const { data } = await chatApi.post<MessageResponse>(`/api/friends/${friendId}/messages`, {
+      content,
+      type: imageUrl ? 'IMAGE' : 'TEXT',
+      imageUrl: imageUrl || null
+    });
     return data;
   },
 
   /**
-   * Silencia o activa las notificaciones de un chat específico
-   * @param chatId ID del chat
-   * @param mute boolean indicando si se silencia o no
+   * POST /api/connections/request
+   * Sends a new friend request to a specified user.
    */
-  async toggleMute(chatId: string, mute: boolean): Promise<{ muted: boolean }> {
-    const { data } = await api.post<{ muted: boolean }>(`/chats/${chatId}/mute`, { mute });
+  async sendConnectionRequest(addresseeId: string): Promise<ConnectionResponse> {
+    const { data } = await chatApi.post<ConnectionResponse>('/api/connections/request', {
+      addresseeId
+    });
     return data;
   },
 
   /**
-   * Vacía el historial de mensajes de un chat para el usuario actual
-   * @param chatId ID del chat
+   * PATCH /api/connections/{connectionId}
+   * Respond to a friend/connection request (ACCEPTED, REJECTED, BLOCKED).
    */
-  async clearChatHistory(chatId: string): Promise<void> {
-    await api.delete(`/chats/${chatId}/messages`);
+  async respondToConnection(connectionId: string, status: ConnectionStatus): Promise<ConnectionResponse> {
+    const { data } = await chatApi.patch<ConnectionResponse>(`/api/connections/${connectionId}`, {
+      status
+    });
+    return data;
   },
 
   /**
-   * Envía un reporte sobre un mensaje inapropiado o problemático
-   * @param messageId ID del mensaje a reportar
-   * @param payload Información del reporte (motivo y descripción adicional)
+   * GET /api/connections
+   * Lists all accepted friend connections for the current user.
    */
-  async reportMessage(messageId: string, payload: ReportMessagePayload): Promise<void> {
-    await api.post(`/messages/${messageId}/report`, payload);
+  async getActiveConnections(): Promise<ConnectionResponse[]> {
+    const { data } = await chatApi.get<ConnectionResponse[]>('/api/connections');
+    return data;
   },
 
   /**
-   * Envía un reporte sobre un parche o grupo completo
-   * @param parcheId ID del parche
-   * @param payload Información del reporte
+   * GET /api/connections/pending
+   * Lists all friend requests awaiting the user's response.
    */
-  async reportParche(parcheId: string, payload: ReportMessagePayload): Promise<void> {
-    await api.post(`/parches/${parcheId}/report`, payload);
-  }
+  async getPendingConnections(): Promise<ConnectionResponse[]> {
+    const { data } = await chatApi.get<ConnectionResponse[]>('/api/connections/pending');
+    return data;
+  },
 };

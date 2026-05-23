@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion } from 'motion/react';
 import { Search, MessageSquare, Users, User } from 'lucide-react';
-import { parches, directChats, chatMessages, TEAL } from '../../types/mockData';
+import { parches, directChats, chatMessages, matchUsers, TEAL } from '../../types/mockData';
 import { EmojiIcon } from '../ui/EmojiIcon';
 import { Avatar } from '../ui/Avatar';
 import { useApp } from '../../store/AppContext';
+import { chatService, ConnectionResponse } from '../../services/chat.service';
 
 export interface ChatSidebarProps {
   activeId?: string;
@@ -16,6 +17,22 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
   const { currentUser, isDark } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'direct' | 'groups'>('all');
+  const [connections, setConnections] = useState<ConnectionResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadConnections = async () => {
+      try {
+        const data = await chatService.getActiveConnections();
+        setConnections(data);
+      } catch (error) {
+        console.error('Error al cargar conexiones:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadConnections();
+  }, []);
 
   // Compute the live messages data dynamically to fix "Reflejo de mensajes"
   const groupChatList = useMemo(() => {
@@ -38,20 +55,31 @@ export function ChatSidebar({ activeId }: ChatSidebarProps) {
   }, [chatMessages]);
 
   const directChatList = useMemo(() => {
-    return directChats.map(dc => {
-      const msgs = chatMessages.filter(m => m.chatId === dc.id);
+    const currentUserId = currentUser?.id || 'u1';
+    return connections.map(conn => {
+      const friendId = conn.requesterId === currentUserId ? conn.addresseeId : conn.requesterId;
+      const matchedProfile = matchUsers.find(u => u.id === friendId) || 
+                             directChats.find(c => c.userId === friendId);
+
+      const msgs = chatMessages.filter(m => m.chatId === friendId);
       const hasMsgs = msgs.length > 0;
       const lastMsg = hasMsgs ? msgs[msgs.length - 1] : null;
 
       return {
-        ...dc,
+        id: friendId,
+        userId: friendId,
+        name: matchedProfile?.name || `Estudiante ${friendId.slice(0, 4)}`,
+        avatar: matchedProfile?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+        faculty: matchedProfile?.faculty || 'Facultad de Ingeniería',
+        lastMessage: lastMsg ? lastMsg.content : (matchedProfile as any)?.lastMessage || 'Conexión aceptada 🤝',
+        lastTime: lastMsg ? lastMsg.timestamp : (matchedProfile as any)?.lastTime || 'Ahora',
+        unread: (matchedProfile as any)?.unread || 0,
+        online: (matchedProfile as any)?.online || false,
+        accentColor: (matchedProfile as any)?.accentColor || '#06B6D4',
         chatType: 'direct' as const,
-        lastMessage: lastMsg ? lastMsg.content : dc.lastMessage,
-        lastTime: lastMsg ? lastMsg.timestamp : dc.lastTime,
-        unread: dc.unread,
       };
     });
-  }, [chatMessages]);
+  }, [chatMessages, connections, currentUser]);
 
   const allChats = useMemo(() => {
     const combined = [...directChatList, ...groupChatList];
