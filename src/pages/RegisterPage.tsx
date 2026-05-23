@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
+import { authService, decodeTokenToUser } from '../services/auth.service';
 import logoImg from '../assets/logo_nuevo_patricia.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
@@ -421,8 +422,13 @@ export function RegisterPage() {
     setCode(next); setOtpStatus('idle');
     codeRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
-  const handleResend = () => {
+  const handleResend = async () => {
     if (resendCooldown > 0) return;
+    try {
+      await authService.resendOtp(email);
+    } catch {
+      // ignore errors on resend silently
+    }
     setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
     setOtpStatus('idle'); setOtpAttempts(0); setResendCooldown(RESEND_COOLDOWN); setErrors({});
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
@@ -439,10 +445,26 @@ export function RegisterPage() {
       setErrors({ code: 'Ingresa los 6 dígitos del código.' }); return;
     }
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setIsLoading(false);
-    setOtpStatus('idle'); setErrors({});
-    setStep(3);
+    try {
+      const tokens = await authService.verifyOtp(email, full);
+      const user = decodeTokenToUser(tokens.accessToken);
+      login(user);
+      setOtpStatus('idle'); setErrors({});
+      setStep(3);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string }; status?: number } };
+      const newAttempts = otpAttempts + 1;
+      setOtpAttempts(newAttempts);
+      if (newAttempts >= MAX_ATTEMPTS) {
+        setOtpStatus('locked');
+        setErrors({ code: 'Has superado el máximo de intentos. Por favor reenvía un nuevo código.' });
+      } else {
+        setOtpStatus('invalid');
+        setErrors({ code: axiosErr.response?.data?.message ?? 'Código incorrecto. Inténtalo de nuevo.' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
   const toggleInterest = (key: string) => {
     setSelectedInterests(prev =>

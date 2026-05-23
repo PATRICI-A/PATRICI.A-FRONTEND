@@ -29,10 +29,18 @@ vi.mock('../services/http', () => ({
   },
 }));
 
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn(() => ({
+    sub: 'u1',
+    email: 'p@test.com',
+    name: 'Patricia',
+    iat: 0,
+    exp: 9999999999,
+  })),
+}));
+
 import { authService } from '../services/auth.service';
 import api from '../services/http';
-
-const mockApi = api as ReturnType<typeof vi.fn>;
 
 describe('authService', () => {
   beforeEach(() => {
@@ -45,11 +53,12 @@ describe('authService', () => {
   });
 
   describe('login', () => {
-    it('calls the correct endpoint and stores the token', async () => {
+    it('calls the correct endpoint and stores the accessToken', async () => {
       const fakeResponse = {
         data: {
-          token: 'abc123',
-          user: { id: 'u1', name: 'Patricia', email: 'p@test.com' },
+          accessToken: 'access123',
+          refreshToken: 'refresh456',
+          tokenType: 'Bearer',
         },
       };
       (api.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce(fakeResponse);
@@ -57,51 +66,64 @@ describe('authService', () => {
       const result = await authService.login({ email: 'p@test.com', password: '1234' });
 
       expect(api.post).toHaveBeenCalledWith('/auth/login', { email: 'p@test.com', password: '1234' });
-      expect(result.token).toBe('abc123');
-      expect(localStorage.getItem('patricia-token')).toBe('abc123');
+      expect(result.tokens.accessToken).toBe('access123');
+      expect(localStorage.getItem('patricia-token')).toBe('access123');
+      expect(localStorage.getItem('patricia-refresh-token')).toBe('refresh456');
     });
   });
 
-  describe('register', () => {
-    it('calls the register endpoint and stores the token', async () => {
+  describe('verifyOtp', () => {
+    it('calls the verify-otp endpoint with email and otp', async () => {
       const fakeResponse = {
         data: {
-          token: 'xyz789',
-          user: { id: 'u2', name: 'New User', email: 'new@test.com' },
+          accessToken: 'access123',
+          refreshToken: 'refresh456',
+          tokenType: 'Bearer',
         },
       };
       (api.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce(fakeResponse);
 
-      const payload = {
-        name: 'New User',
-        email: 'new@test.com',
-        password: 'pass',
-        faculty: 'Ingeniería',
-        semester: 3,
-        interests: ['Programación'],
-      };
-      const result = await authService.register(payload);
+      const result = await authService.verifyOtp('p@test.com', '123456');
 
-      expect(api.post).toHaveBeenCalledWith('/auth/register', payload);
-      expect(result.token).toBe('xyz789');
-      expect(localStorage.getItem('patricia-token')).toBe('xyz789');
+      expect(api.post).toHaveBeenCalledWith('/auth/verify-otp', { email: 'p@test.com', otp: '123456' });
+      expect(result.accessToken).toBe('access123');
+      expect(localStorage.getItem('patricia-token')).toBe('access123');
     });
   });
 
   describe('forgotPassword', () => {
     it('calls the forgot-password endpoint', async () => {
-      (api.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: {} });
+      (api.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: { message: 'ok' } });
       await authService.forgotPassword('p@test.com');
       expect(api.post).toHaveBeenCalledWith('/auth/forgot-password', { email: 'p@test.com' });
     });
   });
 
+  describe('resetPassword', () => {
+    it('calls the reset-password endpoint with all required fields', async () => {
+      (api.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: { message: 'ok' } });
+      await authService.resetPassword('p@test.com', '123456', 'NewPass1!', 'NewPass1!');
+      expect(api.post).toHaveBeenCalledWith('/auth/reset-password', {
+        email: 'p@test.com',
+        code: '123456',
+        newPassword: 'NewPass1!',
+        confirmPassword: 'NewPass1!',
+        passwordsMatch: true,
+      });
+    });
+  });
+
   describe('logout', () => {
-    it('removes token and login flag from localStorage', () => {
+    it('removes tokens from localStorage', async () => {
       localStorage.setItem('patricia-token', 'tok');
+      localStorage.setItem('patricia-refresh-token', 'ref');
       localStorage.setItem('patricia-logged-in', 'true');
-      authService.logout();
+      (api.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: {} });
+
+      await authService.logout();
+
       expect(localStorage.getItem('patricia-token')).toBeNull();
+      expect(localStorage.getItem('patricia-refresh-token')).toBeNull();
       expect(localStorage.getItem('patricia-logged-in')).toBeNull();
     });
   });
