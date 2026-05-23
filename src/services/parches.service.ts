@@ -151,7 +151,7 @@ export async function searchParches(params?: SearchParcheParams): Promise<Parche
     }));
   } catch (error) {
     logFallback('GET /parches', error);
-    return [];
+    throw error;
   }
 }
 
@@ -228,7 +228,7 @@ export async function getMyParches(): Promise<ParcheResponse[]> {
     }));
   } catch (error) {
     logFallback('GET /parches/me', error);
-    return [];
+    throw error;
   }
 }
 
