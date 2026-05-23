@@ -402,7 +402,7 @@ export function HomePage() {
                   }}
                 >
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform"
                     style={{ background: parche.coverColor }}
                   >
                     <EmojiIcon emoji={parche.emoji} size={20} color="white" strokeWidth={2} />
@@ -410,7 +410,7 @@ export function HomePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <h3 className="font-semibold text-gray-800 dark:text-white text-xs truncate">{parche.name}</h3>
-                      {parche.trending && (
+                      {parche.type === 'public' && (
                         <span className="flex items-center gap-0.5 text-[9px] font-bold" style={{ color: ORANGE }}>
                           <Flame size={12} />
                         </span>
@@ -1072,14 +1072,6 @@ export function HomePage() {
           )}
         </div>
       </section>
-      {}
-      <button
-        onClick={() => navigate('/parches/create')}
-        className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all active:scale-95 z-30"
-        style={{ background: GRADIENT }}
-      >
-        <Plus size={28} />
-      </button>
     </div>
   );
 }

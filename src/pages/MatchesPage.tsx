@@ -6,7 +6,7 @@ import patyImg from '../assets/patyMatch.png';
 import {
   Heart, X, Filter, ChevronDown, Sparkles, Users,
   Clock, LocateFixed, CheckCircle2, Navigation, Send,
-  UserPlus, UserCheck, Zap, Search,
+  UserPlus, UserCheck, Zap, Search, ChevronLeft,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { matchUsers, GRADIENT, TEAL, TEAL_GRADIENT, interestOptions } from '../types/mockData';
@@ -148,9 +148,16 @@ export function MatchesPage() {
           : { background: 'rgba(253,252,248,0.92)', borderColor: 'rgba(10,25,47,0.07)', boxShadow: '0 2px 16px rgba(10,25,47,0.07)' }
         }
       >
-        <div className="max-w-2xl mx-auto px-5 pt-4 pb-3">
+        <div className="w-full md:w-4/6 md:mx-auto px-5 pt-4 pb-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-gray-600 dark:text-gray-400"
+                style={{ background: isDark ? 'rgba(17,34,64,0.8)' : 'rgba(10,25,47,0.07)' }}
+              >
+                <ChevronLeft size={20} />
+              </button>
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
                 style={{ background: TEAL_GRADIENT }}
@@ -161,7 +168,7 @@ export function MatchesPage() {
                 <h1 className="text-gray-900 dark:text-white font-black" style={{ fontSize: '1.7rem', lineHeight: 1.1 }}>
                   Perfect Match
                 </h1>
-                <p className="text-xs" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
+                <p className="text-xs" style={{ color: isDark ? '#4A6080' : '#6B7280' }}>
                   {activeTab === 'explore' && 'Encuentra tu tribu universitaria'}
                   {activeTab === 'sent' && `${filteredUsers.length} solicitudes enviadas`}
                   {activeTab === 'received' && `${filteredUsers.length} solicitudes pendientes`}
@@ -196,7 +203,7 @@ export function MatchesPage() {
         </div>
 
         <div className="border-t overflow-x-auto scrollbar-hide" style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}>
-          <div className="flex gap-1.5 px-5 py-2.5 max-w-2xl mx-auto">
+          <div className="flex gap-1.5 px-5 py-2.5 w-full md:w-4/6 md:mx-auto">
             {tabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -225,7 +232,7 @@ export function MatchesPage() {
 
         {(activeTab === 'explore' || activeTab === 'friends') && (
           <div
-            className="border-t px-5 py-2.5 max-w-2xl mx-auto w-full"
+            className="border-t px-5 py-2.5 w-full md:w-4/6 md:mx-auto"
             style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
           >
             <div
@@ -255,7 +262,7 @@ export function MatchesPage() {
 
         {activeTab === 'explore' && (
           <div
-            className="border-t px-5 py-2 flex items-center gap-2 max-w-2xl mx-auto w-full"
+            className="border-t px-5 py-2 flex items-center gap-2 w-full md:w-4/6 md:mx-auto"
             style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
           >
             <button
@@ -300,7 +307,7 @@ export function MatchesPage() {
               className="overflow-hidden border-t"
               style={{ borderColor: isDark ? '#1E3A5F' : 'rgba(10,25,47,0.07)' }}
             >
-              <div className="px-5 py-4 space-y-3 max-w-2xl mx-auto w-full">
+              <div className="px-5 py-4 space-y-3 w-full md:w-4/6 md:mx-auto">
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest mb-2 block" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>
                     Programa
@@ -422,7 +429,7 @@ export function MatchesPage() {
         </AnimatePresence>
       </div>
 
-      <div className="px-4 py-5 pb-28 max-w-2xl mx-auto w-full">
+      <div className="px-4 py-5 pb-28 w-full md:w-4/6 md:mx-auto">
         <AnimatePresence>
           {activeTab === 'explore' && nearbySuggestions.length > 0 && (
             <motion.div
@@ -516,7 +523,7 @@ export function MatchesPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {filteredUsers.map((user, i) => {
               const status = getConnectionStatus(user.id, user.connectionStatus);
               const grad = getCardGradient(user.matchPercent);

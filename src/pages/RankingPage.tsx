@@ -7,10 +7,12 @@ import {
 } from 'lucide-react';
 import {
   rankingUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD, TEAL,
-  type RankingUser,
+  type RankingUser, matchUsers,
 } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
+import { getRanking, getMyRankingPosition } from '../services/gamification.service';
+import { Loader2 } from 'lucide-react';
 const TIER = {
   1: { bg: GOLD_GRADIENT,                                    border: GOLD_LIGHT, label: 'ORO',   height: 130 },
   2: { bg: 'linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)', border: '#CBD5E1', label: 'PLATA', height: 100 },
@@ -203,25 +205,80 @@ const ALL_CAREERS = [
   'Ingeniería en Biotecnología',
 ];
 
+const getAvatarForUser = (name: string): string => {
+  const match = matchUsers.find(u => u.name.toLowerCase().includes(name.toLowerCase()));
+  return match?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=150';
+};
+
 export function RankingPage() {
   const navigate = useNavigate();
-  const { isDark } = useApp();
+  const { isDark, currentUser } = useApp();
   const [tab, setTab]                 = useState<RankTab>('xp');
   const [facultyFilter, setFacultyFilter] = useState('');
 
+  const [rankingList, setRankingList] = useState<RankingUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [myPosition, setMyPosition] = useState<number | null>(null);
+
+  const fetchRanking = () => {
+    setLoading(true);
+    const apiPeriod = tab === 'xp' ? 'SEMESTER' : 'WEEKLY';
+    Promise.all([
+      getRanking(apiPeriod),
+      getMyRankingPosition(apiPeriod)
+    ]).then(([apiRank, apiPos]) => {
+      const mapped = apiRank.map((apiUser, idx) => {
+        const isMe = apiUser.studentId === currentUser?.id || apiUser.studentId === 'u1';
+        return {
+          id: apiUser.studentId,
+          name: apiUser.displayName,
+          avatar: getAvatarForUser(apiUser.displayName),
+          faculty: apiUser.levelName || 'Ingeniería de Sistemas',
+          level: 2,
+          xp: apiUser.totalMonas * 100,
+          parchesCount: apiUser.monasThisPeriod,
+          streak: 3 + (idx % 4),
+          isCurrentUser: isMe
+        } as RankingUser;
+      });
+      setRankingList(mapped);
+      setMyPosition(apiPos.position);
+    }).catch(err => {
+      console.error("Error fetching ranking:", err);
+    }).finally(() => {
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    fetchRanking();
+  }, [tab]);
+
   const sorted = useMemo(() => {
-    let list = [...rankingUsers];
-    if (facultyFilter) list = list.filter(u => u.faculty === facultyFilter);
+    let list = [...rankingList];
+    if (facultyFilter) {
+      list = list.filter(u => u.faculty.toLowerCase().includes(facultyFilter.toLowerCase()));
+    }
     return list.sort((a, b) => getRaw(b, tab) - getRaw(a, tab));
-  }, [tab, facultyFilter]);
+  }, [rankingList, tab, facultyFilter]);
 
   const top3   = sorted.slice(0, 3);
   const rest   = sorted.slice(3);
-  const meRank = sorted.findIndex(u => u.isCurrentUser) + 1;
+  const meRank = myPosition || sorted.findIndex(u => u.isCurrentUser) + 1;
   const meData = sorted.find(u => u.isCurrentUser);
   const podiumOrder: [RankingUser, 1 | 2 | 3][] = top3.length >= 3
     ? [[top3[1], 2], [top3[0], 1], [top3[2], 3]]
     : top3.map((u, i) => [u, (i + 1) as 1 | 2 | 3]);
+
+  if (loading && rankingList.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center relative bg-[#050D1A]">
+        <DoodleBackground isDark opacity={0.6} />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500 mb-4 animate-pulse" />
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Cargando Ranking...</p>
+      </div>
+    );
+  }
   return (
     <div
       className="min-h-screen pb-36 relative overflow-x-hidden"

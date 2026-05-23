@@ -50,6 +50,8 @@ interface AppContextType {
   currentUser: User | null;
   login: (user: User) => void;
   logout: () => void;
+  updateUser: (patch: Partial<User>) => void;
+  addXP: (amount: number) => void;
   notifications: number;
   notificationsList: Notification[];
   setNotificationsList: React.Dispatch<React.SetStateAction<Notification[]>>;
@@ -81,6 +83,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(mockCurrentUser);
+  // Pre-seed localStorage so the hangout service interceptor can read the studentId
+  if (!localStorage.getItem('patricia-user')) {
+    localStorage.setItem('patricia-user', JSON.stringify(mockCurrentUser));
+  }
   const [notificationsList, setNotificationsList] = useState<Notification[]>(initialNotifications);
   const [geo, setGeoState] = useState<GeoState>(GEO_INITIAL);
   useEffect(() => {
@@ -116,12 +122,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(true);
     setCurrentUser(user);
     localStorage.setItem('patricia-logged-in', 'true');
+    localStorage.setItem('patricia-user', JSON.stringify(user));
   };
   const logout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     localStorage.removeItem('patricia-logged-in');
+    localStorage.removeItem('patricia-user');
   };
+  const updateUser = useCallback((patch: Partial<User>) => {
+    setCurrentUser(prev => prev ? { ...prev, ...patch } : prev);
+  }, []);
+  const addXP = useCallback((amount: number) => {
+    setCurrentUser(prev => {
+      if (!prev) return prev;
+      const newXP = prev.xp + amount;
+      const newLevel = Math.floor(newXP / 250) + 1;
+      return { ...prev, xp: newXP, level: newLevel };
+    });
+  }, []);
   const updateGeo = useCallback((patch: Partial<GeoState>) => {
     setGeoState(prev => ({ ...prev, ...patch }));
   }, []);
@@ -141,7 +160,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         isDark, toggleTheme,
-        isLoggedIn, currentUser, login, logout,
+        isLoggedIn, currentUser, login, logout, updateUser, addXP,
         notifications: unreadNotificationsCount,
         notificationsList,
         setNotificationsList,
