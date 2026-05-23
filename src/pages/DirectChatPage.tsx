@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Send, Smile, Plus, Phone, MoreVertical,
@@ -8,7 +8,7 @@ import {
   UserCheck, Search, AlertCircle, Eraser, User, Flag,
   ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
-import { directChats, matchUsers, GOLD_LIGHT } from '../types/mockData';
+import { chatMessages, directChats, matchUsers, GOLD_LIGHT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { chatService, type MessageResponse } from '../services/chat.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
@@ -21,11 +21,56 @@ const CONTEXT_ACTIONS = [
   { icon: Eraser,    label: 'Vaciar chat',             color: '#EF4444', action: 'clear' },
   { icon: AlertCircle, label: 'Reportar chat',         color: '#DC2626', action: 'report' },
 ];
+
+const getDemoStorageKey = (friendId: string) => `patricia-demo-direct-chat-${friendId}`;
+
+function toMockMessageResponse(
+  friendId: string,
+  currentUserId: string,
+  senderName: string,
+  content: string,
+  sentAt: string,
+): MessageResponse {
+  return {
+    id: `mock-${friendId}-${sentAt}-${Math.random().toString(36).slice(2, 8)}`,
+    parcheId: null,
+    senderId: currentUserId,
+    receiverId: friendId,
+    senderName,
+    content,
+    type: 'TEXT',
+    imageUrl: null,
+    sentAt,
+  };
+}
+
+function getSeedMessages(friendId: string, currentUserId: string, currentUserName: string): MessageResponse[] {
+  const demoChat = directChats.find(c => c.userId === friendId);
+  const demoChatId = demoChat?.id;
+  const baseTime = Date.now() - 1000 * 60 * 18;
+
+  return chatMessages
+    .filter(message => message.chatId === demoChatId)
+    .map((message, index) => ({
+      id: `seed-${message.id}`,
+      parcheId: null,
+      senderId: message.senderId === 'u1' ? currentUserId : message.senderId,
+      receiverId: friendId,
+      senderName: message.senderId === 'u1' ? currentUserName : message.sender,
+      content: message.content,
+      type: message.type === 'image' ? 'IMAGE' : 'TEXT',
+      imageUrl: message.imageUrl || null,
+      sentAt: new Date(baseTime + index * 1000 * 90).toISOString(),
+    }));
+}
+
 export function DirectChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { currentUser, isDark } = useApp();
   const friendId = id || 'u2';
+  const isDemoMode = searchParams.get('demo') === '1';
   const matchedProfile = matchUsers.find(u => u.id === friendId) || 
                          directChats.find(c => c.userId === friendId) || 
                          directChats[0];
@@ -52,6 +97,7 @@ export function DirectChatPage() {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [usingMockChat, setUsingMockChat] = useState(isDemoMode);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -67,12 +113,46 @@ export function DirectChatPage() {
     return matched?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50';
   };
 
+  const loadMockMessages = () => {
+    const storageKey = getDemoStorageKey(friendId);
+    const currentUserId = currentUser?.id || 'u1';
+    const currentUserName = currentUser?.name || 'Tú';
+
+    try {
+      const stored = sessionStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as MessageResponse[];
+        setMessages(parsed);
+        return;
+      }
+    } catch {
+      // ignore malformed demo cache
+    }
+
+    const seedMessages = getSeedMessages(friendId, currentUserId, currentUserName);
+    setMessages(seedMessages);
+    sessionStorage.setItem(storageKey, JSON.stringify(seedMessages));
+  };
+
+  const persistMockMessages = (nextMessages: MessageResponse[]) => {
+    sessionStorage.setItem(getDemoStorageKey(friendId), JSON.stringify(nextMessages));
+  };
+
   const loadMessages = async (targetFriendId: string) => {
+    if (isDemoMode) {
+      setUsingMockChat(true);
+      loadMockMessages();
+      return;
+    }
+
     try {
       const response = await chatService.fetchFriendMessages(targetFriendId, 0, 100);
       setMessages(response.content);
+      setUsingMockChat(false);
     } catch (error) {
       console.error('Error al cargar mensajes del chat privado:', error);
+      setUsingMockChat(true);
+      loadMockMessages();
     }
   };
 
@@ -93,6 +173,50 @@ export function DirectChatPage() {
     const trimmedInput = input.trim();
     if (!trimmedInput || !friendId || isSending) return;
 
+    const currentUserId = currentUser?.id || 'u1';
+    const currentUserName = currentUser?.name || 'Tú';
+
+    if (usingMockChat) {
+      setIsSending(true);
+
+      const outgoingMessage = toMockMessageResponse(
+        friendId,
+        currentUserId,
+        currentUserName,
+        trimmedInput,
+        new Date().toISOString(),
+      );
+
+      const nextMessages = [...messages, outgoingMessage];
+      setMessages(nextMessages);
+      persistMockMessages(nextMessages);
+      setInput('');
+      setShowEmojis(false);
+
+      window.setTimeout(() => {
+        const autoReply: MessageResponse = {
+          id: `mock-reply-${Date.now()}`,
+          parcheId: null,
+          senderId: friendId,
+          receiverId: currentUserId,
+          senderName: chat.name,
+          content: `Demo recibido: ${trimmedInput}`,
+          type: 'TEXT',
+          imageUrl: null,
+          sentAt: new Date().toISOString(),
+        };
+
+        setMessages(prev => {
+          const updated = [...prev, autoReply];
+          persistMockMessages(updated);
+          return updated;
+        });
+      }, 900);
+
+      setIsSending(false);
+      return;
+    }
+
     try {
       setIsSending(true);
       await chatService.sendFriendMessage(friendId, trimmedInput);
@@ -101,6 +225,23 @@ export function DirectChatPage() {
       setShowEmojis(false);
     } catch (error) {
       console.error('Error al enviar mensaje privado:', error);
+      setUsingMockChat(true);
+
+      const fallbackMessage = toMockMessageResponse(
+        friendId,
+        currentUserId,
+        currentUserName,
+        trimmedInput,
+        new Date().toISOString(),
+      );
+
+      setMessages(prev => {
+        const updated = [...prev, fallbackMessage];
+        persistMockMessages(updated);
+        return updated;
+      });
+      setInput('');
+      setShowEmojis(false);
     } finally {
       setIsSending(false);
     }
@@ -115,7 +256,12 @@ export function DirectChatPage() {
         );
         break;
       case 'clear':
-        if (window.confirm('¿Vaciar todos los mensajes de este chat?')) setMessages([]);
+        if (window.confirm('¿Vaciar todos los mensajes de este chat?')) {
+          setMessages([]);
+          if (usingMockChat) {
+            persistMockMessages([]);
+          }
+        }
         break;
       case 'report':
         alert('¡Reporte enviado! El equipo de patrici.a revisará este chat. 🛡️');
@@ -186,6 +332,11 @@ export function DirectChatPage() {
 
         {/* Right Side: Active direct chat conversation */}
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        {usingMockChat && (
+          <div className="px-4 py-2 text-[11px] font-semibold text-center border-b bg-cyan-50 text-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-300 dark:border-cyan-900/40 border-cyan-200">
+            Modo demo activo: este chat es una simulacion local para grabacion.
+          </div>
+        )}
         <div
         className="px-4 py-3 flex items-center gap-3 shadow-sm border-b backdrop-blur-md"
         style={{
