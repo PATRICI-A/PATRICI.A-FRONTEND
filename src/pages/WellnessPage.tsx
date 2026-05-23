@@ -207,7 +207,7 @@ function ResourceCard({ resource, isDark, image }: { resource: WellnessResource;
 
 export function WellnessPage() {
   const navigate = useNavigate();
-  const { isDark } = useApp();
+  const { isDark, addXP } = useApp();
   const [activeTab, setActiveTab] = useState<CategoryKey>('ALL');
   const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
@@ -239,6 +239,8 @@ export function WellnessPage() {
     setShowSurveyModal(true);
   };
 
+  const XP_REWARD = 100;
+
   const handleConfirmAndSendSurvey = () => {
     const recs = getRecommendations(surveyAnswers);
     setRecommendations(recs);
@@ -246,8 +248,9 @@ export function WellnessPage() {
     localStorage.setItem('patricia_survey_completed', 'true');
     localStorage.setItem('patricia_survey_answers', JSON.stringify(surveyAnswers));
     localStorage.setItem('patricia_survey_recommendations', JSON.stringify(recs));
-    setSuccessMessage('Encuesta enviada con éxito. ¡Gracias!');
-    setTimeout(() => { setSuccessMessage(''); setShowSurveyModal(false); setActiveTab('RECOMMENDATIONS'); }, 2000);
+    addXP(XP_REWARD);
+    setSuccessMessage(`¡+${XP_REWARD} XP! Encuesta enviada con éxito.`);
+    setTimeout(() => { setSuccessMessage(''); setShowSurveyModal(false); setActiveTab('RECOMMENDATIONS'); }, 2500);
   };
 
   const handleIncidentSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
@@ -407,21 +410,25 @@ export function WellnessPage() {
 
         {/* Energía del campus */}
         <div
-          className="rounded-[2rem] p-5 relative overflow-hidden"
+          className="rounded-[2rem] p-5 relative"
           style={isDark ? {
             background: 'linear-gradient(135deg, #0A192F 0%, #0D2C54 60%, #081B33 100%)',
             border: '1.5px solid rgba(6,182,212,0.3)',
             boxShadow: '0 12px 32px rgba(6,182,212,0.12), 0 4px 12px rgba(0,0,0,0.4)',
+            overflow: 'hidden',
+            transform: 'translateZ(0)',
           } : {
             background: 'linear-gradient(135deg, #F0FDFA 0%, #E0F2FE 60%, #E0E7FF 100%)',
             border: '1.5px solid rgba(14,165,233,0.22)',
             boxShadow: '0 8px 24px rgba(6,182,212,0.1), 0 2px 8px rgba(0,0,0,0.04)',
+            overflow: 'hidden',
+            transform: 'translateZ(0)',
           }}
         >
           <img
             src={energiaCampusImg}
             alt=""
-            className="absolute bottom-0 right-0 h-20 sm:h-28 md:h-32 object-contain object-bottom pointer-events-none select-none"
+            className="absolute bottom-0 right-0 h-20 sm:h-24 object-contain object-bottom pointer-events-none select-none"
             style={{ opacity: 0.9 }}
           />
           <div className="flex items-center gap-4">
@@ -588,7 +595,7 @@ export function WellnessPage() {
                   </button>
                 </div>
               )}
-              {filtered.map(r => <ResourceCard key={r.id} resource={r} isDark={isDark} />)}
+              {filtered.map(r => <ResourceCard key={r.id} resource={r} isDark={isDark} image={RESOURCE_IMAGES[r.id]} />)}
             </motion.div>
           )}
         </AnimatePresence>
@@ -633,12 +640,21 @@ export function WellnessPage() {
               <div className="px-5 pt-4 pb-5 overflow-y-auto scrollbar-hide flex-1">
 
                 {successMessage ? (
-                  <div className="flex flex-col items-center justify-center py-10">
+                  <div className="flex flex-col items-center justify-center py-10 gap-3">
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}
-                      className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center mb-4">
+                      className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
                       <CheckCircle2 size={40} className="text-emerald-500" />
                     </motion.div>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white text-center">{successMessage}</h3>
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white text-center">¡Encuesta completada!</h3>
+                    <motion.div
+                      initial={{ scale: 0, y: 10 }} animate={{ scale: 1, y: 0 }}
+                      transition={{ type: 'spring', delay: 0.2 }}
+                      className="px-5 py-2.5 rounded-full font-black text-white text-base"
+                      style={{ background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}
+                    >
+                      +{XP_REWARD} XP ✨
+                    </motion.div>
+                    <p className="text-sm text-gray-400 text-center">Tus recomendaciones personalizadas están listas.</p>
                   </div>
 
                 ) : surveyStep === 'WELCOME' ? (

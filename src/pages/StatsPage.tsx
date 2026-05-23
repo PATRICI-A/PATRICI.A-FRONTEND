@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { TrendingUp, Users, Calendar, MessageCircle, Star, Zap, Award, ChevronUp } from 'lucide-react';
@@ -6,7 +6,8 @@ import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Line
 import { useApp } from '../store/AppContext';
 import { GRADIENT, GOLD_GRADIENT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { usePageHeader } from '../store/PageHeaderContext';
-import { useEffect } from 'react';
+import { getStudentDashboard, getSocialIndicators, getInteractionAnalytics } from '../services/analytics.service';
+import type { StudentDashboardResponse, SocialIndicatorsResponse, InteractionAnalyticsResponse } from '../services/analytics.service';
 
 const DATA_BY_PERIOD = {
   semana: {
@@ -93,22 +94,75 @@ const DATA_BY_PERIOD = {
 
 const PERIODS = ['semana', 'mes', 'semestre'] as const;
 
+const WEEK_RANGE: Record<'semana' | 'mes' | 'semestre', number> = { semana: 0, mes: 4, semestre: 16 };
+
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: 'L', TUESDAY: 'M', WEDNESDAY: 'X', THURSDAY: 'J',
+  FRIDAY: 'V', SATURDAY: 'S', SUNDAY: 'D',
+};
+
 export function StatsPage() {
   const navigate = useNavigate();
   const { currentUser, isDark } = useApp();
   const { setHeader } = usePageHeader();
   const [period, setPeriod] = useState<'semana' | 'mes' | 'semestre'>('mes');
 
+  const [dashboard, setDashboard] = useState<StudentDashboardResponse | null>(null);
+  const [social, setSocial] = useState<SocialIndicatorsResponse | null>(null);
+  const [interactions, setInteractions] = useState<InteractionAnalyticsResponse | null>(null);
+
   useEffect(() => {
     setHeader({ title: '🏆 Estadísticas', subtitle: 'Tu impacto en la comunidad', showBack: true });
     return () => setHeader(null);
   }, [setHeader]);
 
+  useEffect(() => {
+    getStudentDashboard().then(setDashboard).catch(() => {});
+    getInteractionAnalytics().then(setInteractions).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getSocialIndicators(WEEK_RANGE[period]).then(setSocial).catch(() => {});
+  }, [period]);
+
   if (!currentUser) return null;
 
+  // Datos reales si están disponibles, de lo contrario mock
   const d = DATA_BY_PERIOD[period];
-  const maxActivity = Math.max(...d.activity.map(a => a.value), 1);
-  const maxCategory = Math.max(...d.categories.map(c => c.count), 1);
+
+  const activityData = dashboard?.weeklyActivity
+    ? Object.entries(dashboard.weeklyActivity).map(([day, value]) => ({ day: DAY_LABELS[day] ?? day, value: value ?? 0 }))
+    : d.activity;
+
+  const categoryData = interactions?.interactionSummary
+    ? Object.entries(interactions.interactionSummary).map(([name, count], i) => ({
+        name, count, color: ['#3B82F6', PINK, '#10B981', ORANGE, '#8B5CF6'][i % 5],
+      }))
+    : d.categories;
+
+  const radarData = social?.socialAffinity
+    ? Object.entries(social.socialAffinity).map(([subject, value]) => ({ subject, value: Math.round(value * 100) }))
+    : d.radar;
+
+  const achievements = dashboard?.recentAchievements?.length
+    ? dashboard.recentAchievements.map(a => ({
+        emoji: '🏆', title: a.name, desc: a.description, xp: a.xpReward, color: ORANGE,
+      }))
+    : [
+        { emoji: '🏆', title: 'Primer Parche', desc: 'Creaste tu primer parche', xp: 50, color: ORANGE },
+        { emoji: '🤝', title: 'Networker', desc: 'Conectaste con 10 compañeros', xp: 75, color: PINK },
+        { emoji: '⭐', title: 'Explorador', desc: 'Visitaste 5 zonas del campus', xp: 60, color: TEAL },
+      ];
+
+  const statsGrid = [
+    { icon: Users,         value: String(dashboard?.patchesAttended ?? d.stats[1].value), label: 'Parches asistidos', delta: '', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+    { icon: Calendar,      value: String(dashboard?.achievementsEarned ?? d.stats[0].value), label: 'Logros obtenidos', delta: '', color: PINK, bg: 'rgba(236,72,153,0.12)' },
+    { icon: MessageCircle, value: String(interactions?.totalInteractions ?? d.stats[2].value), label: 'Interacciones', delta: '', color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { icon: Star,          value: dashboard?.participationLevel ?? d.stats[3].value, label: 'Nivel de participación', delta: '', color: ORANGE, bg: 'rgba(251,146,60,0.12)' },
+  ];
+
+  const maxActivity = Math.max(...activityData.map(a => a.value), 1);
+  const maxCategory = Math.max(...categoryData.map(c => c.count), 1);
 
   const cardBg = isDark
     ? { background: '#112240', border: '1px solid rgba(30,58,95,0.4)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }
@@ -143,7 +197,7 @@ export function StatsPage() {
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
-            {d.stats.map((stat, i) => (
+            {statsGrid.map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 16 }}
@@ -218,7 +272,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Actividad</p>
             <p className="text-xs text-gray-400 mb-4">Interacciones por {period === 'semana' ? 'día' : period === 'mes' ? 'semana' : 'mes'}</p>
             <div className="flex items-end gap-2 h-24">
-              {d.activity.map((item, i) => (
+              {activityData.map((item, i) => (
                 <div key={item.day} className="flex-1 flex flex-col items-center gap-1.5">
                   <motion.div
                     className="w-full rounded-lg"
@@ -248,7 +302,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Crecimiento de red</p>
             <p className="text-xs text-gray-400 mb-4">Parches y conexiones</p>
             <ResponsiveContainer width="100%" height={150}>
-              <LineChart data={d.growth}>
+              <LineChart data={d.growth /* social indicators growth — mismo shape */}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(30,58,95,0.4)' : '#F3F4F6'} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                 <YAxis hide />
@@ -290,7 +344,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Perfil Social</p>
             <p className="text-xs text-gray-400 mb-2">Tus dimensiones universitarias</p>
             <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={[...d.radar]}>
+              <RadarChart data={[...radarData]}>
                 <PolarGrid stroke={isDark ? 'rgba(30,58,95,0.5)' : '#F3F4F6'} />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: isDark ? '#4A6080' : '#9CA3AF' }} />
                 <Radar name="Perfil" dataKey="value" stroke={PINK} fill={PINK} fillOpacity={0.18} strokeWidth={2} />
@@ -309,7 +363,7 @@ export function StatsPage() {
           >
             <p className="font-bold text-gray-900 dark:text-white mb-4">Parches por categoría</p>
             <div className="space-y-3.5">
-              {d.categories.map((cat, i) => (
+              {categoryData.map((cat, i) => (
                 <div key={cat.name} className="flex items-center gap-3">
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">{cat.name}</span>
                   <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(30,58,95,0.5)' : '#F3F4F6' }}>
@@ -340,11 +394,7 @@ export function StatsPage() {
               <p className="font-bold text-gray-900 dark:text-white">Logros recientes</p>
             </div>
             <div className="space-y-3">
-              {[
-                { emoji: '🏆', title: 'Primer Parche', desc: 'Creaste tu primer parche', xp: 50, color: ORANGE },
-                { emoji: '🤝', title: 'Networker', desc: 'Conectaste con 10 compañeros', xp: 75, color: PINK },
-                { emoji: '⭐', title: 'Explorador', desc: 'Visitaste 5 zonas del campus', xp: 60, color: TEAL },
-              ].map((a, i) => (
+              {achievements.map((a, i) => (
                 <div key={a.title} className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
