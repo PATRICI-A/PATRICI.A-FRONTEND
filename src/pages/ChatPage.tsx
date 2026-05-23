@@ -69,7 +69,7 @@ export function ChatPage() {
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
 
   const parche = apiParche
-    ? { id: apiParche.id, name: apiParche.name, emoji: apiParche.emoji, coverColor: apiParche.coverColor, members: apiParche.membersCount }
+    ? { id: apiParche.id, name: apiParche.name, emoji: apiParche.emoji, coverColor: apiParche.coverColor, members: apiParche.membersCount, memberAvatars: [] as string[], location: '', time: '' }
     : mockParche;
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
 
