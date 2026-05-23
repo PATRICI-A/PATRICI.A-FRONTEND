@@ -176,6 +176,7 @@ export interface CafeteriaPrize {
   name: string;
   emoji: string;
   color: string;
+  pct?: number;
 }
 
 export const CAFETERIA_PRIZES: CafeteriaPrize[] = [

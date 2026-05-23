@@ -221,7 +221,7 @@ export function HomePage() {
                 </div>
                 {nextMona && (
                   <p className="text-xs mt-2" style={{ color: isDark ? '#6B7280' : 'rgba(10,25,47,0.45)' }}>
-                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.condition}
+                    Próxima: <span style={{ color: GOLD_LIGHT }}>{nextMona.name}</span> — {nextMona.description}
                   </p>
                 )}
               </div>

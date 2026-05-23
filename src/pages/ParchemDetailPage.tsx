@@ -274,7 +274,7 @@ export function ParchemDetailPage() {
           {}
           <div className="absolute top-4 left-1/2 -translate-x-1/2">
             <span className="px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1.5">
-              {parche.type === 'private'
+              {parche.type === 'PRIVATE'
                 ? <><Lock size={10} /> Privado</>
                 : <><Globe size={10} /> Público</>}
             </span>
@@ -688,7 +688,7 @@ export function ParchemDetailPage() {
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Antes de salir, debes transferir el liderazgo del parche a otro miembro.</p>
               </div>
               <div className="space-y-2 mb-5 max-h-48 overflow-y-auto">
-                {matchUsers.slice(0, Math.min(4, parche.members)).filter(m => m.id !== currentUser?.id).map(member => (
+                {matchUsers.slice(0, Math.min(4, parche.members.length)).filter(m => m.id !== currentUser?.id).map(member => (
                   <button key={member.id} onClick={() => { setJoined(false); setShowTransferModal(false); navigate('/parches'); }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-left transition-colors">
                     <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
                     <div>

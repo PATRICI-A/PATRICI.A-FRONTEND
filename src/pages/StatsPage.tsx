@@ -302,7 +302,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Crecimiento de red</p>
             <p className="text-xs text-gray-400 mb-4">Parches y conexiones</p>
             <ResponsiveContainer width="100%" height={150}>
-              <LineChart data={d.growth /* social indicators growth — mismo shape */}>
+              <LineChart data={[...d.growth] /* social indicators growth — mismo shape */}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(30,58,95,0.4)' : '#F3F4F6'} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                 <YAxis hide />
