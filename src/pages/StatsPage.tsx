@@ -8,6 +8,8 @@ import { GRADIENT, GOLD_GRADIENT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { usePageHeader } from '../store/PageHeaderContext';
 import { getStudentDashboard, getSocialIndicators, getInteractionAnalytics } from '../services/analytics.service';
 import type { StudentDashboardResponse, SocialIndicatorsResponse, InteractionAnalyticsResponse } from '../services/analytics.service';
+import { getGamificationStats, getUnlockedBadges, getBadgeProgress } from '../services/gamification.service';
+import type { UserStatsResponse, EarnedBadgeResponse, BadgeProgressResponse } from '../services/gamification.service';
 
 const DATA_BY_PERIOD = {
   semana: {
@@ -110,6 +112,10 @@ export function StatsPage() {
   const [dashboard, setDashboard] = useState<StudentDashboardResponse | null>(null);
   const [social, setSocial] = useState<SocialIndicatorsResponse | null>(null);
   const [interactions, setInteractions] = useState<InteractionAnalyticsResponse | null>(null);
+  
+  const [gamificationStats, setGamificationStats] = useState<UserStatsResponse | null>(null);
+  const [unlockedBadges, setUnlockedBadges] = useState<EarnedBadgeResponse[]>([]);
+  const [badgeProgress, setBadgeProgress] = useState<BadgeProgressResponse[]>([]);
 
   useEffect(() => {
     setHeader({ title: '🏆 Estadísticas', subtitle: 'Tu impacto en la comunidad', showBack: true });
@@ -119,6 +125,9 @@ export function StatsPage() {
   useEffect(() => {
     getStudentDashboard().then(setDashboard).catch(() => {});
     getInteractionAnalytics().then(setInteractions).catch(() => {});
+    getGamificationStats().then(setGamificationStats).catch(() => {});
+    getUnlockedBadges().then(setUnlockedBadges).catch(() => {});
+    getBadgeProgress().then(setBadgeProgress).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -144,7 +153,15 @@ export function StatsPage() {
     ? Object.entries(social.socialAffinity).map(([subject, value]) => ({ subject, value: Math.round(value * 100) }))
     : d.radar;
 
-  const achievements = dashboard?.recentAchievements?.length
+  const achievements = unlockedBadges.length > 0
+    ? unlockedBadges.map(b => ({
+        emoji: '🏆',
+        title: b.badgeName,
+        desc: `Desbloqueada el ${b.earnedAt ? b.earnedAt.split('T')[0] : new Date().toISOString().split('T')[0]}`,
+        xp: b.xpAwarded || 100,
+        color: ORANGE
+      }))
+    : dashboard?.recentAchievements?.length
     ? dashboard.recentAchievements.map(a => ({
         emoji: '🏆', title: a.name, desc: a.description, xp: a.xpReward, color: ORANGE,
       }))
@@ -168,7 +185,11 @@ export function StatsPage() {
     ? { background: '#112240', border: '1px solid rgba(30,58,95,0.4)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }
     : { background: 'rgba(253,252,248,0.95)', border: '1px solid rgba(10,25,47,0.07)', boxShadow: '0 4px 24px rgba(10,25,47,0.08)' };
 
-  const xpPercent = Math.min((currentUser.xp / 5000) * 100, 100);
+  const xp = gamificationStats ? gamificationStats.totalXp : currentUser.xp;
+  const level = gamificationStats ? gamificationStats.nivel : currentUser.level;
+  const xpInCurrentLevel = xp % 5000;
+  const xpPercent = Math.min((xpInCurrentLevel / 5000) * 100, 100);
+  const xpToNextLevel = 5000 - xpInCurrentLevel;
 
   return (
     <div className="w-full md:w-4/6 md:mx-auto min-h-screen pb-10">
@@ -232,14 +253,14 @@ export function StatsPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>Nivel actual</p>
-                <p className="font-black text-3xl text-gray-900 dark:text-white leading-none">Nivel {currentUser.level}</p>
-                <p className="text-xs text-gray-400 mt-1">{currentUser.xp.toLocaleString()} / 5,000 XP</p>
+                <p className="font-black text-3xl text-gray-900 dark:text-white leading-none">Nivel {level}</p>
+                <p className="text-xs text-gray-400 mt-1">{xp.toLocaleString()} / 5,000 XP</p>
               </div>
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg"
                 style={{ background: GOLD_GRADIENT }}
               >
-                {currentUser.level}
+                {level}
               </div>
             </div>
             <div className="h-3 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(30,58,95,0.5)' : 'rgba(10,25,47,0.08)' }}>
@@ -253,9 +274,9 @@ export function StatsPage() {
               />
             </div>
             <div className="flex justify-between mt-2">
-              <span className="text-[11px] text-gray-400">Nivel {currentUser.level}</span>
+              <span className="text-[11px] text-gray-400">Nivel {level}</span>
               <span className="text-[11px] font-bold" style={{ color: isDark ? '#FBBF24' : '#D97706' }}>
-                {5000 - currentUser.xp} XP para subir
+                {xpToNextLevel} XP para subir
               </span>
             </div>
           </motion.div>
