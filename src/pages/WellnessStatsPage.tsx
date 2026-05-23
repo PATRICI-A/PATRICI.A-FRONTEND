@@ -240,9 +240,9 @@ export function WellnessStatsPage() {
             <div className="text-center py-4">
               <div className="text-3xl font-black mb-1" style={{ color: currentTendencia.color }}>{currentTendencia.label}</div>
               <p className="text-xs" style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                {tendenciaSemanal === 'SUBIENDO' && 'La actividad estudiantil está en aumento'}
-                {tendenciaSemanal === 'ESTABLE' && 'La actividad se mantiene estable'}
-                {tendenciaSemanal === 'BAJANDO' && 'Se detecta una disminución en la actividad'}
+                {(tendenciaSemanal as string) === 'SUBIENDO' && 'La actividad estudiantil está en aumento'}
+                {(tendenciaSemanal as string) === 'ESTABLE' && 'La actividad se mantiene estable'}
+                {(tendenciaSemanal as string) === 'BAJANDO' && 'Se detecta una disminución en la actividad'}
               </p>
             </div>
           </motion.div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { TrendingUp, Users, Calendar, MessageCircle, Star, Zap, Award, ChevronUp } from 'lucide-react';
@@ -6,7 +6,10 @@ import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Line
 import { useApp } from '../store/AppContext';
 import { GRADIENT, GOLD_GRADIENT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { usePageHeader } from '../store/PageHeaderContext';
-import { useEffect } from 'react';
+import { getStudentDashboard, getSocialIndicators, getInteractionAnalytics } from '../services/analytics.service';
+import type { StudentDashboardResponse, SocialIndicatorsResponse, InteractionAnalyticsResponse } from '../services/analytics.service';
+import { getGamificationStats, getUnlockedBadges, getBadgeProgress } from '../services/gamification.service';
+import type { UserStatsResponse, EarnedBadgeResponse, BadgeProgressResponse } from '../services/gamification.service';
 
 const DATA_BY_PERIOD = {
   semana: {
@@ -93,28 +96,100 @@ const DATA_BY_PERIOD = {
 
 const PERIODS = ['semana', 'mes', 'semestre'] as const;
 
+const WEEK_RANGE: Record<'semana' | 'mes' | 'semestre', number> = { semana: 0, mes: 4, semestre: 16 };
+
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: 'L', TUESDAY: 'M', WEDNESDAY: 'X', THURSDAY: 'J',
+  FRIDAY: 'V', SATURDAY: 'S', SUNDAY: 'D',
+};
+
 export function StatsPage() {
   const navigate = useNavigate();
   const { currentUser, isDark } = useApp();
   const { setHeader } = usePageHeader();
   const [period, setPeriod] = useState<'semana' | 'mes' | 'semestre'>('mes');
 
+  const [dashboard, setDashboard] = useState<StudentDashboardResponse | null>(null);
+  const [social, setSocial] = useState<SocialIndicatorsResponse | null>(null);
+  const [interactions, setInteractions] = useState<InteractionAnalyticsResponse | null>(null);
+  
+  const [gamificationStats, setGamificationStats] = useState<UserStatsResponse | null>(null);
+  const [unlockedBadges, setUnlockedBadges] = useState<EarnedBadgeResponse[]>([]);
+  const [badgeProgress, setBadgeProgress] = useState<BadgeProgressResponse[]>([]);
+
   useEffect(() => {
     setHeader({ title: '🏆 Estadísticas', subtitle: 'Tu impacto en la comunidad', showBack: true });
     return () => setHeader(null);
   }, [setHeader]);
 
+  useEffect(() => {
+    getStudentDashboard().then(setDashboard).catch(() => {});
+    getInteractionAnalytics().then(setInteractions).catch(() => {});
+    getGamificationStats().then(setGamificationStats).catch(() => {});
+    getUnlockedBadges().then(setUnlockedBadges).catch(() => {});
+    getBadgeProgress().then(setBadgeProgress).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getSocialIndicators(WEEK_RANGE[period]).then(setSocial).catch(() => {});
+  }, [period]);
+
   if (!currentUser) return null;
 
+  // Datos reales si están disponibles, de lo contrario mock
   const d = DATA_BY_PERIOD[period];
-  const maxActivity = Math.max(...d.activity.map(a => a.value), 1);
-  const maxCategory = Math.max(...d.categories.map(c => c.count), 1);
+
+  const activityData = dashboard?.weeklyActivity
+    ? Object.entries(dashboard.weeklyActivity).map(([day, value]) => ({ day: DAY_LABELS[day] ?? day, value: value ?? 0 }))
+    : d.activity;
+
+  const categoryData = interactions?.interactionSummary
+    ? Object.entries(interactions.interactionSummary).map(([name, count], i) => ({
+        name, count, color: ['#3B82F6', PINK, '#10B981', ORANGE, '#8B5CF6'][i % 5],
+      }))
+    : d.categories;
+
+  const radarData = social?.socialAffinity
+    ? Object.entries(social.socialAffinity).map(([subject, value]) => ({ subject, value: Math.round(value * 100) }))
+    : d.radar;
+
+  const achievements = unlockedBadges.length > 0
+    ? unlockedBadges.map(b => ({
+        emoji: '🏆',
+        title: b.badgeName,
+        desc: `Desbloqueada el ${b.earnedAt ? b.earnedAt.split('T')[0] : new Date().toISOString().split('T')[0]}`,
+        xp: b.xpAwarded || 100,
+        color: ORANGE
+      }))
+    : dashboard?.recentAchievements?.length
+    ? dashboard.recentAchievements.map(a => ({
+        emoji: '🏆', title: a.name, desc: a.description, xp: a.xpReward, color: ORANGE,
+      }))
+    : [
+        { emoji: '🏆', title: 'Primer Parche', desc: 'Creaste tu primer parche', xp: 50, color: ORANGE },
+        { emoji: '🤝', title: 'Networker', desc: 'Conectaste con 10 compañeros', xp: 75, color: PINK },
+        { emoji: '⭐', title: 'Explorador', desc: 'Visitaste 5 zonas del campus', xp: 60, color: TEAL },
+      ];
+
+  const statsGrid = [
+    { icon: Users,         value: String(dashboard?.patchesAttended ?? d.stats[1].value), label: 'Parches asistidos', delta: '', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+    { icon: Calendar,      value: String(dashboard?.achievementsEarned ?? d.stats[0].value), label: 'Logros obtenidos', delta: '', color: PINK, bg: 'rgba(236,72,153,0.12)' },
+    { icon: MessageCircle, value: String(interactions?.totalInteractions ?? d.stats[2].value), label: 'Interacciones', delta: '', color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { icon: Star,          value: dashboard?.participationLevel ?? d.stats[3].value, label: 'Nivel de participación', delta: '', color: ORANGE, bg: 'rgba(251,146,60,0.12)' },
+  ];
+
+  const maxActivity = Math.max(...activityData.map(a => a.value), 1);
+  const maxCategory = Math.max(...categoryData.map(c => c.count), 1);
 
   const cardBg = isDark
     ? { background: '#112240', border: '1px solid rgba(30,58,95,0.4)', boxShadow: '0 4px 24px rgba(0,0,0,0.25)' }
     : { background: 'rgba(253,252,248,0.95)', border: '1px solid rgba(10,25,47,0.07)', boxShadow: '0 4px 24px rgba(10,25,47,0.08)' };
 
-  const xpPercent = Math.min((currentUser.xp / 5000) * 100, 100);
+  const xp = gamificationStats ? gamificationStats.totalXp : currentUser.xp;
+  const level = gamificationStats ? gamificationStats.nivel : currentUser.level;
+  const xpInCurrentLevel = xp % 5000;
+  const xpPercent = Math.min((xpInCurrentLevel / 5000) * 100, 100);
+  const xpToNextLevel = 5000 - xpInCurrentLevel;
 
   return (
     <div className="w-full md:w-4/6 md:mx-auto min-h-screen pb-10">
@@ -143,7 +218,7 @@ export function StatsPage() {
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
-            {d.stats.map((stat, i) => (
+            {statsGrid.map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 16 }}
@@ -178,14 +253,14 @@ export function StatsPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: isDark ? '#4A6080' : '#9CA3AF' }}>Nivel actual</p>
-                <p className="font-black text-3xl text-gray-900 dark:text-white leading-none">Nivel {currentUser.level}</p>
-                <p className="text-xs text-gray-400 mt-1">{currentUser.xp.toLocaleString()} / 5,000 XP</p>
+                <p className="font-black text-3xl text-gray-900 dark:text-white leading-none">Nivel {level}</p>
+                <p className="text-xs text-gray-400 mt-1">{xp.toLocaleString()} / 5,000 XP</p>
               </div>
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg"
                 style={{ background: GOLD_GRADIENT }}
               >
-                {currentUser.level}
+                {level}
               </div>
             </div>
             <div className="h-3 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(30,58,95,0.5)' : 'rgba(10,25,47,0.08)' }}>
@@ -199,9 +274,9 @@ export function StatsPage() {
               />
             </div>
             <div className="flex justify-between mt-2">
-              <span className="text-[11px] text-gray-400">Nivel {currentUser.level}</span>
+              <span className="text-[11px] text-gray-400">Nivel {level}</span>
               <span className="text-[11px] font-bold" style={{ color: isDark ? '#FBBF24' : '#D97706' }}>
-                {5000 - currentUser.xp} XP para subir
+                {xpToNextLevel} XP para subir
               </span>
             </div>
           </motion.div>
@@ -218,7 +293,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Actividad</p>
             <p className="text-xs text-gray-400 mb-4">Interacciones por {period === 'semana' ? 'día' : period === 'mes' ? 'semana' : 'mes'}</p>
             <div className="flex items-end gap-2 h-24">
-              {d.activity.map((item, i) => (
+              {activityData.map((item, i) => (
                 <div key={item.day} className="flex-1 flex flex-col items-center gap-1.5">
                   <motion.div
                     className="w-full rounded-lg"
@@ -248,7 +323,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Crecimiento de red</p>
             <p className="text-xs text-gray-400 mb-4">Parches y conexiones</p>
             <ResponsiveContainer width="100%" height={150}>
-              <LineChart data={d.growth}>
+              <LineChart data={[...d.growth] /* social indicators growth — mismo shape */}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(30,58,95,0.4)' : '#F3F4F6'} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                 <YAxis hide />
@@ -290,7 +365,7 @@ export function StatsPage() {
             <p className="font-bold text-gray-900 dark:text-white mb-1">Perfil Social</p>
             <p className="text-xs text-gray-400 mb-2">Tus dimensiones universitarias</p>
             <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={[...d.radar]}>
+              <RadarChart data={[...radarData]}>
                 <PolarGrid stroke={isDark ? 'rgba(30,58,95,0.5)' : '#F3F4F6'} />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: isDark ? '#4A6080' : '#9CA3AF' }} />
                 <Radar name="Perfil" dataKey="value" stroke={PINK} fill={PINK} fillOpacity={0.18} strokeWidth={2} />
@@ -309,7 +384,7 @@ export function StatsPage() {
           >
             <p className="font-bold text-gray-900 dark:text-white mb-4">Parches por categoría</p>
             <div className="space-y-3.5">
-              {d.categories.map((cat, i) => (
+              {categoryData.map((cat, i) => (
                 <div key={cat.name} className="flex items-center gap-3">
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">{cat.name}</span>
                   <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ background: isDark ? 'rgba(30,58,95,0.5)' : '#F3F4F6' }}>
@@ -340,11 +415,7 @@ export function StatsPage() {
               <p className="font-bold text-gray-900 dark:text-white">Logros recientes</p>
             </div>
             <div className="space-y-3">
-              {[
-                { emoji: '🏆', title: 'Primer Parche', desc: 'Creaste tu primer parche', xp: 50, color: ORANGE },
-                { emoji: '🤝', title: 'Networker', desc: 'Conectaste con 10 compañeros', xp: 75, color: PINK },
-                { emoji: '⭐', title: 'Explorador', desc: 'Visitaste 5 zonas del campus', xp: 60, color: TEAL },
-              ].map((a, i) => (
+              {achievements.map((a, i) => (
                 <div key={a.title} className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"

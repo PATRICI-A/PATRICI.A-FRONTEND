@@ -436,7 +436,7 @@ export function RegisterPage() {
     setCode(next); setOtpStatus('idle');
     codeRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
-  const handleResend = () => {
+  const handleResend = async () => {
     if (resendCooldown > 0) return;
     setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
     setOtpStatus('idle'); setOtpAttempts(0); setResendCooldown(RESEND_COOLDOWN); setErrors({});
@@ -456,17 +456,11 @@ export function RegisterPage() {
     }
     setIsLoading(true);
     try {
-      const result = await authService.verifyOtp(email, full);
-      localStorage.setItem('patricia-token', result.accessToken);
-      try {
-        const user = await profileService.getUserByEmail(email);
-        localStorage.setItem('patricia_user_id', user.id);
-      } catch {
-        // non-blocking
-      }
+      await authService.verifyOtp(email, full);
       setOtpStatus('idle'); setErrors({});
       setStep(3);
-    } catch {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string }; status?: number } };
       const newAttempts = otpAttempts + 1;
       setOtpAttempts(newAttempts);
       if (newAttempts >= MAX_ATTEMPTS) {
@@ -474,7 +468,7 @@ export function RegisterPage() {
         setErrors({ code: 'Has superado el máximo de intentos. Por favor reenvía un nuevo código.' });
       } else {
         setOtpStatus('invalid');
-        setErrors({ code: `Código incorrecto. Intentos restantes: ${MAX_ATTEMPTS - newAttempts}` });
+        setErrors({ code: axiosErr.response?.data?.message ?? 'Código incorrecto. Inténtalo de nuevo.' });
       }
     } finally {
       setIsLoading(false);

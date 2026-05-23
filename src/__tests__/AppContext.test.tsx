@@ -57,14 +57,14 @@ describe('AppContext', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  it('starts logged in with the mock user', () => {
+  it('starts logged out when there is no token in localStorage', () => {
     render(
       <AppProvider>
         <AuthConsumer />
       </AppProvider>
     );
-    expect(screen.getByTestId('logged').textContent).toBe('true');
-    expect(screen.getByTestId('user').textContent).toBe('Patricia S.');
+    expect(screen.getByTestId('logged').textContent).toBe('false');
+    expect(screen.getByTestId('user').textContent).toBe('none');
   });
 
   it('throws when useApp is used outside provider', () => {
