@@ -2,8 +2,23 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, MessageCircle, MapPin, Clock, Calendar, Users, Lock, Globe, Share2, Bell, UserPlus, LogOut, Sparkles, AlertCircle, Link2, Sun, Moon, MoreVertical, Flag, CheckCircle, Edit, Trash2, X, Plus, Check, Crown } from 'lucide-react';
-import { parches, matchUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
+import { matchUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
+import { getParcheById, joinParche, leaveParche, type ParcheDetailResponse } from '../services/parches.service';
+import { useEffect } from 'react';
+
+const categories = [
+  { id: 'MUSIC', label: 'Música', emoji: '🎵', gradient: GRADIENT },
+  { id: 'SPORT', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
+  { id: 'TECHNOLOGY', label: 'Tecnología', emoji: '💻', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)' },
+  { id: 'STUDY', label: 'Estudio', emoji: '📚', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
+  { id: 'CULTURE', label: 'Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
+  { id: 'SOCIAL', label: 'Social', emoji: '🤝', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
+  { id: 'FOOD', label: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)' },
+  { id: 'WELLNESS', label: 'Bienestar', emoji: '🧘', gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' },
+];
+const categoryColor = (cat: string) => categories.find(c => c.id === cat)?.gradient || GRADIENT;
+const categoryEmoji = (cat: string) => categories.find(c => c.id === cat)?.emoji || '✨';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { LuxuryDrawer } from '../components/layout/LuxuryDrawer';
@@ -35,9 +50,22 @@ export function ParchemDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { isDark, toggleTheme, currentUser, notifications } = useApp();
-  const parche = parches.find(p => p.id === id);
-  const [joined, setJoined] = useState(parche?.joined ?? false);
+  const [parche, setParche] = useState<ParcheDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [joined, setJoined] = useState(false);
   const [reminder, setReminder] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      getParcheById(id)
+        .then(res => {
+          setParche(res);
+          const isMember = res.members.some(m => m.studentId === currentUser?.id);
+          setJoined(isMember);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [id, currentUser?.id]);
   const [shareToast, setShareToast] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
@@ -51,7 +79,7 @@ export function ParchemDetailPage() {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
-  const isOwner = currentUser?.id === parche.adminId || currentUser?.name === parche.admin;
+  const isOwner = currentUser?.id === parche?.ownerId;
 
   const reportReasons = ['Contenido inapropiado', 'Acoso', 'Spam', 'Información falsa', 'Otro'];
   const handleNextStep = () => {
@@ -74,18 +102,22 @@ export function ParchemDetailPage() {
   };
   
   const handleLeave = () => {
-    if (isOwner && parche.members > 1) {
+    if (isOwner && membersCount > 1) {
       setShowTransferModal(true);
-    } else if (isOwner && parche.members <= 1) {
+    } else if (isOwner && membersCount <= 1) {
       setShowDeleteConfirm(true);
     } else {
       setJoined(false);
+      // optionally call leaveParche API here
     }
   };
 
-  const members = matchUsers.slice(0, Math.min(4, parche?.members ?? 0));
-  const isFull = (parche?.members ?? 0) >= (parche?.maxMembers ?? 1);
-  if (!id || !parche) return <ParcheDetailSkeleton />;
+  if (loading) return <ParcheDetailSkeleton />;
+  if (!id || !parche) return <div className="min-h-screen pt-20 text-center font-bold">Parche no encontrado</div>;
+
+  const membersCount = parche.actualMembers || parche.members.length;
+  const membersList = matchUsers.slice(0, Math.min(4, membersCount));
+  const isFull = membersCount >= parche.maximumQuota;
   const handleShare = async () => {
     const url = window.location.href;
     if (typeof navigator.share === 'function') {
@@ -158,9 +190,9 @@ export function ParchemDetailPage() {
       </header>
       {/* Background Cover */}
       <div className="w-full px-4 md:w-[90%] md:px-0 max-w-[1400px] mx-auto mt-[57px] pt-6">
-        <div className="relative h-64 md:h-72 w-full rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)]" style={{ background: parche.coverImage ? `url(${parche.coverImage}) center/cover no-repeat` : parche.coverColor }}>
+        <div className="relative h-64 md:h-72 w-full rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)]" style={{ background: parche.imageUrl ? `url(${parche.imageUrl}) center/cover no-repeat` : categoryColor(parche.category) }}>
           {/* Overlay gradient so text is readable over image */}
-          {parche.coverImage && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />}
+          {parche.imageUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />}
           <button
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white z-10"
@@ -255,19 +287,11 @@ export function ParchemDetailPage() {
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(4px)' }}
                   >
-                    <EmojiIcon emoji={parche.emoji} size={20} color="white" strokeWidth={2} />
+                    <EmojiIcon emoji={categoryEmoji(parche.category)} size={20} color="white" strokeWidth={2} />
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold">
                     {parche.category.toUpperCase()}
                   </span>
-                  {parche.trending && (
-                    <span
-                      className="px-2 py-0.5 rounded-full text-[10px] font-black text-white flex items-center gap-0.5"
-                      style={{ background: GOLD_GRADIENT }}
-                    >
-                      <Sparkles size={8} /> TOP
-                    </span>
-                  )}
                 </div>
                 <h1 className="text-white text-xl font-bold flex items-center gap-2">
                   {parche.name}
@@ -275,12 +299,14 @@ export function ParchemDetailPage() {
                 </h1>
               </div>
               <div className="flex -space-x-2">
-                {parche.memberAvatars.slice(0, 3).map((av, i) => (
-                  <img key={i} src={av} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/50" />
+                {matchUsers.slice(0, 3).map((av, i) => (
+                  <img key={i} src={av.avatar} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/50" />
                 ))}
-                <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm border-2 border-white/50 flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">+{parche.members - 3}</span>
-                </div>
+                {membersCount > 3 && (
+                  <div className="w-8 h-8 rounded-full bg-white/30 backdrop-blur-sm border-2 border-white/50 flex items-center justify-center">
+                    <span className="text-white text-[10px] font-bold">+{membersCount - 3}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -293,10 +319,10 @@ export function ParchemDetailPage() {
         {/* Info Chips */}
         <div className="flex flex-wrap gap-3">
           {[
-            { icon: MapPin, text: parche.location },
+            { icon: MapPin, text: parche.place?.displayName || 'Campus' },
             { icon: Calendar, text: parche.date },
-            { icon: Clock, text: parche.time },
-            { icon: Users, text: `${parche.members}/${parche.maxMembers} miembros` },
+            { icon: Clock, text: parche.hour },
+            { icon: Users, text: `${membersCount}/${parche.maximumQuota} miembros` },
           ].map(chip => (
             <div
               key={chip.text}
@@ -313,7 +339,7 @@ export function ParchemDetailPage() {
           <h3 className="text-xl font-black text-gray-900 dark:text-white mb-4">Sobre este parche</h3>
           <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 leading-relaxed font-medium">{parche.description}</p>
           <div className="flex gap-2 mt-5 flex-wrap">
-            {parche.tags.map(tag => (
+            {[parche.category].map(tag => (
               <span key={tag} className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ color: PINK, background: 'rgba(29,78,216,0.1)' }}>
                 #{tag}
               </span>
@@ -325,13 +351,13 @@ export function ParchemDetailPage() {
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
           <h3 className="text-xl font-black text-gray-900 dark:text-white mb-5">Organizado por</h3>
           <div className="flex items-center gap-4">
-            <img src={parche.memberAvatars[0]} alt={parche.admin} className="w-14 h-14 rounded-full object-cover shadow-sm" />
+            <img src={matchUsers[0].avatar} alt={"Admin"} className="w-14 h-14 rounded-full object-cover shadow-sm" />
             <div>
-              <p className="font-bold text-gray-900 dark:text-white text-base">{parche.admin}</p>
+              <p className="font-bold text-gray-900 dark:text-white text-base">{"Admin"}</p>
               <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">ADMIN DEL PARCHE</p>
             </div>
             <button
-              onClick={() => navigate(`/user/${parche.adminId}`)}
+              onClick={() => navigate(`/user/${parche.ownerId}`)}
               className="ml-auto px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all hover:bg-blue-50/50 dark:hover:bg-blue-900/10 active:scale-95"
               style={{ color: PINK, borderColor: PINK }}
             >
@@ -344,7 +370,7 @@ export function ParchemDetailPage() {
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-black text-gray-900 dark:text-white">Miembros ({parche.members})</h3>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white">Miembros ({membersCount})</h3>
             </div>
             {joined && (
               <motion.button
@@ -360,7 +386,7 @@ export function ParchemDetailPage() {
             )}
           </div>
           <div className="flex flex-col gap-2">
-            {members.map(member => (
+            {membersList.map(member => (
               <button
                 key={member.id}
                 onClick={() => navigate(`/user/${member.id}`)}
@@ -387,9 +413,9 @@ export function ParchemDetailPage() {
                 </div>
               </button>
             ))}
-            {parche.members > 4 && (
+            {membersCount > 4 && (
               <button className="w-full py-4 mt-2 text-[10px] font-black uppercase tracking-widest text-center hover:opacity-80 active:scale-95 transition-opacity" style={{ color: PINK }}>
-                Ver todos los {parche.members} miembros
+                Ver todos los {membersCount} miembros
               </button>
             )}
           </div>
@@ -399,19 +425,19 @@ export function ParchemDetailPage() {
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-black text-gray-900 dark:text-white">Capacidad</h3>
-            <span className="font-black text-2xl text-gray-900 dark:text-white leading-none">{parche.members}<span className="text-sm text-gray-400">/{parche.maxMembers}</span></span>
+            <span className="font-black text-2xl text-gray-900 dark:text-white leading-none">{membersCount}<span className="text-sm text-gray-400">/{parche.maximumQuota}</span></span>
           </div>
           <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
             <motion.div
               className="h-full rounded-full"
               style={{ background: isFull ? GOLD_GRADIENT : GRADIENT }}
               initial={{ width: 0 }}
-              animate={{ width: `${(parche.members / parche.maxMembers) * 100}%` }}
+              animate={{ width: `${(membersCount / parche.maximumQuota) * 100}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
             />
           </div>
           <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-3 text-right">
-            {isFull ? '⚠️ Parche lleno' : `${parche.maxMembers - parche.members} ESPACIOS DISPONIBLES`}
+            {isFull ? '⚠️ Parche lleno' : `${parche.maximumQuota - membersCount} ESPACIOS DISPONIBLES`}
           </p>
         </div>
 
