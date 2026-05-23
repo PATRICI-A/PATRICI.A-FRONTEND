@@ -151,13 +151,16 @@ export interface Mona {
   color: string;
   bgColor: string;
   rarity: 'común' | 'poco común' | 'raro' | 'épico' | 'legendario';
-  category: 'networking' | 'cafeterias' | 'edificios' | 'actividad' | 'eventos' | 'legendarias';
+  category: 'networking' | 'edificios' | 'actividad' | 'legendarias';
   unlocked: boolean;
   unlockedAt?: string;
   xp: number;
   image?: string;
   imgSrc?: string;
   imgScale?: number;
+  currentCount?: number;
+  targetCount?: number;
+  progressPercentage?: number;
 }
 export interface Notification {
   id: string;
@@ -171,23 +174,6 @@ export interface Notification {
   read: boolean;
   actionUrl?: string;
 }
-export interface CafeteriaPrize {
-  id: string;
-  name: string;
-  emoji: string;
-  color: string;
-  pct?: number;
-}
-
-export const CAFETERIA_PRIZES: CafeteriaPrize[] = [
-  { id: 'prize-cafe', name: 'Café Gratis', emoji: '☕', color: '#8B5CF6' },
-  { id: 'prize-empanada', name: 'Empanada de Carne', emoji: '🥟', color: '#F59E0B' },
-  { id: 'prize-jugo', name: 'Jugo Natural', emoji: '🧃', color: '#10B981' },
-  { id: 'prize-almuerzo', name: 'Almuerzo Completo', emoji: '🍱', color: '#EC4899' },
-  { id: 'prize-brownie', name: 'Brownie con Helado', emoji: '🍦', color: '#6366F1' },
-  { id: 'prize-papas', name: 'Papas Fritas', emoji: '🍟', color: '#EAB308' },
-  { id: 'prize-croissant', name: 'Croissant Relleno', emoji: '🥐', color: '#D97706' }
-];
 export const GRADIENT = 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)';
 export const PINK = '#1D4ED8';
 export const ORANGE = '#06B6D4';
@@ -892,12 +878,6 @@ export const monas: Mona[] = [
   { id: 'patricia-anfitrion', name: 'Anfitrión', description: 'Tu parche atrajo a alguien nuevo — eso habla de la energía que generas. Ser anfitrión es abrir las puertas de tu grupo, hacer sentir bienvenido al que llega y construir una comunidad donde todos quieren estar.', emoji: '🏠', category: 'networking', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 75, image: imgAnfitrion },
   { id: 'patricia-conector-veloz', name: 'Conector Veloz', description: '10 conexiones en menos de 30 días es impresionante. Eres un torbellino social, un fenómeno de la interacción que no pierde tiempo. Tu energía contagia y tu velocidad para hacer amigos no tiene rival en todo el campus.', emoji: '🚀', category: 'networking', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 850, image: imgConectorVeloz },
 
-  // ☕ Cafeterías (4 medallas)
-  { id: 'patricia-explorador-cafeterias', name: 'Explorador de Cafeterías', description: '"Café con clase" — Has recorrido Central, Regio, Leyenda y Harvies. Conoces cada rincón gastronómico del campus y sabes exactamente dónde encontrar el mejor tinto, la empanada más crujiente y el almuerzo más contundente.', emoji: '☕', category: 'cafeterias', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: true, unlockedAt: 'Ayer', xp: 200 },
-  { id: 'patricia-fan-regio', name: 'Fan del Regio', description: '"Combo universitario" — 5 visitas al Regio te convierten en cliente VIP. Ya te conocen por nombre, ya sabes el menú de memoria y tu combo favorito está listo antes de que lo pidas. La fidelidad tiene sus recompensas.', emoji: '🥤', category: 'cafeterias', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: false, xp: 100 },
-  { id: 'patricia-cliente-frecuente', name: 'Cliente Frecuente', description: '"Mesa reservada" — 15 visitas a las cafeterías del campus. Ya tienes tu mesa favorita, tu horario preferido y esa rutina sagrada que combina estudio con un buen café. Las cafeterías son tu segundo hogar.', emoji: '🍽️', category: 'cafeterias', color: '#10B981', bgColor: '#ECFDF5', rarity: 'poco común', unlocked: false, xp: 250 },
-  { id: 'patricia-ruta-cafe', name: 'Ruta del Café', description: '"Barista académico" — Has completado la ruta gastronómica definitiva visitando todas las cafeterías del campus. Eres un crítico culinario universitario con opiniones sobre cada menú, cada precio y cada sabor.', emoji: '🍩', category: 'cafeterias', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 450 },
-
   // 🏛️ Edificios (10 medallas)
   { id: 'patricia-edificio-a', name: 'Edificio A', description: '"Inicio de misión" — El Edificio A es donde todo comienza. Aquí se respira el primer día de clases, las bienvenidas y ese nerviosismo de estudiante nuevo que con el tiempo se transforma en orgullo escuelero.', emoji: '🅰️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75, image: imgEdificioA, imgScale: 1.4 },
   { id: 'patricia-edificio-b', name: 'Edificio B', description: '"Ruta académica" — El Edificio B guarda secretos de generaciones enteras. Sus pasillos han visto madrugadas de estudio, celebraciones post-parcial y esas conversaciones de pasillo que definen la vida universitaria.', emoji: '🅱️', category: 'edificios', color: '#3B82F6', bgColor: '#DBEAFE', rarity: 'común', unlocked: true, unlockedAt: 'Hace 2 meses', xp: 75, image: imgEdificioB, imgScale: 1.7 },
@@ -916,10 +896,6 @@ export const monas: Mona[] = [
   { id: 'patricia-maraton-universitaria', name: 'Maratón Universitaria', description: '"Sin perder el parcial" — Recorriste 5 zonas del campus en un solo día. Desde las aulas hasta las canchas, desde la biblioteca hasta las cafeterías — tu resistencia y velocidad son dignas de admiración.', emoji: '🏃', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 400, image: imgMaratonUniversitaria },
   { id: 'patricia-noctambulo-academico', name: 'Noctámbulo Académico', description: '"Último en salir" — Cuando todos se van, tú sigues. El campus nocturno tiene una magia especial: pasillos vacíos, luces tenues y ese silencio perfecto para concentrarse. Eres el guardián de la noche escuelera.', emoji: '🦉', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300, image: imgNoctambuloAcademico },
   { id: 'patricia-amanecer-productivo', name: 'Amanecer Productivo', description: '"Primera clase survivor" — 5 días seguidos ingresando antes de las 7 AM. Mientras el mundo duerme, tú ya estás conquistando el día. Tu disciplina y madrugada son una inspiración para toda la ECI.', emoji: '🌅', category: 'actividad', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300, image: imgAmanecerProductivo },
-
-  // 🎉 Eventos y Participación (2 medallas)
-  { id: 'patricia-asistente-vip', name: 'Asistente VIP', description: '"Siempre presente" — Asististe a un evento institucional y viviste la experiencia completa. Los eventos de la ECI son únicos: desde hackathones hasta festivales, cada uno deja una marca imborrable en tu paso por la universidad.', emoji: '🎟️', category: 'eventos', color: '#06B6D4', bgColor: '#CFFAFE', rarity: 'raro', unlocked: false, xp: 300 },
-  { id: 'patricia-invitado-especial', name: 'Invitado Especial', description: '"Figura pública" — 5 eventos y contando. Ya eres rostro conocido en cada inauguración, cada taller y cada celebración. Tu presencia eleva cualquier evento y tu entusiasmo es contagioso para todos.', emoji: '👑', category: 'eventos', color: '#8B5CF6', bgColor: '#F5F3FF', rarity: 'épico', unlocked: false, xp: 500 },
 
   // 👑 Medallas Legendarias (4 medallas)
   { id: 'patricia-conquistador-campus', name: 'Conquistador del Campus', description: 'Has visitado cada lugar importante de la ECI. Desde los laboratorios más escondidos hasta las zonas verdes más serenas — el campus entero es tu territorio. Esta patricia legendaria corona tu dominio absoluto del espacio universitario.', emoji: '🗺️', category: 'legendarias', color: '#F59E0B', bgColor: '#FFFBEB', rarity: 'legendario', unlocked: false, xp: 1000, image: imgConquistadorCampus },

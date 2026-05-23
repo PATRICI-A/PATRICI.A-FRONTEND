@@ -231,7 +231,7 @@ export function ParchesPage() {
           <div className="flex items-center justify-between w-full md:w-auto md:flex-1">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/home')}
                 className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-gray-600 dark:text-gray-400 bg-white dark:bg-slate-900 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 hover:scale-105 active:scale-95 transition-all"
               >
                 <ChevronLeft size={24} />

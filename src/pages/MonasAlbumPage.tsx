@@ -96,10 +96,8 @@ const R = {
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '✨', color: '#3B82F6' },
   { id: 'networking', label: 'Networking', emoji: '🤝', color: '#3B82F6' },
-  { id: 'cafeterias', label: 'Cafeterías', emoji: '☕', color: '#F59E0B' },
   { id: 'edificios', label: 'Edificios', emoji: '🏛️', color: '#6366F1' },
   { id: 'actividad', label: 'Zonas y Actividad', emoji: '🌿', color: '#10B981' },
-  { id: 'eventos', label: 'Eventos', emoji: '🎉', color: '#EC4899' },
   { id: 'legendarias', label: 'Legendarias', emoji: '👑', color: '#F59E0B' },
 ];
 // Removed BADGES array as per refactoring
@@ -280,6 +278,20 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
             <p className="text-[10px] sm:text-[11px] font-black leading-tight line-clamp-2 drop-shadow-md text-white/50" style={{ minHeight: '24px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
               {mona.name}
             </p>
+            {mona.currentCount !== undefined && mona.targetCount !== undefined && mona.targetCount > 0 && (
+              <div className="mt-1 px-1">
+                <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.min((mona.currentCount / mona.targetCount) * 100, 100)}%`,
+                      background: 'linear-gradient(90deg, #3B82F6, #06B6D4)',
+                    }}
+                  />
+                </div>
+                <p className="text-[8px] font-bold mt-0.5 drop-shadow-sm text-white/40">{mona.currentCount}/{mona.targetCount}</p>
+              </div>
+            )}
             <p className="text-[9px] sm:text-[10px] font-bold mt-0.5 drop-shadow-sm text-white/40">Nº {slotNumber}</p>
           </div>
         </div>
@@ -297,40 +309,16 @@ function MonaCardLocked({ mona, index, onClick }: { mona: Mona; index: number; o
   );
 }
 
-function MonaSlotRender({ mona, i, albumPage, monasPerPage, setPastingMonaId, pastingMonaId, setCollection, setSelectedMona }: any) {
+function MonaSlotRender({ mona, i, albumPage, monasPerPage, setSelectedMona }: any) {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04, type: 'spring', stiffness: 200, damping: 22 }}>
       {mona.unlocked ? (
         <MonaCardUnlocked mona={mona} onClick={() => setSelectedMona(mona)} />
-      ) : pastingMonaId === mona.id ? (
-        <motion.div
-          className="relative w-full"
-          style={{ aspectRatio: '3/4', transformOrigin: 'center center' }}
-          initial={{ scale: 2.5, y: -200, opacity: 0, rotateZ: 25 }}
-          animate={{ scale: 1, y: 0, opacity: 1, rotateZ: (Math.random() * 4 - 2) }}
-          transition={{ type: 'spring', stiffness: 200, damping: 14 }}
-          onAnimationComplete={() => {
-            setCollection((prev: any) =>
-              prev.map((m: any) => m.id === mona.id ? { ...m, unlocked: true, unlockedAt: 'Pegado ahora' } : m)
-            );
-            setPastingMonaId(null);
-          }}
-        >
-          <motion.div 
-            className="absolute inset-0 bg-black/40 rounded-xl blur-md" 
-            initial={{ scale: 0.8, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 0.3, y: 4 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 14 }}
-          />
-          <div className="relative z-10 w-full h-full">
-            <MonaCardUnlocked mona={{ ...mona, unlocked: true }} onClick={() => {}} />
-          </div>
-        </motion.div>
       ) : (
         <MonaCardLocked
           mona={mona}
           index={albumPage * monasPerPage + i}
-          onClick={() => setPastingMonaId(mona.id)}
+          onClick={() => setSelectedMona(mona)}
         />
       )}
     </motion.div>
@@ -368,7 +356,9 @@ function EventCodeModal({
   
   useEffect(() => {
     getMonas().then(apiMonas => {
-      const mapped = apiMonas.map(apiMona => {
+      const mapped = apiMonas
+        .filter(apiMona => initialMonas.some(m => m.id === apiMona.monaId))
+        .map(apiMona => {
         const visual = initialMonas.find(m => m.id === apiMona.monaId);
         return {
           id: apiMona.monaId,
@@ -383,6 +373,9 @@ function EventCodeModal({
           unlockedAt: apiMona.earnedAt || undefined,
           xp: visual?.xp || 100,
           image: visual?.image,
+          currentCount: apiMona.currentCount,
+          targetCount: apiMona.targetCount,
+          progressPercentage: apiMona.progressPercentage,
         } as Mona;
       });
       setCollection(mapped);
@@ -832,7 +825,9 @@ export function MonasAlbumPage() {
     setLoading(true);
     getMonas()
       .then((apiMonas) => {
-        const mapped = apiMonas.map((apiMona) => {
+        const mapped = apiMonas
+          .filter((apiMona) => initialMonas.some((m) => m.id === apiMona.monaId))
+          .map((apiMona) => {
           const visual = initialMonas.find((m) => m.id === apiMona.monaId);
           return {
             id: apiMona.monaId,
@@ -847,6 +842,9 @@ export function MonasAlbumPage() {
             unlockedAt: apiMona.earnedAt || undefined,
             xp: visual?.xp || 100,
             image: visual?.image,
+            currentCount: apiMona.currentCount,
+            targetCount: apiMona.targetCount,
+            progressPercentage: apiMona.progressPercentage,
           } as Mona;
         });
         setCollection(mapped);
@@ -873,7 +871,6 @@ export function MonasAlbumPage() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [selectedMona]);
 
-  const [pastingMonaId, setPastingMonaId] = useState<string | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(true);
   const [monasPerPage, setMonasPerPage] = useState(18);
   useEffect(() => {
@@ -962,18 +959,6 @@ export function MonasAlbumPage() {
     setPendingEnvelope(null);
     fetchMonas();
   };
-  const claimReward = (reward: typeof CAFETERIA_PRIZES[0]) => {
-    setClaimedRewards(prev => [...prev, reward]);
-    setShowRewardModal(reward);
-  };
-  
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [showRouletteModal, setShowRouletteModal] = useState(false);
-
-  const handleSpinRoulette = () => {
-    if (availableSpins <= 0 || isSpinning) return;
-    setShowRouletteModal(true);
-  };
   const handleCloseWelcome = () => {
     setShowWelcomeModal(false);
   };
@@ -1009,7 +994,7 @@ export function MonasAlbumPage() {
         />
         {}
         <div className="w-[90%] max-w-[1400px] mx-auto flex items-center justify-between mb-6">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}>
+          <button onClick={() => navigate('/home')} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}>
             <ArrowLeft size={18} style={{ color: isDark ? '#fff' : '#1e293b' }} />
           </button>
           <div className="text-center flex-1">
@@ -1296,7 +1281,7 @@ export function MonasAlbumPage() {
                 {/* === MOBILE GRID (1 column wrapper) === */}
                 <div className="md:hidden w-full grid grid-cols-3 sm:grid-cols-4 gap-4">
                   {pageMonas.map((mona, i) => (
-                    <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                    <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setSelectedMona={setSelectedMona} />
                   ))}
                   {pageMonas.length < monasPerPage && albumPage === totalAlbumPages - 1 &&
                     Array.from({ length: monasPerPage - pageMonas.length }).map((_, i) => (
@@ -1309,7 +1294,7 @@ export function MonasAlbumPage() {
                 {/* Left Page */}
                 <div className="hidden md:grid w-1/2 pr-12 grid-cols-3 gap-6 auto-rows-max">
                   {pageMonas.slice(0, 9).map((mona, i) => (
-                    <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                    <MonaSlotRender key={mona.id} mona={mona} i={i} albumPage={albumPage} monasPerPage={monasPerPage} setSelectedMona={setSelectedMona} />
                   ))}
                   {pageMonas.length < 9 && albumPage === totalAlbumPages - 1 &&
                     Array.from({ length: 9 - pageMonas.length }).map((_, i) => (
@@ -1321,7 +1306,7 @@ export function MonasAlbumPage() {
                 {/* Right Page */}
                 <div className="hidden md:grid w-1/2 pl-12 grid-cols-3 gap-6 auto-rows-max">
                   {pageMonas.slice(9, 18).map((mona, i) => (
-                    <MonaSlotRender key={mona.id} mona={mona} i={i + 9} albumPage={albumPage} monasPerPage={monasPerPage} setPastingMonaId={setPastingMonaId} pastingMonaId={pastingMonaId} setCollection={setCollection} setSelectedMona={setSelectedMona} />
+                    <MonaSlotRender key={mona.id} mona={mona} i={i + 9} albumPage={albumPage} monasPerPage={monasPerPage} setSelectedMona={setSelectedMona} />
                   ))}
                   {pageMonas.length >= 9 && pageMonas.length < 18 && albumPage === totalAlbumPages - 1 &&
                     Array.from({ length: 18 - pageMonas.length }).map((_, i) => (
@@ -1563,24 +1548,31 @@ export function MonasAlbumPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col h-full items-center justify-center text-center">
-                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                    <div className="flex flex-col h-full items-center justify-center text-center px-2">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
                         <Lock size={24} className="text-white/30" />
                       </div>
                       <h3 className="text-white/70 font-black text-xl mb-2">Mona Bloqueada</h3>
-                      <p className="text-white/40 text-sm leading-relaxed px-4 mb-8">
-                        Para revelar esta lámina, necesitas ingresar un código de evento válido.
+                      {selectedMona.currentCount !== undefined && selectedMona.targetCount !== undefined && selectedMona.targetCount > 0 ? (
+                        <div className="w-full mb-4">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Progreso</span>
+                            <span className="text-[10px] font-black text-white/60">{selectedMona.currentCount}/{selectedMona.targetCount}</span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${Math.min((selectedMona.currentCount / selectedMona.targetCount) * 100, 100)}%`,
+                                background: 'linear-gradient(90deg, #3B82F6, #06B6D4)',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+                      <p className="text-white/40 text-xs leading-relaxed px-2">
+                        Sigue participando en la comunidad para desbloquear esta mona automáticamente.
                       </p>
-                      
-                      <motion.button
-                        whileTap={{ scale: 0.96 }}
-                        onClick={(e) => { e.stopPropagation(); setSelectedMona(null); setTimeout(() => setShowEventCodeModal(true), 200); }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-white text-sm font-bold shadow-lg"
-                        style={{ background: GOLD_GRADIENT }}
-                      >
-                        <Gift size={16} />
-                        Ingresar Código de Evento
-                      </motion.button>
                     </div>
                   )}
                   {/* Hint to flip back */}

@@ -80,14 +80,6 @@ export interface RankingOptInResponse {
   updatedAt: string;
 }
 
-export interface EarnedRewardResponse {
-  rewardId: string;
-  rewardName: string;
-  rewardType: string;
-  unlockedAt: string;
-  xpAtUnlock: number;
-}
-
 export interface BadgeProgressResponse {
   badgeId: string;
   currentValue: number;
@@ -322,25 +314,6 @@ export async function getGamificationStats(): Promise<UserStatsResponse> {
     logFallback('GET /gamificacion/me/stats', error);
     initLocalGamification();
     return localStats!;
-  }
-}
-
-/** GET /gamificacion/me/rewards — My unlocked rewards */
-export async function getUnlockedRewards(): Promise<EarnedRewardResponse[]> {
-  try {
-    const res = await gamificationApi.get<EarnedRewardResponse[]>('/gamificacion/me/rewards');
-    return res.data;
-  } catch (error) {
-    logFallback('GET /gamificacion/me/rewards', error);
-    return [
-      {
-        rewardId: 'r1',
-        rewardName: '+0.2 en un parcial',
-        rewardType: 'TITLE',
-        unlockedAt: new Date().toISOString(),
-        xpAtUnlock: 1000
-      }
-    ];
   }
 }
 
