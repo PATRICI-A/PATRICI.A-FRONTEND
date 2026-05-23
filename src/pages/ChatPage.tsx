@@ -51,6 +51,7 @@ export function ChatPage() {
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -67,19 +68,20 @@ export function ChatPage() {
     return matched?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50';
   };
 
+  const loadMessages = async (parcheId: string) => {
+    try {
+      const response = await chatService.fetchParcheMessages(parcheId, 0, 100);
+      setMessages(response.content);
+    } catch (error) {
+      console.error('Error al cargar mensajes del parche:', error);
+    }
+  };
+
   // reiniciar y cargar mensajes desde el backend de Azure al cambiar de parche
   useEffect(() => {
-    const currentParche = parches.find(p => p.id === id) || parches[0];
-    const loadMessages = async () => {
-      try {
-        const response = await chatService.fetchParcheMessages(currentParche.id, 0, 100);
-        setMessages(response.content);
-      } catch (error) {
-        console.error('Error al cargar mensajes del parche:', error);
-      }
-    };
-
-    loadMessages();
+    if (id) {
+      loadMessages(id);
+    }
     setInput('');
     setShowEmojis(false);
     setShowInfo(false);
@@ -92,14 +94,19 @@ export function ChatPage() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || !id) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || !id || isSending) return;
+
     try {
-      const responseMsg = await chatService.sendParcheMessage(id, input.trim());
-      setMessages(prev => [...prev, responseMsg]);
+      setIsSending(true);
+      await chatService.sendParcheMessage(id, trimmedInput);
+      await loadMessages(id);
       setInput('');
       setShowEmojis(false);
     } catch (error) {
       console.error('Error al enviar mensaje al parche:', error);
+    } finally {
+      setIsSending(false);
     }
   };
   const handleContextAction = (action: string) => {
@@ -486,7 +493,7 @@ export function ChatPage() {
           </div>
           <button
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!input.trim() || isSending}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all active:scale-90 disabled:opacity-50"
             style={{ background: bubbleBg }}
           >

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Dedicated axios instance for the chat microservice
 const chatApi = axios.create({
-  baseURL: 'https://patricia-chat-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  baseURL: import.meta.env.VITE_CHAT_API_URL ?? 'https://patricia-chat-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -14,6 +14,42 @@ chatApi.interceptors.request.use((config) => {
   }
   return config;
 });
+
+chatApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('patricia-token');
+      localStorage.removeItem('patricia-refresh-token');
+      localStorage.removeItem('patricia-logged-in');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+function normalizeMessageResponse(data: unknown): MessageResponse | null {
+  if (!data || typeof data !== 'object') return null;
+
+  const candidate = data as Partial<MessageResponse> & {
+    message?: Partial<MessageResponse>;
+    data?: Partial<MessageResponse>;
+  };
+
+  if (candidate.id && candidate.content !== undefined) {
+    return candidate as MessageResponse;
+  }
+
+  if (candidate.message?.id && candidate.message.content !== undefined) {
+    return candidate.message as MessageResponse;
+  }
+
+  if (candidate.data?.id && candidate.data.content !== undefined) {
+    return candidate.data as MessageResponse;
+  }
+
+  return null;
+}
 
 // ─── OpenAPI Types ─────────────────────────────────────────────────────────────
 
@@ -105,26 +141,26 @@ export const chatService = {
    * POST /api/parches/{parcheId}/messages
    * Sends a new chat message to a specific Parche group.
    */
-  async sendParcheMessage(parcheId: string, content: string, imageUrl?: string): Promise<MessageResponse> {
-    const { data } = await chatApi.post<MessageResponse>(`/api/parches/${parcheId}/messages`, {
+  async sendParcheMessage(parcheId: string, content: string, imageUrl?: string): Promise<MessageResponse | null> {
+    const { data } = await chatApi.post(`/api/parches/${parcheId}/messages`, {
       content,
       type: imageUrl ? 'IMAGE' : 'TEXT',
       imageUrl: imageUrl || null
     });
-    return data;
+    return normalizeMessageResponse(data);
   },
 
   /**
    * POST /api/friends/{friendId}/messages
    * Sends a new private message to a specific friend.
    */
-  async sendFriendMessage(friendId: string, content: string, imageUrl?: string): Promise<MessageResponse> {
-    const { data } = await chatApi.post<MessageResponse>(`/api/friends/${friendId}/messages`, {
+  async sendFriendMessage(friendId: string, content: string, imageUrl?: string): Promise<MessageResponse | null> {
+    const { data } = await chatApi.post(`/api/friends/${friendId}/messages`, {
       content,
       type: imageUrl ? 'IMAGE' : 'TEXT',
       imageUrl: imageUrl || null
     });
-    return data;
+    return normalizeMessageResponse(data);
   },
 
   /**

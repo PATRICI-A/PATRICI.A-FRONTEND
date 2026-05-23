@@ -51,6 +51,7 @@ export function DirectChatPage() {
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -66,18 +67,18 @@ export function DirectChatPage() {
     return matched?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50';
   };
 
+  const loadMessages = async (targetFriendId: string) => {
+    try {
+      const response = await chatService.fetchFriendMessages(targetFriendId, 0, 100);
+      setMessages(response.content);
+    } catch (error) {
+      console.error('Error al cargar mensajes del chat privado:', error);
+    }
+  };
+
   // reiniciar y cargar mensajes del backend de Azure
   useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const response = await chatService.fetchFriendMessages(friendId, 0, 100);
-        setMessages(response.content);
-      } catch (error) {
-        console.error('Error al cargar mensajes del chat privado:', error);
-      }
-    };
-
-    loadMessages();
+    loadMessages(friendId);
     setInput('');
     setShowEmojis(false);
     setShowAttachments(false);
@@ -89,14 +90,19 @@ export function DirectChatPage() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || !friendId) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || !friendId || isSending) return;
+
     try {
-      const responseMsg = await chatService.sendFriendMessage(friendId, input.trim());
-      setMessages(prev => [...prev, responseMsg]);
+      setIsSending(true);
+      await chatService.sendFriendMessage(friendId, trimmedInput);
+      await loadMessages(friendId);
       setInput('');
       setShowEmojis(false);
     } catch (error) {
       console.error('Error al enviar mensaje privado:', error);
+    } finally {
+      setIsSending(false);
     }
   };
   const handleContextAction = (action: string) => {
@@ -468,7 +474,7 @@ export function DirectChatPage() {
           </div>
           <button
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!input.trim() || isSending}
             className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all active:scale-90 disabled:opacity-50"
             style={{ background: accentColor }}
           >
