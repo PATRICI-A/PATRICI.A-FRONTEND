@@ -6,7 +6,7 @@ import { parches, directChats, chatMessages, matchUsers, TEAL } from '../../type
 import { EmojiIcon } from '../ui/EmojiIcon';
 import { Avatar } from '../ui/Avatar';
 import { useApp } from '../../store/AppContext';
-import { chatService, ConnectionResponse } from '../../services/chat.service';
+import { chatService, type ConnectionResponse } from '../../services/chat.service';
 
 export interface ChatSidebarProps {
   activeId?: string;

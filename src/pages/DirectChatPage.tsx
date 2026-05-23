@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { directChats, matchUsers, GOLD_LIGHT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
-import { chatService, MessageResponse } from '../services/chat.service';
+import { chatService, type MessageResponse } from '../services/chat.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
@@ -527,7 +527,7 @@ export function DirectChatPage() {
                   }}
                 >
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    De: {reportingMessage.sender}
+                    De: {reportingMessage.senderName}
                   </p>
                   <p className="text-gray-800 dark:text-white">
                     "{reportingMessage.content}"

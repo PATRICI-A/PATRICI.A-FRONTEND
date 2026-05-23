@@ -11,7 +11,7 @@ import {
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { parches, directChats, matchUsers, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
-import { chatService, MessageResponse } from '../services/chat.service';
+import { chatService, type MessageResponse } from '../services/chat.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
@@ -550,7 +550,7 @@ export function ChatPage() {
                 }}
               >
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  De: {reportingMessage.sender}
+                  De: {reportingMessage.senderName}
                 </p>
                 <p className="text-gray-800 dark:text-white">
                   "{reportingMessage.content}"
