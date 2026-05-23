@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 *.env
+mobile-android/local.properties
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -452,4 +453,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-coverage/
+coverage/
+
+
+# Version mobile files
+mobile-android
