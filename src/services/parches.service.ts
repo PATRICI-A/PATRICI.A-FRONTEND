@@ -120,10 +120,9 @@ function cleanImageUrl(url: string | null | undefined): string {
   return url;
 }
 
-function logFallback(endpoint: string, error: any) {
-  console.warn(
-    `[Fallback] La llamada a backend ${endpoint} falló (${error?.response?.status || 'Error de Red'}).`
-  );
+function logFallback(endpoint: string, error: unknown) {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  console.warn(`[Fallback] La llamada a backend ${endpoint} falló (${status || 'Error de Red'}).`);
 }
 
 // ──────────────────────────────────────────────
@@ -147,7 +146,6 @@ export async function searchParches(params?: SearchParcheParams): Promise<Parche
 /** POST /parches — create a new parche (ownerId passed via X-User-Id header) */
 export async function createParche(
   data: CreateParcheRequest,
-  userId: string,
 ): Promise<ParcheResponse> {
   try {
     const res = await hangoutApi.post<ParcheResponse>('/parches', data);

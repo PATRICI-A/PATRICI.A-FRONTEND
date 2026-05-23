@@ -59,7 +59,7 @@ function enrichUser(
   };
 }
 
-export const useMatchingStore = create<MatchingState>((set, get) => ({
+export const useMatchingStore = create<MatchingState>((set) => ({
   explore: [],
   sent: [],
   received: [],
@@ -159,9 +159,10 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
           sent: [...s.sent, { ...user, matchId: match.idMatch, connectionStatus: 'pending' as const }],
         };
       });
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? `Error ${status ?? 'de red'} al enviar solicitud`;
+    } catch (err) {
+      const e = err as { response?: { status?: number; data?: { message?: string; error?: string } } };
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? `Error ${status ?? 'de red'} al enviar solicitud`;
       set({ error: msg });
       console.error('[sendRequest]', msg, err);
     }
@@ -178,7 +179,7 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
           friends: [...s.friends, { ...user, connectionStatus: 'connected' as const }],
         };
       });
-    } catch (err: any) {
+    } catch (err) {
       set({ error: 'Error al aceptar solicitud. Intenta de nuevo.' });
       console.error('[acceptRequest]', err);
     }
@@ -190,7 +191,7 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
       set(s => ({
         received: s.received.filter(u => u.matchId !== matchId),
       }));
-    } catch (err: any) {
+    } catch (err) {
       set({ error: 'Error al rechazar solicitud. Intenta de nuevo.' });
       console.error('[rejectRequest]', err);
     }
@@ -203,7 +204,7 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
         friends: s.friends.filter(u => u.matchId !== matchId),
         sent: s.sent.filter(u => u.matchId !== matchId),
       }));
-    } catch (err: any) {
+    } catch (err) {
       set({ error: 'Error al eliminar conexión. Intenta de nuevo.' });
       console.error('[removeMatch]', err);
     }

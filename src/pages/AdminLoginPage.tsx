@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Lock, Mail, ShieldCheck, AlertCircle, Sun, Moon } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE } from '../types/mockData';
+import { GRADIENT, PINK } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
 import { authService } from '../services/auth.service';
@@ -22,9 +22,10 @@ export function AdminLoginPage() {
       await authService.login({ email, password });
       localStorage.setItem('adminSession', 'true');
       navigate('/admin/dashboard');
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? 'Credenciales de administrador inválidas';
-      setError(typeof msg === 'string' ? msg : 'Credenciales de administrador inválidas');
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string; error?: string } } };
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? 'Credenciales de administrador inválidas';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

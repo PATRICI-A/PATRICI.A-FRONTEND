@@ -74,7 +74,7 @@ export const editService = {
         const mappedGender = GENDER_MAP[data.genero] ?? data.genero;
 
         // Do not send interests in PATCH — backend expects tag UUIDs via addTag separately
-        const payload: Record<string, any> = {
+        const payload: Record<string, unknown> = {
             name: data.name,
             biography: data.bio,
             career: mappedCareer,

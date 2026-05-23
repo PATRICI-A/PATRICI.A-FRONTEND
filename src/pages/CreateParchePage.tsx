@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, events } from '../types/mockData';
+import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, Check, Rocket, Image as ImageIcon, Ticket } from 'lucide-react';
+import { GRADIENT, PINK, events } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
@@ -24,12 +24,10 @@ const friends = [
   { id: 'u4', name: 'Sofía M.', avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
   { id: 'u5', name: 'Daniel C.', avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
 ];
-import { useApp } from '../store/AppContext';
 import { createParche, sendInvitation } from '../services/parches.service';
 
 export function CreateParchePage() {
   const navigate = useNavigate();
-  const { currentUser } = useApp();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -69,7 +67,6 @@ export function CreateParchePage() {
     try {
       const formattedTime = time ? `${time}:00` : '12:00:00';
       const formattedDate = date || new Date().toISOString().split('T')[0];
-      const userId = localStorage.getItem('patricia_user_id') || currentUser?.id || '';
 
       // Only send imageUrl if it's a real URL (not a base64 data URI)
       const safeImageUrl = coverImage && !coverImage.startsWith('data:') ? coverImage : undefined;
@@ -85,7 +82,7 @@ export function CreateParchePage() {
         type: isPublic ? 'PUBLIC' : 'PRIVATE',
         eventId: eventId || undefined,
         imageUrl: safeImageUrl,
-      }, userId);
+      });
 
       if (invitedFriends.length > 0) {
         await Promise.allSettled(
@@ -95,9 +92,10 @@ export function CreateParchePage() {
 
       setCreated(true);
       setTimeout(() => navigate('/parches'), 2000);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? 'Error al crear el parche. Intenta de nuevo.';
-      setCreateError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string; error?: string } } };
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? 'Error al crear el parche. Intenta de nuevo.';
+      setCreateError(msg);
       console.error(err);
     } finally {
       setIsLoading(false);

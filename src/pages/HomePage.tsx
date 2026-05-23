@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
-import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
+import { Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { parches, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
+import { parches, vibraCategories, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { useMatchingStore } from '../store/matchingStore';
 import type { Event, Mona } from '../types/mockData';
 import { eventsService } from '../services/events.service';
@@ -35,7 +35,6 @@ function homeApiEventToMock(e: ApiEvent): Event {
   };
 }
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import patySelfie from '../assets/PatySelfie.png';
 import patyAlbum from '../assets/Album.png';
 import mascotFutbol from '../assets/mascota_futbol.png';
 import vibraMusica from '../assets/Musica-removebg-preview.png';
@@ -46,9 +45,8 @@ import vibraVideojuegos from '../assets/Videojuegos-removebg-preview.png';
 import vibraPintura from '../assets/Pintura-removebg-preview.png';
 export function HomePage() {
   const navigate = useNavigate();
-  const { currentUser, isDark, geo } = useApp();
+  const { isDark, geo } = useApp();
   const matchingStore = useMatchingStore();
-  const [searchQuery, setSearchQuery] = useState('');
   const [homeEvents, setHomeEvents] = useState<Event[]>([]);
   const [homeMonas, setHomeMonas] = useState<Mona[]>(monas);
 
@@ -63,10 +61,11 @@ export function HomePage() {
       }
     });
     if (matchingStore.explore.length === 0) matchingStore.loadTab('explore');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
-  const autoplayTimerRef = useRef<any>(null);
+  const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAutoplay = () => {
     if (autoplayTimerRef.current) {
@@ -87,6 +86,7 @@ export function HomePage() {
   useEffect(() => {
     startAutoplay();
     return () => stopAutoplay();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleNextEvent = () => {
@@ -136,7 +136,6 @@ export function HomePage() {
     if (!user || user.connectionStatus !== 'none') return;
     matchingStore.sendRequest(userId);
   };
-  const featuredEvent = homeEvents[currentEventIndex] ?? homeEvents[0];
   const topParches = parches.slice(0, 3);
   const topMatches = matchingStore.explore.slice(0, 4);
   const unlockedMonas = homeMonas.filter(m => m.unlocked);

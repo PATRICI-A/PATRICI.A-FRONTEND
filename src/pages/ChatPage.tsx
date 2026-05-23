@@ -4,12 +4,12 @@ import { useNavigate, useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Send, Smile, Plus, Phone, MoreVertical,
-  Image as ImageIcon, Users, X, Bell, BellOff, Trash2,
-  UserCheck, Film, ChevronRight, Search, AlertCircle, Eraser,
-  MapPin, Clock, User, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
+  Image as ImageIcon, Users, BellOff,
+  UserCheck, Search, AlertCircle, Eraser,
+  MapPin, Clock, Flag, ShieldAlert, ThumbsDown, Megaphone, TriangleAlert, MessageSquare,
 } from 'lucide-react';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
-import { parches, directChats, matchUsers, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
+import { parches, directChats, matchUsers, GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { chatService, type MessageResponse } from '../services/chat.service';
 import { getParcheById } from '../services/parches.service';
@@ -37,12 +37,6 @@ function extractGradientColors(coverColor: string) {
   const bubbleBg = coverColor.includes('gradient') ? coverColor : `linear-gradient(135deg, ${accentColor}, ${accentColor})`;
   return { bubbleBg, accentColor };
 }
-const chatList = parches.filter(p => p.joined).map((p, i) => ({
-  ...p,
-  lastMessage: ['¡Ya estoy en la mesa del fondo! 🔌', 'Coffee & Python esta noche? ☕', 'Alguien ya terminó los ejercicios?'][i % 3],
-  lastTime: ['Ahora', '15 min', '1h'][i % 3],
-  unread: [3, 0, 1][i % 3],
-}));
 const CONTEXT_ACTIONS = [
   { icon: UserCheck, label: 'Ver perfil del parche',    color: '#3B82F6', action: 'profile' },
   { icon: Search,    label: 'Buscar en el chat',        color: '#06B6D4', action: 'search' },
@@ -92,27 +86,36 @@ export function ChatPage() {
   // Load real parche info and messages from the backend
   useEffect(() => {
     if (!id) return;
-    setMessages([]);
-    setInput('');
-    setShowEmojis(false);
-    setShowInfo(false);
-    setShowAttachments(false);
-    setShowContextMenu(false);
 
-    getParcheById(id).then(data => {
-      const cat = data.category?.toUpperCase() ?? 'SOCIAL';
-      setApiParche({
-        id: data.id,
-        name: data.name,
-        emoji: CATEGORY_EMOJI[cat] ?? '🤝',
-        coverColor: CATEGORY_COLOR[cat] ?? 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
-        membersCount: data.actualMembers,
-      });
-    }).catch(() => {});
+    Promise.allSettled([
+      getParcheById(id),
+      chatService.fetchParcheMessages(id, 0, 100),
+    ]).then(([parcheResult, msgsResult]) => {
+      setInput('');
+      setShowEmojis(false);
+      setShowInfo(false);
+      setShowAttachments(false);
+      setShowContextMenu(false);
 
-    chatService.fetchParcheMessages(id, 0, 100)
-      .then(res => setMessages(res.content))
-      .catch(err => console.error('Error al cargar mensajes del parche:', err));
+      if (parcheResult.status === 'fulfilled') {
+        const data = parcheResult.value;
+        const cat = data.category?.toUpperCase() ?? 'SOCIAL';
+        setApiParche({
+          id: data.id,
+          name: data.name,
+          emoji: CATEGORY_EMOJI[cat] ?? '🤝',
+          coverColor: CATEGORY_COLOR[cat] ?? 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+          membersCount: data.actualMembers,
+        });
+      }
+
+      if (msgsResult.status === 'fulfilled') {
+        setMessages(msgsResult.value.content);
+      } else {
+        setMessages([]);
+        console.error('Error al cargar mensajes del parche:', msgsResult.reason);
+      }
+    });
   }, [id]);
 
   useEffect(() => {
@@ -127,11 +130,13 @@ export function ChatPage() {
       setMessages(prev => [...prev, responseMsg]);
       setInput('');
       setShowEmojis(false);
-    } catch (error: any) {
-      const status = error?.response?.status;
-      const raw = error?.response?.data;
-      const msg = raw
-        ? (typeof raw === 'object' ? (raw.message ?? raw.error) : String(raw))
+    } catch (error) {
+      const e = error as { response?: { status?: number; data?: unknown } };
+      const status = e?.response?.status;
+      const raw = e?.response?.data;
+      const rawObj = (typeof raw === 'object' && raw !== null) ? raw as { message?: string; error?: string } : null;
+      const msg = rawObj
+        ? (rawObj.message ?? rawObj.error ?? `Error ${status ?? 'de red'} al enviar mensaje`)
         : `Error ${status ?? 'de red'} al enviar mensaje`;
       console.error('Error al enviar mensaje al parche:', error);
       setSendError(msg);

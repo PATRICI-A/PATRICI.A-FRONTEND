@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Heart, Sparkles, CheckCircle2, MapPin, ChevronLeft, ChevronRight, Clock, Mail,
+  Heart, Sparkles, CheckCircle2, MapPin, ChevronLeft, ChevronRight, Clock,
   Shield, Dumbbell, Palette, Brain, ToggleLeft, ToggleRight,
   FileText, AlertTriangle, X, Search,
 } from 'lucide-react';
