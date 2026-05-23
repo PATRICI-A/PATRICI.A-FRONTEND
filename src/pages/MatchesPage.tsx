@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import patyImg from '../assets/patyMatch.png';
@@ -9,9 +9,10 @@ import {
   UserPlus, UserCheck, Zap, Search, ChevronLeft,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { matchUsers, GRADIENT, TEAL, TEAL_GRADIENT, interestOptions } from '../types/mockData';
+import { GRADIENT, TEAL, TEAL_GRADIENT, interestOptions } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { Avatar } from '../components/ui/Avatar';
+import { useMatchingStore, type EnrichedMatchUser } from '../store/matchingStore';
 
 const getCardGradient = (pct: number) => {
   if (pct >= 80) return 'linear-gradient(145deg, #064E3B 0%, #065F46 45%, #0D9488 100%)';
@@ -34,107 +35,100 @@ const getBarColor = (pct: number) => {
 
 export function MatchesPage() {
   const navigate = useNavigate();
-  const { currentUser, isDark, geo } = useApp();
-  const [selectedUser, setSelectedUser] = useState<typeof matchUsers[0] | null>(null);
+  const { isDark, geo } = useApp();
+  const store = useMatchingStore();
+
+  const [selectedUser, setSelectedUser] = useState<EnrichedMatchUser | null>(null);
   const [activeTab, setActiveTab] = useState<'explore' | 'sent' | 'received' | 'friends'>('explore');
   const [filters, setFilters] = useState({ program: '', semester: '', interest: '', location: '', availability: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [showUnfriendModal, setShowUnfriendModal] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
-  const [incomingRequests, setIncomingRequests] = useState<string[]>(['u4', 'u6', 'u18']);
 
-  const uniquePrograms = Array.from(new Set(matchUsers.map(u => u.program)));
-  const uniqueSemesters = Array.from(new Set(matchUsers.map(u => u.semester))).sort((a, b) => a - b);
+  useEffect(() => {
+    store.loadTab(activeTab);
+  }, [activeTab]);
 
-  const calculateCompatibility = (user: typeof matchUsers[0]) => {
-    const userInterests = currentUser?.interests || [];
-    const commonInterests = user.interests.filter(i => userInterests.includes(i));
+  const activeUsers = useMemo<EnrichedMatchUser[]>(() => {
+    if (activeTab === 'explore') return store.explore;
+    if (activeTab === 'sent') return store.sent;
+    if (activeTab === 'received') return store.received;
+    return store.friends;
+  }, [activeTab, store.explore, store.sent, store.received, store.friends]);
 
-    const interestScore = userInterests.length > 0
-      ? Math.min(40, (commonInterests.length / userInterests.length) * 40)
-      : 0;
-
-    const programScore = user.program === currentUser?.program ? 20 : 0;
-    const semesterDiff = Math.abs((user.semester || 0) - (currentUser?.semester || 0));
-    const semesterScore = Math.max(10 - semesterDiff * 3, 0);
-    const academicScore = Math.min(30, programScore + semesterScore);
-
-    const availabilityScore = user.online ? 30 : 15;
-
-    return Math.round(Math.min(100, Math.max(0, interestScore + academicScore + availabilityScore)));
-  };
-
-  const getConnectionStatus = (userId: string, originalStatus?: 'none' | 'pending' | 'connected') =>
-    connectionStates[userId] || originalStatus || 'none';
-
-  const filteredUsers = useMemo(() => {
-    let filtered = matchUsers.map(u => ({ ...u, matchPercent: calculateCompatibility(u) }));
-    if (activeTab === 'sent') {
-      filtered = filtered.filter(u =>
-        getConnectionStatus(u.id, u.connectionStatus) === 'pending' && !incomingRequests.includes(u.id)
-      );
-    } else if (activeTab === 'received') {
-      filtered = filtered.filter(u => incomingRequests.includes(u.id));
-    } else if (activeTab === 'friends') {
-      filtered = filtered.filter(u => getConnectionStatus(u.id, u.connectionStatus) === 'connected');
-    } else {
-      filtered = filtered.filter(u =>
-        getConnectionStatus(u.id, u.connectionStatus) === 'none' && !incomingRequests.includes(u.id)
-      );
-    }
-    if (searchQuery) {
-      filtered = filtered.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    if (activeTab === 'explore') {
-      if (filters.program) filtered = filtered.filter(u => u.program.toLowerCase().includes(filters.program.toLowerCase()));
-      if (filters.semester) filtered = filtered.filter(u => u.semester.toString() === filters.semester);
-      if (filters.interest) filtered = filtered.filter(u => u.interests.some(i => i.toLowerCase().includes(filters.interest.toLowerCase())));
-      if (filters.location === 'nearby') filtered = filtered.filter(u => nearbyUserIds.has(u.id));
-      if (filters.availability === 'online') filtered = filtered.filter(u => u.online);
-    }
-    return filtered.sort((a, b) => b.matchPercent - a.matchPercent);
-  }, [filters, activeTab, connectionStates, incomingRequests, searchQuery]);
-
-  const handleConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
-    const status = connectionStates[userId] || currentStatus || 'none';
-    if (status === 'none') setConnectionStates(prev => ({ ...prev, [userId]: 'pending' }));
-    else if (status === 'pending') setConnectionStates(prev => ({ ...prev, [userId]: 'none' }));
-  };
-  const handleAcceptRequest = (userId: string) => {
-    setConnectionStates(prev => ({ ...prev, [userId]: 'connected' }));
-    setIncomingRequests(prev => prev.filter(id => id !== userId));
-  };
-  const handleRejectRequest = (userId: string) => {
-    setConnectionStates(prev => ({ ...prev, [userId]: 'none' }));
-    setIncomingRequests(prev => prev.filter(id => id !== userId));
-  };
-  const handleUnfriend = (userId: string) => {
-    setConnectionStates(prev => ({ ...prev, [userId]: 'none' }));
-    setShowUnfriendModal(null);
-  };
-  const clearFilters = () => setFilters({ program: '', semester: '', interest: '', location: '', availability: '' });
-  const activeFiltersCount = [filters.program, filters.semester, filters.interest, filters.location, filters.availability].filter(Boolean).length;
+  const uniquePrograms = useMemo(
+    () => Array.from(new Set(store.explore.map(u => u.career).filter((c): c is string => !!c))),
+    [store.explore]
+  );
+  const uniqueSemesters = useMemo(
+    () => Array.from(new Set(store.explore.map(u => u.semester))).sort((a, b) => a - b),
+    [store.explore]
+  );
 
   const nearbySuggestions = useMemo(() => {
     if (!geo.enabled || !geo.onCampus) return [];
-    return matchUsers.slice(0, 3).map(u => ({ ...u, matchPercent: Math.max(u.matchPercent, 72) }));
-  }, [geo.enabled, geo.onCampus]);
+    return store.explore.slice(0, 3).map(u => ({ ...u, matchPercent: Math.max(u.matchPercent, 72) }));
+  }, [geo.enabled, geo.onCampus, store.explore]);
 
   const nearbyUserIds = useMemo(
     () => new Set(nearbySuggestions.map(u => u.id)),
     [nearbySuggestions]
   );
 
+  const filteredUsers = useMemo(() => {
+    let filtered = [...activeUsers];
+    if (searchQuery) {
+      filtered = filtered.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (activeTab === 'explore') {
+      if (filters.program) filtered = filtered.filter(u => u.career?.toLowerCase().includes(filters.program.toLowerCase()));
+      if (filters.semester) filtered = filtered.filter(u => u.semester.toString() === filters.semester);
+      if (filters.interest) filtered = filtered.filter(u => u.tags.some(t => t.toLowerCase().includes(filters.interest.toLowerCase())));
+      if (filters.location === 'nearby') filtered = filtered.filter(u => nearbyUserIds.has(u.id));
+      if (filters.availability === 'online') filtered = filtered.filter(u => u.active);
+    }
+    return filtered.sort((a, b) => b.matchPercent - a.matchPercent);
+  }, [activeUsers, activeTab, filters, searchQuery, nearbyUserIds]);
+
+  const handleConnect = (userId: string) => {
+    const user = [...store.explore, ...store.sent].find(u => u.id === userId);
+    if (!user) return;
+    if (user.connectionStatus === 'none') {
+      store.sendRequest(userId);
+    } else if (user.connectionStatus === 'pending' && user.matchId) {
+      store.removeMatch(user.matchId);
+    }
+  };
+
+  const handleAcceptRequest = (userId: string) => {
+    const user = store.received.find(u => u.id === userId);
+    if (user?.matchId) store.acceptRequest(user.matchId);
+  };
+
+  const handleRejectRequest = (userId: string) => {
+    const user = store.received.find(u => u.id === userId);
+    if (user?.matchId) store.rejectRequest(user.matchId);
+  };
+
+  const handleUnfriend = (userId: string) => {
+    const user = store.friends.find(u => u.id === userId);
+    if (user?.matchId) store.removeMatch(user.matchId);
+    setShowUnfriendModal(null);
+  };
+
+  const clearFilters = () => setFilters({ program: '', semester: '', interest: '', location: '', availability: '' });
+  const activeFiltersCount = [filters.program, filters.semester, filters.interest, filters.location, filters.availability].filter(Boolean).length;
+
   const avgMatch = filteredUsers.length
     ? Math.round(filteredUsers.reduce((s, u) => s + u.matchPercent, 0) / filteredUsers.length)
     : 0;
-  const connectedCount = matchUsers.filter(u => getConnectionStatus(u.id, u.connectionStatus) === 'connected').length;
+  const connectedCount = store.friends.length;
+  const isLoading = store.loading[activeTab];
 
   const tabs = [
     { id: 'explore' as const, label: 'Explorar', icon: Sparkles, badge: 0 },
     { id: 'sent' as const, label: 'Enviadas', icon: Send, badge: 0 },
-    { id: 'received' as const, label: 'Recibidas', icon: UserPlus, badge: incomingRequests.length },
+    { id: 'received' as const, label: 'Recibidas', icon: UserPlus, badge: store.received.length },
     { id: 'friends' as const, label: 'Amigos', icon: UserCheck, badge: 0 },
   ];
 
@@ -181,7 +175,7 @@ export function MatchesPage() {
           {activeTab === 'explore' && (
             <div className="flex gap-2">
               {[
-                { icon: Users, label: 'Compatibles', value: matchUsers.length, color: TEAL },
+                { icon: Users, label: 'Compatibles', value: store.explore.length, color: TEAL },
                 { icon: Heart, label: 'Amigos', value: connectedCount, color: '#EC4899' },
                 { icon: Zap, label: 'Match prom.', value: `${avgMatch}%`, color: '#F59E0B' },
               ].map(stat => (
@@ -458,15 +452,15 @@ export function MatchesPage() {
                   <motion.button key={user.id} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/user/${user.id}`)} className="flex-shrink-0 flex flex-col items-center gap-1.5" style={{ width: 68 }}>
                     <div className="relative">
                       <div className="w-14 h-14 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,#10B981,#06B6D4)' }}>
-                        {user.avatar
-                          ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                        {user.photoUrl
+                          ? <img src={user.photoUrl} alt={user.name} className="w-full h-full object-cover" />
                           : <Avatar name={user.name} size={56} className="rounded-2xl" gradient="linear-gradient(135deg,#10B981,#06B6D4)" />
                         }
                       </div>
                       <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white shadow" style={{ background: 'linear-gradient(135deg,#10B981,#06B6D4)' }}>
                         {user.matchPercent}%
                       </div>
-                      {user.online && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#0A192F]" style={{ background: '#10B981' }} />}
+                      {user.active && <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#0A192F]" style={{ background: '#10B981' }} />}
                     </div>
                     <p className="text-[10px] font-bold text-gray-800 dark:text-white text-center leading-tight truncate w-full">{user.name.split(' ')[0]}</p>
                   </motion.button>
@@ -495,7 +489,14 @@ export function MatchesPage() {
           </motion.button>
         )}
 
-        {filteredUsers.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div
+              className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+              style={{ borderColor: TEAL }}
+            />
+          </div>
+        ) : filteredUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -525,7 +526,7 @@ export function MatchesPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {filteredUsers.map((user, i) => {
-              const status = getConnectionStatus(user.id, user.connectionStatus);
+              const status = user.connectionStatus;
               const grad = getCardGradient(user.matchPercent);
               return (
                 <motion.div
@@ -542,8 +543,8 @@ export function MatchesPage() {
                 >
                   <div className="relative" style={{ aspectRatio: '1/1' }}>
                     <div className="absolute inset-0" style={{ background: grad }} />
-                    {user.avatar && (
-                      <img src={user.avatar} alt={user.name} className="absolute inset-0 w-full h-full object-contain" />
+                    {user.photoUrl && (
+                      <img src={user.photoUrl} alt={user.name} className="absolute inset-0 w-full h-full object-contain" />
                     )}
                     <div
                       className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black text-white shadow-lg"
@@ -551,7 +552,7 @@ export function MatchesPage() {
                     >
                       {user.matchPercent}%
                     </div>
-                    {user.online && (
+                    {user.active && (
                       <div className="absolute top-1.5 left-1.5 w-2 h-2 rounded-full border border-white/50" style={{ background: '#10B981' }} />
                     )}
                     <div
@@ -560,7 +561,7 @@ export function MatchesPage() {
                     />
                     <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
                       <h3 className="text-white font-black text-[11px] leading-tight truncate">
-                        {user.name.split(' ')[0]}, {user.age}
+                        {user.name.split(' ')[0]}
                       </h3>
                       <p className="text-white/70 text-[9px] truncate">{user.semester}° sem.</p>
                     </div>
@@ -597,7 +598,7 @@ export function MatchesPage() {
                     ) : activeTab === 'sent' ? (
                       <motion.button
                         whileTap={{ scale: 0.95 }}
-                        onClick={e => { e.stopPropagation(); handleConnect(user.id, user.connectionStatus); }}
+                        onClick={e => { e.stopPropagation(); handleConnect(user.id); }}
                         className="w-full py-1.5 rounded-xl flex items-center justify-center gap-1 text-white text-[10px] font-bold"
                         style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}
                       >
@@ -615,7 +616,7 @@ export function MatchesPage() {
                     ) : (
                       <motion.button
                         whileTap={{ scale: 0.95 }}
-                        onClick={e => { e.stopPropagation(); handleConnect(user.id, user.connectionStatus); }}
+                        onClick={e => { e.stopPropagation(); handleConnect(user.id); }}
                         key={`${user.id}-${status}`}
                         className="w-full py-1.5 rounded-xl flex items-center justify-center gap-1 text-white text-[10px] font-bold transition-all"
                         style={{
@@ -665,15 +666,15 @@ export function MatchesPage() {
                 <div className="p-5">
                   <div className="flex items-start gap-4 mb-6">
                     <div className="relative">
-                      {selectedUser.avatar
-                        ? <img src={selectedUser.avatar} alt={selectedUser.name} className="w-24 h-24 rounded-2xl object-cover" />
+                      {selectedUser.photoUrl
+                        ? <img src={selectedUser.photoUrl} alt={selectedUser.name} className="w-24 h-24 rounded-2xl object-cover" />
                         : <Avatar name={selectedUser.name} size={96} className="rounded-2xl" gradient={TEAL_GRADIENT} fontSize="32px" />
                       }
-                      {selectedUser.online && <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-[#0A192F]" style={{ background: TEAL }} />}
+                      {selectedUser.active && <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-[#0A192F]" style={{ background: TEAL }} />}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-gray-900 dark:text-white font-bold text-xl mb-1">{selectedUser.name}, {selectedUser.age}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{selectedUser.program}</p>
+                      <h3 className="text-gray-900 dark:text-white font-bold text-xl mb-1">{selectedUser.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{selectedUser.career}</p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-[#112240] overflow-hidden">
                           <motion.div initial={{ width: 0 }} animate={{ width: `${selectedUser.matchPercent}%` }} transition={{ duration: 1 }}
@@ -689,30 +690,32 @@ export function MatchesPage() {
                       <p className="text-sm text-gray-700 dark:text-gray-300">{selectedUser.bio}</p>
                     </div>
                   )}
-                  <div className="mb-4">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">INTERESES</h4>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedUser.interests.map(interest => (
-                        <span key={interest} className="px-3 py-1.5 rounded-xl text-sm font-medium"
-                          style={{ background: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(10,25,47,0.06)', color: isDark ? '#67D2E8' : '#4A5568' }}>
-                          {interest}
-                        </span>
-                      ))}
+                  {selectedUser.tags.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">INTERESES</h4>
+                      <div className="flex gap-2 flex-wrap">
+                        {selectedUser.tags.map(tag => (
+                          <span key={tag} className="px-3 py-1.5 rounded-xl text-sm font-medium"
+                            style={{ background: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(10,25,47,0.06)', color: isDark ? '#67D2E8' : '#4A5568' }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  {getConnectionStatus(selectedUser.id, selectedUser.connectionStatus) === 'connected' ? (
+                  )}
+                  {selectedUser.connectionStatus === 'connected' ? (
                     <div className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2" style={{ background: '#10B981' }}>
                       <CheckCircle2 size={18} /> ✓ Conectados
                     </div>
                   ) : (
                     <motion.button
-                      onClick={() => handleConnect(selectedUser.id, selectedUser.connectionStatus)}
+                      onClick={() => handleConnect(selectedUser.id)}
                       whileTap={{ scale: 0.97 }}
-                      key={`modal-${selectedUser.id}-${getConnectionStatus(selectedUser.id, selectedUser.connectionStatus)}`}
+                      key={`modal-${selectedUser.id}-${selectedUser.connectionStatus}`}
                       className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg"
-                      style={{ background: getConnectionStatus(selectedUser.id, selectedUser.connectionStatus) === 'pending' ? '#F59E0B' : GRADIENT }}
+                      style={{ background: selectedUser.connectionStatus === 'pending' ? '#F59E0B' : GRADIENT }}
                     >
-                      {getConnectionStatus(selectedUser.id, selectedUser.connectionStatus) === 'pending'
+                      {selectedUser.connectionStatus === 'pending'
                         ? '⏱ Solicitud enviada (toca para cancelar)'
                         : 'Enviar solicitud de conexión'}
                     </motion.button>
