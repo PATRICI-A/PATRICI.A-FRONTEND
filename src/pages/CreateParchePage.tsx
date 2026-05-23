@@ -7,14 +7,14 @@ import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
 const categories = [
-  { id: 'musica', label: 'Música', emoji: '🎵', gradient: GRADIENT },
-  { id: 'deporte', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
-  { id: 'tecnologia', label: 'Tecnología', emoji: '💻', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)' },
-  { id: 'estudio', label: 'Estudio', emoji: '📚', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
-  { id: 'cultura', label: 'Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
-  { id: 'social', label: 'Social', emoji: '🤝', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
-  { id: 'gastronomia', label: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)' },
-  { id: 'bienestar', label: 'Bienestar', emoji: '🧘', gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' },
+  { id: 'MUSIC', label: 'Música', emoji: '🎵', gradient: GRADIENT },
+  { id: 'SPORT', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
+  { id: 'TECHNOLOGY', label: 'Tecnología', emoji: '💻', gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)' },
+  { id: 'STUDY', label: 'Estudio', emoji: '📚', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
+  { id: 'CULTURE', label: 'Cultura', emoji: '🎨', gradient: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)' },
+  { id: 'SOCIAL', label: 'Social', emoji: '🤝', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
+  { id: 'FOOD', label: 'Foodie', emoji: '🍕', gradient: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)' },
+  { id: 'WELLNESS', label: 'Bienestar', emoji: '🧘', gradient: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' },
 ];
 const friends = [
   { id: 'u2', name: 'Valentina R.', avatar: 'https://images.unsplash.com/photo-1641253762691-b5c07939449d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
@@ -22,9 +22,12 @@ const friends = [
   { id: 'u4', name: 'Sofía M.', avatar: 'https://images.unsplash.com/photo-1740512380326-12ea7fc64c53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
   { id: 'u5', name: 'Daniel C.', avatar: 'https://images.unsplash.com/photo-1766066014773-0074bf4911de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=50' },
 ];
+import { useApp } from '../store/AppContext';
+import { createParche, sendInvitation } from '../services/parches.service';
+
 export function CreateParchePage() {
   const navigate = useNavigate();
-
+  const { currentUser } = useApp();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -52,12 +55,39 @@ export function CreateParchePage() {
     }
   };
   const handleCreate = async () => {
-    if (!name || !category || !coverImage) return;
+    if (!name || !category) return;
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setCreated(true);
-    setIsLoading(false);
-    setTimeout(() => navigate('/parches'), 2000);
+    try {
+      const formattedTime = time ? `${time}:00` : "00:00:00";
+      const formattedDate = date || new Date().toISOString().split('T')[0];
+      
+      const newParche = await createParche({
+        name,
+        description,
+        lugar: location || 'Campus',
+        category,
+        date: formattedDate,
+        hour: formattedTime,
+        maximumQuota: parseInt(maxMembers) || 10,
+        type: isPublic ? 'PUBLIC' : 'PRIVATE',
+        eventId: eventId || undefined,
+        imageUrl: coverImage || undefined,
+      }, currentUser?.id || 'u1');
+
+      if (invitedFriends.length > 0) {
+        await Promise.allSettled(
+          invitedFriends.map(friendId => sendInvitation(newParche.id, friendId))
+        );
+      }
+      
+      setCreated(true);
+      setTimeout(() => navigate('/parches'), 2000);
+    } catch (err: unknown) {
+      alert("Error al crear parche");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
   const selectedCategory = categories.find(c => c.id === category);
   if (created) {
@@ -336,7 +366,7 @@ export function CreateParchePage() {
           {}
           <button
             onClick={handleCreate}
-            disabled={!name || !category || !coverImage || isLoading}
+            disabled={!name || !category || isLoading}
             className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
             style={{ background: GRADIENT }}
           >
