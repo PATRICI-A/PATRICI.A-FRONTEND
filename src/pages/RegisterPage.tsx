@@ -357,7 +357,7 @@ export function RegisterPage() {
     password === confirmPassword;
   const step3Valid = program !== '' && semester !== '' && /^\d{10}$/.test(studentId);
   useEffect(() => {
-    if (step !== 2 || otpTimeLeft <= 0) return;
+    if (step !== 3 || otpTimeLeft <= 0) return;
     const t = setInterval(() => {
       setOtpTimeLeft(s => {
         if (s <= 1) { setOtpStatus('expired'); return 0; }
@@ -458,7 +458,7 @@ export function RegisterPage() {
     try {
       await authService.verifyOtp(email, full);
       setOtpStatus('idle'); setErrors({});
-      setStep(3);
+      setStep(4);
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string }; status?: number } };
       const newAttempts = otpAttempts + 1;
@@ -481,24 +481,8 @@ export function RegisterPage() {
   };
   const handleNext = async () => {
     if (step === 1) {
-      setIsLoading(true);
-      try {
-        await authService.initVerification(email, password);
-        setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
-        setOtpAttempts(0); setOtpStatus('idle'); setResendCooldown(0);
-        setStep(2);
-        setTimeout(() => codeRefs.current[0]?.focus(), 300);
-      } catch (err: unknown) {
-        const status = (err as { response?: { status?: number } })?.response?.status;
-        if (status === 409) {
-          setShowEmailExistsModal(true);
-        } else {
-          setErrors({ email: `Error ${status ?? 'de red'} al enviar el código. Intenta de nuevo.` });
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    } else if (step === 3) {
+      setStep(2);
+    } else if (step === 2) {
       const errs: Record<string, string> = {};
       if (!program)  errs.program  = 'Selecciona tu programa';
       if (!semester) errs.semester = 'Selecciona tu semestre';
@@ -508,20 +492,39 @@ export function RegisterPage() {
       setIsLoading(true);
       try {
         const career = CAREER_MAP[program] ?? 'SYSTEMS_ENGINEERING';
+        const cleanEmail = email.trim().toLowerCase().replace(/['"]/g, '');
+        console.log('email enviado al backend:', cleanEmail, '| chars:', [...cleanEmail].map(c => c.charCodeAt(0)));
         const created = await profileService.createStudent({
-          name: `${firstName} ${lastName}`,
-          email,
+          name: `${firstName.trim()} ${lastName.trim()}`.replace(/['"]/g, ''),
+          email: cleanEmail,
           password,
           gender,
           career,
           semester: parseInt(semester),
           studentCarnet: studentId,
           dateOfBirth: birthDate,
+          privacyLevel: 'PUBLIC',
+          geolocationEnabled: false,
+          photourl: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(`${firstName.trim()} ${lastName.trim()}`) + '&background=random',
         });
         localStorage.setItem('patricia_user_id', created.id);
-        setStep(4);
-      } catch {
-        setErrors({ program: 'Error al guardar tu perfil. Intenta de nuevo.' });
+        setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
+        setOtpAttempts(0); setOtpStatus('idle'); setResendCooldown(0);
+        setStep(3);
+        setTimeout(() => codeRefs.current[0]?.focus(), 300);
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { data?: { message?: string; error?: string } | string; status?: number } };
+        const status = axiosErr.response?.status;
+        const raw = axiosErr.response?.data;
+        const serverMsg = raw
+          ? (typeof raw === 'object' ? (raw.message ?? raw.error) : String(raw))
+          : undefined;
+        console.error('createStudent 400 detail:', { status, serverMsg, raw });
+        if (status === 409) {
+          setShowEmailExistsModal(true);
+        } else {
+          setErrors({ program: serverMsg ?? `Error ${status ?? 'de red'} al crear tu cuenta. Intenta de nuevo.` });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -577,7 +580,7 @@ export function RegisterPage() {
     if (touched[field] && !errors[field] && !forceErr) return 'border-emerald-400 focus:border-emerald-500';
     return 'border-gray-200 dark:border-[#233554] focus:border-[#06B6D4]';
   };
-  const steps = ['Cuenta', 'Verificación', 'Perfil', 'Intereses'];
+  const steps = ['Cuenta', 'Perfil', 'Verificación', 'Intereses'];
   return (
     <div className="min-h-screen transition-colors duration-300 flex flex-col md:flex-row relative">
       <div
@@ -752,11 +755,11 @@ export function RegisterPage() {
                 </div>
                 <div className="mt-8 space-y-3">
                   <motion.button
-                    onClick={handleNext} disabled={!step1Valid || isLoading} whileTap={step1Valid && !isLoading ? { scale: 0.97 } : {}}
+                    onClick={handleNext} disabled={!step1Valid} whileTap={step1Valid ? { scale: 0.97 } : {}}
                     className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all flex items-center justify-center gap-2 shadow-lg"
-                    style={{ background: step1Valid && !isLoading ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'), opacity: step1Valid && !isLoading ? 1 : 0.6, cursor: step1Valid && !isLoading ? 'pointer' : 'not-allowed' }}
+                    style={{ background: step1Valid ? GRADIENT : (isDark ? '#1E3A5F' : '#CBD5E1'), opacity: step1Valid ? 1 : 0.6, cursor: step1Valid ? 'pointer' : 'not-allowed' }}
                   >
-                    {isLoading ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enviando código...</> : <>Continuar <ArrowRight size={18} /></>}
+                    <>Continuar <ArrowRight size={18} /></>
                   </motion.button>
                   <p className="text-center text-sm text-gray-900 dark:text-white">
                     ¿Ya tienes cuenta?{' '}
@@ -765,8 +768,8 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-            {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
+            {step === 3 && (
+              <motion.div key="step3-otp" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="text-center mb-6">
                   <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: GRADIENT, boxShadow: '0 8px 24px rgba(6,182,212,0.35)' }}>
                     <ShieldCheck size={28} color="white" strokeWidth={2} />
@@ -847,8 +850,8 @@ export function RegisterPage() {
                 </div>
               </motion.div>
             )}
-            {step === 3 && (
-              <motion.div key="step3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
+            {step === 2 && (
+              <motion.div key="step2-profile" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="flex-1">
                 <div className="mb-6">
                   <h1 className="text-gray-900 dark:text-white">Tu perfil académico</h1>
                   <p className="text-sm text-gray-900 dark:text-white">Ayúdanos a conectarte mejor</p>

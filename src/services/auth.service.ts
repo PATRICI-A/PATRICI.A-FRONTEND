@@ -71,8 +71,8 @@ export const authService = {
     return { tokens: data, user };
   },
 
-  async initVerification(email: string, hashedPassword: string): Promise<MessageResponse> {
-    const { data } = await api.post<MessageResponse>('/auth/init-verification', { email, hashedPassword });
+  async initVerification(email: string): Promise<MessageResponse> {
+    const { data } = await api.post<MessageResponse>('/auth/init-verification', { email });
     return data;
   },
 

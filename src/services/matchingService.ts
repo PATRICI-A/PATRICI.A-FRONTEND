@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const matchingApi = axios.create({
-  baseURL: 'https://patricia-social-matching-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  baseURL: '/svc/matching',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });

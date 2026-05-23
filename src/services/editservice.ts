@@ -29,7 +29,8 @@ export const editService = {
     },
 
     updateProfile: async (data: UIProfileData) => {
-        // Mapeo: UI -> Backend
+        const userId = localStorage.getItem('patricia_user_id');
+        if (!userId) throw new Error('No user ID found');
         const payload = {
             name: data.name,
             biography: data.bio,
@@ -40,7 +41,6 @@ export const editService = {
             privacyLevel: data.privacidad,
             interests: data.interests
         };
-
-        return await profileService.updateProfile(payload);
+        return await profileService.updateProfile(userId, payload);
     }
 };

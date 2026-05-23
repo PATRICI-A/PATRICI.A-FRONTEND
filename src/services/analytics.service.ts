@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Dedicated axios instance pointing at the analytics microservice
 const analyticsApi = axios.create({
-  baseURL: 'https://patricia-stati-analytics-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  baseURL: '/svc/analytics',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });

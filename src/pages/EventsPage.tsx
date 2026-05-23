@@ -10,6 +10,43 @@ import { events, GRADIENT, PINK } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import type { Event } from '../types/mockData';
 import mascotRockstar from '../assets/mascota_rockstar.png';
+import { eventsService } from '../services/events.service';
+import type { ApiEvent } from '../services/events.service';
+
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const API_CATEGORY_META: Record<string, { uiCat: string; emoji: string; gradient: string }> = {
+  ACADEMIC: { uiCat: 'Tecnología', emoji: '💻', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
+  CULTURAL: { uiCat: 'Arte',       emoji: '🎨', gradient: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)' },
+  SPORTS:   { uiCat: 'Social',     emoji: '⚽', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
+  WELLNESS: { uiCat: 'Bienestar',  emoji: '🧘', gradient: 'linear-gradient(135deg, #06B6D4 0%, #10B981 100%)' },
+};
+
+function apiEventToMock(e: ApiEvent, registeredIds: Set<string>): Event {
+  const d = new Date(e.dateTime);
+  const dateStr = `${d.getDate()} ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+  const meta = API_CATEGORY_META[e.category] ?? { uiCat: 'Social', emoji: '🎉', gradient: GRADIENT };
+  const attended = (e.maxCapacity ?? 0) - (e.availableCapacity ?? e.maxCapacity ?? 0);
+  return {
+    id: e.id,
+    title: e.name,
+    description: e.description ?? '',
+    category: meta.uiCat,
+    emoji: meta.emoji,
+    date: dateStr,
+    time: e.startTime ?? '',
+    location: e.location,
+    organizer: 'Escuela Colombiana de Ingeniería',
+    attendees: Math.max(attended, 0),
+    maxAttendees: e.maxCapacity,
+    coverGradient: meta.gradient,
+    official: e.type === 'WITH_CAPACITY',
+    registered: registeredIds.has(e.id),
+    reminder: false,
+    tags: [meta.uiCat],
+    isPast: e.status === 'FINISHED' || e.status === 'CANCELLED',
+  };
+}
 
 
 const CATEGORIES = ['Todos', 'Música', 'Tecnología', 'Bienestar', 'Social', 'Arte', 'Emprendimiento'];
@@ -75,12 +112,28 @@ export function EventsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showFullCalendar, setShowFullCalendar] = useState(false);
 
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [eventStates, setEventStates] = useState<Record<string, { registered: boolean; reminder: boolean }>>(
     Object.fromEntries(events.map(e => [e.id, { registered: e.registered, reminder: e.reminder }]))
   );
   const [attendeeCounts, setAttendeeCounts] = useState<Record<string, number>>(
     Object.fromEntries(events.map(e => [e.id, e.attendees]))
   );
+
+  useEffect(() => {
+    Promise.all([eventsService.getEvents(), eventsService.getMyAgenda()])
+      .then(([apiEvents, agenda]) => {
+        const registeredIds = new Set(agenda.map(e => e.id));
+        const transformed = apiEvents.map(e => apiEventToMock(e, registeredIds));
+        setAllEvents(transformed);
+        setEventStates(Object.fromEntries(
+          transformed.map(e => [e.id, { registered: e.registered, reminder: false }])
+        ));
+        setAttendeeCounts(Object.fromEntries(
+          transformed.map(e => [e.id, e.attendees])
+        ));
+      });
+  }, []);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showQRFor, setShowQRFor] = useState<string | null>(null);
   const [cancelModal, setCancelModal] = useState<{ eventId: string; reason: string } | null>(null);
@@ -103,8 +156,8 @@ export function EventsPage() {
   const isPast = (event: Event) => !!event.isPast;
 
   const carouselEvents = useMemo(() => {
-    return events.filter(e => !isPast(e));
-  }, []);
+    return allEvents.filter(e => !isPast(e));
+  }, [allEvents]);
 
   const spotsLeft = (event: Event) => {
     if (!event.maxAttendees) return null;
@@ -118,10 +171,11 @@ export function EventsPage() {
 
   const handleConfirmAttendance = (eventId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const event = events.find(ev => ev.id === eventId);
+    const event = allEvents.find(ev => ev.id === eventId);
     if (!event || isPast(event) || !hasCapacity(event)) return;
     setEventStates(prev => ({ ...prev, [eventId]: { ...prev[eventId], registered: true } }));
     setAttendeeCounts(prev => ({ ...prev, [eventId]: (prev[eventId] ?? 0) + 1 }));
+    eventsService.rsvpEvent(eventId, 'CONFIRM');
   };
 
   const handleStartCancel = (eventId: string, e?: React.MouseEvent) => {
@@ -136,6 +190,7 @@ export function EventsPage() {
     setAttendeeCounts(prev => ({ ...prev, [eventId]: Math.max((prev[eventId] ?? 0) - 1, 0) }));
     setCancelModal(null);
     if (selectedEvent?.id === eventId) setSelectedEvent(null);
+    eventsService.rsvpEvent(eventId, 'CANCEL');
   };
 
   const toggleReminder = (id: string, e?: React.MouseEvent) => {
@@ -167,10 +222,10 @@ export function EventsPage() {
 
   const hasEventOnDate = (d: Date) => {
     const formatted = formatEventDate(d);
-    return events.some(e => e.date === formatted);
+    return allEvents.some(e => e.date === formatted);
   };
 
-  const allFiltered = useMemo(() => events.filter(e => {
+  const allFiltered = useMemo(() => allEvents.filter(e => {
     const matchesCategory = activeCategory === 'Todos' || e.category === activeCategory;
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -178,7 +233,7 @@ export function EventsPage() {
     const matchesDate = dateFilter === 'Todos' || getEventMonth(e.date) === dateFilter;
     const matchesSelectedDate = !selectedDate || e.date === formatEventDate(selectedDate);
     return matchesCategory && matchesSearch && matchesOfficial && matchesDate && matchesSelectedDate;
-  }), [activeCategory, searchQuery, showOfficialOnly, dateFilter, selectedDate]);
+  }), [allEvents, activeCategory, searchQuery, showOfficialOnly, dateFilter, selectedDate]);
 
   const upcomingEvents = allFiltered.filter(e => !isPast(e));
   const pastEvents = allFiltered.filter(e => isPast(e));
@@ -190,8 +245,8 @@ export function EventsPage() {
   }, [upcomingEvents, carouselEvents, carouselIndex, activeCategory, searchQuery, selectedDate]);
 
   const agendaEvents = useMemo(() => {
-    return events.filter(e => eventStates[e.id]?.registered);
-  }, [eventStates]);
+    return allEvents.filter(e => eventStates[e.id]?.registered);
+  }, [allEvents, eventStates]);
 
   const nextAgendaEvent = useMemo(() => {
     const activeUpcoming = agendaEvents.filter(e => !isPast(e));
@@ -1201,7 +1256,7 @@ export function EventsPage() {
         <div className="px-5 mb-4">
           <h3 className="font-semibold text-sm text-gray-800 dark:text-white mb-3">Tus Recordatorios</h3>
           <div className="space-y-2">
-            {events.filter(e => eventStates[e.id]?.reminder).map(event => (
+            {allEvents.filter(e => eventStates[e.id]?.reminder).map(event => (
               <div key={event.id} className="flex items-center gap-3 bg-white dark:bg-[#112240] rounded-xl p-3 shadow-sm">
                 <BellRing size={16} color="#60A5FA" />
                 <div className="flex-1 min-w-0">

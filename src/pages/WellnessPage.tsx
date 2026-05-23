@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -10,6 +10,33 @@ import {
 import { GRADIENT, TEAL, TEAL_GRADIENT, wellnessResources } from '../types/mockData';
 import type { WellnessResource } from '../types/mockData';
 import mascotImg from '../assets/PATYPSICO.png';
+import { wellnessService } from '../services/wellness.service';
+import type { WellnessResourceResponse, ReportType } from '../services/wellness.service';
+
+const API_CAT_TO_FRONTEND: Record<string, WellnessResource['category']> = {
+  HEALTH: 'SALUD', SPORTS: 'DEPORTE', CULTURE: 'CULTURA', EMOTIONAL_SUPPORT: 'MENTAL_HEALTH',
+};
+
+function apiResourceToMock(r: WellnessResourceResponse): WellnessResource {
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    category: API_CAT_TO_FRONTEND[r.category] ?? 'SALUD',
+    schedule: r.schedule ?? '',
+    contact: r.contactInfo,
+    active: r.available,
+    location: r.location,
+  };
+}
+
+const INCIDENT_TYPE_MAP: Record<string, ReportType> = {
+  acoso: 'HARASSMENT',
+  seguridad: 'INAPPROPRIATE_BEHAVIOR',
+  infraestructura: 'OFFENSIVE_CONTENT',
+  salud: 'OFFENSIVE_CONTENT',
+  otro: 'OFFENSIVE_CONTENT',
+};
 import energiaCampusImg from '../assets/EnergiaCampus-removebg-preview.png';
 import saludImg from '../assets/Salud-removebg-preview.png';
 import enfermeriaImg from '../assets/Enfermeria-removebg-preview.png';
@@ -213,6 +240,13 @@ export function WellnessPage() {
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [showIncidentModal, setShowIncidentModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [allResources, setAllResources] = useState<WellnessResource[]>(wellnessResources);
+
+  useEffect(() => {
+    wellnessService.getResources().then(apiResources => {
+      if (apiResources.length > 0) setAllResources(apiResources.map(apiResourceToMock));
+    });
+  }, []);
 
   const [surveyCompleted, setSurveyCompleted] = useState<boolean>(() =>
     localStorage.getItem('patricia_survey_completed') === 'true'
@@ -250,18 +284,33 @@ export function WellnessPage() {
     localStorage.setItem('patricia_survey_recommendations', JSON.stringify(recs));
     addXP(XP_REWARD);
     setSuccessMessage(`¡+${XP_REWARD} XP! Encuesta enviada con éxito.`);
+    const responses = Object.entries(surveyAnswers).map(([questionId, { text }]) => ({ questionId, answer: text }));
+    wellnessService.submitSurvey(responses).then(result => {
+      if (result?.recommendedCategories?.length) {
+        wellnessService.getRecommendations().then(apiRecs => {
+          if (apiRecs.length > 0) {
+            const existing = new Set(allResources.map(r => r.id));
+            const newMapped = apiRecs.filter(r => !existing.has(r.id)).map(apiResourceToMock);
+            if (newMapped.length) setAllResources(prev => [...prev, ...newMapped]);
+            setRecommendations(prev => Array.from(new Set([...prev, ...apiRecs.map(r => r.id)])));
+          }
+        });
+      }
+    });
     setTimeout(() => { setSuccessMessage(''); setShowSurveyModal(false); setActiveTab('RECOMMENDATIONS'); }, 2500);
   };
 
   const handleIncidentSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     if (!incidentDescription.trim()) return;
+    const reportType = INCIDENT_TYPE_MAP[incidentType] ?? 'OFFENSIVE_CONTENT';
+    wellnessService.submitReport(reportType, incidentDescription);
     setSuccessMessage('Incidente reportado con éxito de manera confidencial.');
     setIncidentDescription(''); setIncidentLocation(''); setStudentId(''); setIsAnonymous(false);
     setTimeout(() => { setSuccessMessage(''); setShowIncidentModal(false); }, 2500);
   };
 
-  const filtered = wellnessResources.filter(r => {
+  const filtered = allResources.filter(r => {
     if (showActiveOnly && !r.active) return false;
     if (activeTab === 'RECOMMENDATIONS') return recommendations.includes(r.id);
     if (activeTab !== 'ALL' && r.category !== activeTab) return false;

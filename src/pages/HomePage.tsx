@@ -5,6 +5,34 @@ import { toast } from 'sonner';
 import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import { parches, matchUsers, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
+import type { Event, Mona } from '../types/mockData';
+import { eventsService } from '../services/events.service';
+import type { ApiEvent } from '../services/events.service';
+import { getMonas } from '../services/gamification.service';
+
+const HOME_MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const HOME_CAT_META: Record<string, { uiCat: string; emoji: string; gradient: string }> = {
+  ACADEMIC: { uiCat: 'Tecnología', emoji: '💻', gradient: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)' },
+  CULTURAL: { uiCat: 'Arte',       emoji: '🎨', gradient: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)' },
+  SPORTS:   { uiCat: 'Social',     emoji: '⚽', gradient: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)' },
+  WELLNESS: { uiCat: 'Bienestar',  emoji: '🧘', gradient: 'linear-gradient(135deg, #06B6D4 0%, #10B981 100%)' },
+};
+function homeApiEventToMock(e: ApiEvent): Event {
+  const d = new Date(e.dateTime);
+  const meta = HOME_CAT_META[e.category] ?? { uiCat: 'Social', emoji: '🎉', gradient: GRADIENT };
+  const attended = (e.maxCapacity ?? 0) - (e.availableCapacity ?? e.maxCapacity ?? 0);
+  return {
+    id: e.id, title: e.name, description: e.description ?? '',
+    category: meta.uiCat, emoji: meta.emoji,
+    date: `${d.getDate()} ${HOME_MONTHS[d.getMonth()]} ${d.getFullYear()}`,
+    time: e.startTime ?? '', location: e.location,
+    organizer: 'Escuela Colombiana de Ingeniería',
+    attendees: Math.max(attended, 0), maxAttendees: e.maxCapacity,
+    coverGradient: meta.gradient, official: e.type === 'WITH_CAPACITY',
+    registered: false, reminder: false, tags: [meta.uiCat],
+    isPast: e.status === 'FINISHED' || e.status === 'CANCELLED',
+  };
+}
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfie from '../assets/PatySelfie.png';
 import patyAlbum from '../assets/Album.png';
@@ -20,6 +48,20 @@ export function HomePage() {
   const { currentUser, isDark, geo } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
+  const [homeEvents, setHomeEvents] = useState<Event[]>([]);
+  const [homeMonas, setHomeMonas] = useState<Mona[]>(monas);
+
+  useEffect(() => {
+    eventsService.getEvents().then(apiEvents => {
+      if (apiEvents.length > 0) setHomeEvents(apiEvents.map(homeApiEventToMock));
+    });
+    getMonas().then(apiMonas => {
+      if (apiMonas.length > 0) {
+        const unlockedSet = new Set(apiMonas.filter(m => m.unlocked).map(m => m.monaId));
+        setHomeMonas(monas.map(m => ({ ...m, unlocked: unlockedSet.has(m.id) })));
+      }
+    });
+  }, []);
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const autoplayTimerRef = useRef<any>(null);
@@ -29,7 +71,7 @@ export function HomePage() {
       clearInterval(autoplayTimerRef.current);
     }
     autoplayTimerRef.current = setInterval(() => {
-      setCurrentEventIndex(prev => (prev + 1) % events.length);
+      setCurrentEventIndex(prev => (prev + 1) % homeEvents.length);
     }, 6000);
   };
 
@@ -46,12 +88,12 @@ export function HomePage() {
   }, []);
 
   const handleNextEvent = () => {
-    setCurrentEventIndex(prev => (prev + 1) % events.length);
+    setCurrentEventIndex(prev => (prev + 1) % homeEvents.length);
     startAutoplay();
   };
 
   const handlePrevEvent = () => {
-    setCurrentEventIndex(prev => (prev === 0 ? events.length - 1 : prev - 1));
+    setCurrentEventIndex(prev => (prev === 0 ? homeEvents.length - 1 : prev - 1));
     startAutoplay();
   };
 
@@ -96,14 +138,14 @@ export function HomePage() {
   const getConnectionStatus = (userId: string, originalStatus?: 'none' | 'pending' | 'connected') => {
     return connectionStates[userId] || originalStatus || 'none';
   };
-  const featuredEvent = events[0];
+  const featuredEvent = homeEvents[currentEventIndex] ?? homeEvents[0];
   const topParches = parches.slice(0, 3);
   const topMatches = matchUsers.slice(0, 4);
-  const unlockedMonas = monas.filter(m => m.unlocked);
-  const totalMonas = monas.length;
-  const albumPercent = Math.round((unlockedMonas.length / totalMonas) * 100);
+  const unlockedMonas = homeMonas.filter(m => m.unlocked);
+  const totalMonas = homeMonas.length;
+  const albumPercent = totalMonas > 0 ? Math.round((unlockedMonas.length / totalMonas) * 100) : 0;
   const recentMonas = unlockedMonas.slice(-4);
-  const nextMona = monas.find(m => !m.unlocked);
+  const nextMona = homeMonas.find(m => !m.unlocked);
   return (
     <div className="w-full md:w-4/6 md:mx-auto flex flex-col min-h-screen pb-4">
       {}
@@ -634,8 +676,8 @@ export function HomePage() {
         </div>
       </section>
       {}
-      <section className="px-5 mb-8 relative">
-        
+      {homeEvents.length > 0 && <section className="px-5 mb-8 relative">
+
         <div className="flex items-end justify-between mb-4 relative z-20">
           <div>
             <div className="flex items-center gap-2">
@@ -655,7 +697,7 @@ export function HomePage() {
           <div className="relative min-h-[460px] sm:min-h-[360px] w-full overflow-visible">
             <AnimatePresence mode="wait">
               {(() => {
-                const event = events[currentEventIndex];
+                const event = homeEvents[currentEventIndex] ?? homeEvents[0];
                 return (
                   <motion.div
                     key={currentEventIndex}
@@ -852,7 +894,7 @@ export function HomePage() {
 
           
           <div className="flex justify-center gap-2 mt-4 relative z-20">
-            {events.map((_, idx) => (
+            {homeEvents.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectEvent(idx)}
@@ -868,10 +910,10 @@ export function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
       {}
       <section className="px-5 mb-8 relative">
-        
+
         <div className="flex items-end justify-between mb-4 relative z-20">
           <div>
             <div className="flex items-center gap-2">

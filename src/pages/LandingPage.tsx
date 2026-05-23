@@ -43,9 +43,9 @@ const patriciaRarities = [
 ];
 
 const testimonials = [
-  { id: 't1', name: 'Carlos M.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100', program: 'Ingeniería de Sistemas · 5to semestre', comment: 'La mejor plataforma para conectar con estudiantes de mi facultad. Encontré mi grupo de estudio y ahora compartimos recursos y nos ayudamos mutuamente.', date: 'Hace 2 días', rating: 5 },
-  { id: 't2', name: 'María S.', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100', program: 'Diseño Industrial · 3er semestre', comment: 'Increíble cómo patrici.a facilita la organización de eventos y parches. Ya he asistido a 5 eventos este mes.', date: 'Hace 1 semana', rating: 5 },
-  { id: 't3', name: 'Andrés L.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100', program: 'Administración · 7mo semestre', comment: 'El sistema de patricias es adictivo! Me encanta desbloquear nuevas y ver mi progreso en el campus.', date: 'Hace 3 días', rating: 4 },
+  { id: 't1', name: 'Ignacio Castillo', program: 'Estudiante · 7 Semestre Ingeniería de Sistemas', comment: 'Sería chévere esta oportunidad de interactuar con demás carreras.' },
+  { id: 't2', name: 'Laura', program: '3 Semestre Ingeniería Civil', comment: 'Mi mayor dificultad es encontrar personas con mis mismos intereses, me gustaría tener una ayuda para poder socializar.' },
+  { id: 't3', name: 'Santiago Malagón', program: 'Graduado de Economía', comment: 'Me parece una aplicación muy buena y útil, en su momento me hubiera servido mucho.' },
 ];
 
 export function LandingPage() {
@@ -448,28 +448,13 @@ export function LandingPage() {
                   <div className="bg-white dark:bg-[#112240] w-full rounded-[3rem] p-5 sm:p-8 md:p-14 border border-gray-100 dark:border-[#233554] shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden group">
                     <Quote size={80} className="absolute -top-4 -right-4 text-blue-500/5 dark:text-blue-400/5 rotate-12 transition-transform duration-700 group-hover:rotate-0 group-hover:scale-110" />
                     
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
-                      <div className="relative">
-                        <img
-                          src={testimonials[currentTestimonialIndex].avatar}
-                          alt={testimonials[currentTestimonialIndex].name}
-                          className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full object-cover shadow-xl border-4 border-white dark:border-[#1A2C4E]"
-                        />
-                      </div>
-                      
-                      <div className="flex-1 text-center md:text-left">
-                        <div className="flex items-center justify-center md:justify-start gap-1 mb-4">
-                          {[...Array(testimonials[currentTestimonialIndex].rating)].map((_, i) => (
-                            <Star key={i} size={18} className="fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                        <p className="text-sm sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed font-medium italic mb-6">
-                          "{testimonials[currentTestimonialIndex].comment}"
-                        </p>
-                        <div>
-                          <p className="font-bold text-lg text-gray-900 dark:text-white">{testimonials[currentTestimonialIndex].name}</p>
-                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonials[currentTestimonialIndex].program}</p>
-                        </div>
+                    <div className="relative z-10">
+                      <p className="text-sm sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed font-medium italic mb-6">
+                        "{testimonials[currentTestimonialIndex].comment}"
+                      </p>
+                      <div>
+                        <p className="font-bold text-lg text-gray-900 dark:text-white">{testimonials[currentTestimonialIndex].name}</p>
+                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonials[currentTestimonialIndex].program}</p>
                       </div>
                     </div>
                   </div>
@@ -482,6 +467,20 @@ export function LandingPage() {
              <button onClick={nextTestimonial} className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 bg-white dark:bg-[#1A2C4E] rounded-full shadow-xl border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-800 dark:text-white z-20 hover:scale-110 transition-transform">
                 <ChevronRight size={22} />
              </button>
+          </div>
+
+          <div className="text-center mt-6 mb-8 relative z-10">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Para ver más testimonios visita nuestro Instagram:{' '}
+              <a
+                href="https://www.instagram.com/patrici.a_eci"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                @patrici.a_eci
+              </a>
+            </p>
           </div>
 
           <div className="max-w-4xl mx-auto relative z-10">

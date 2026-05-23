@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
-import { notifications as initialNotifications, type Notification } from '../types/mockData';
+import { type Notification } from '../types/mockData';
 import { decodeTokenToUser, clearAuth } from '../services/auth.service';
 
 export interface User {
@@ -83,7 +83,7 @@ export function AppProvider({ children }: { readonly children: ReactNode }) {
   const initialAuth = getInitialAuthState();
   const [isLoggedIn, setIsLoggedIn] = useState(initialAuth.isLoggedIn);
   const [currentUser, setCurrentUser] = useState<User | null>(initialAuth.currentUser);
-  const [notificationsList, setNotificationsList] = useState<Notification[]>(initialNotifications);
+  const [notificationsList, setNotificationsList] = useState<Notification[]>([]);
   const [geo, setGeoState] = useState<GeoState>(GEO_INITIAL);
 
   useEffect(() => {

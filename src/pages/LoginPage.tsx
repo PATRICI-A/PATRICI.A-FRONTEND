@@ -7,7 +7,7 @@ import { useApp } from '../store/AppContext';
 import { GRADIENT, PINK } from '../types/mockData';
 import { authService } from '../services/auth.service';
 import logoImg from '../assets/logo_nuevo_patricia.png';
-import patiLoginImg from '../assets/pati-login.png';
+import patiLoginImg from '../assets/patySinFondo.png';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';

@@ -13,7 +13,6 @@ import { authService } from '../services/auth.service';
 import fondoClaro from '../assets/fondoClaroPATRICIA.png';
 import fondoOscuro from '../assets/fondoOscuroPATRICIA.png';
 import patiOlvidareImg from '../assets/pati-olvidar.png';
-import patiRestablecerImg from '../assets/pati-restablecer.png';
 const TEAL  = '#06B6D4';
 const GOLD  = '#F59E0B';
 const OTP_DURATION     = 600;
@@ -594,7 +593,7 @@ export function ForgotPasswordPage() {
               </div>
               <div className="order-2 lg:order-1 flex justify-center">
                 <img
-                  src={phase === 'email' ? patiOlvidareImg : patiRestablecerImg}
+                  src={patiOlvidareImg}
                   alt={phase === 'email' ? 'Patricia Olvidé contraseña' : 'Patricia Restablecer contraseña'}
                   className="w-full max-w-md rounded-[2rem] object-cover bg-transparent"
                 />

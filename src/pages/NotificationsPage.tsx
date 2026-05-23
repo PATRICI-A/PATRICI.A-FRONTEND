@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Bell, Check, Trash2, MessageCircle, Users, Calendar, PartyPopper, AlertCircle, Zap } from 'lucide-react';
 import { type Notification } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
+import { notificationsService, mapApiNotification } from '../services/notifications.service';
 
 // Mascot Assets
 import mascotaDurmiendo from '../assets/mascota_durmiendo.png';
@@ -95,6 +96,14 @@ export function NotificationsPage() {
   const { isDark, notificationsList: notifications, setNotificationsList: setNotifications } = useApp();
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
 
+  useEffect(() => {
+    notificationsService.getNotifications().then(apiNotifs => {
+      if (apiNotifs.length > 0) {
+        setNotifications(apiNotifs.map(mapApiNotification) as Notification[]);
+      }
+    });
+  }, []);
+
   // Total unread notifications count (global badge)
   const totalUnreadCount = notifications.filter(n => !n.read).length;
 
@@ -103,6 +112,7 @@ export function NotificationsPage() {
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
+    notificationsService.markAsRead(id);
   };
 
   // Delete a single notification
@@ -114,16 +124,17 @@ export function NotificationsPage() {
   const handleMarkAllAsRead = () => {
     setNotifications(prev =>
       prev.map(n => {
-        const belongsToCat = 
+        const belongsToCat =
           activeCategory === 'all' ||
           (activeCategory === 'chat' && n.type === 'chat') ||
           (activeCategory === 'match' && (n.type === 'match' || n.type === 'high_match')) ||
           (activeCategory === 'event' && (n.type === 'event' || n.type === 'event_reminder')) ||
           (activeCategory === 'parches' && n.type === 'parche_invitation');
-        
+
         return belongsToCat ? { ...n, read: true } : n;
       })
     );
+    if (activeCategory === 'all') notificationsService.markAllAsRead();
   };
 
   // Click on a notification triggers navigation/read action

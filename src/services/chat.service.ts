@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Dedicated axios instance for the chat microservice
 const chatApi = axios.create({
-  baseURL: 'https://patricia-chat-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  baseURL: '/svc/chat',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });

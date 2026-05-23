@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const profileApi = axios.create({
-  baseURL: 'https://patricia-profile-service-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io',
+  baseURL: '/svc/profile',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -159,10 +159,10 @@ export const profileService = {
     const id = userId ?? localStorage.getItem('patricia_user_id');
     if (!id) return null;
     try {
-      const response = await profileApi.get(`/api/v1/users/${id}/profile-image`, {
-        responseType: 'blob',
-      });
-      return URL.createObjectURL(response.data);
+      // Prefer the photoUrl field from profile data (direct URL, no redirect needed)
+      const profile = await profileApi.get<UserProfileData>(`/api/v1/users/${id}`);
+      if (profile.data.photoUrl) return profile.data.photoUrl;
+      return null;
     } catch {
       return null;
     }
@@ -194,5 +194,9 @@ export const profileService = {
 
   async addTag(userId: string, tagId: string): Promise<void> {
     await profileApi.patch(`/api/v1/users/${userId}/tags`, { tagId });
+  },
+
+  async deleteAccount(userId: string): Promise<void> {
+    await profileApi.delete(`/api/v1/users/${userId}`);
   },
 };

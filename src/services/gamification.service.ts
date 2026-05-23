@@ -4,9 +4,7 @@ import { monas as initialMonas, rankingUsers } from '../types/mockData';
 // ──────────────────────────────────────────────
 // Dedicated Axios instance for the Gamification Service
 // ──────────────────────────────────────────────
-const BASE_URL =
-  import.meta.env.VITE_API_GATEWAY_URL ??
-  'https://patricia-api-gateway-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io';
+const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL ?? '/svc/gateway';
 
 const gamificationApi = axios.create({
   baseURL: `${BASE_URL}/api/v1`,

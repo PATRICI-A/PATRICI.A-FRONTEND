@@ -3,9 +3,7 @@ import axios from 'axios';
 // ──────────────────────────────────────────────
 // Dedicated Axios instance for the Hangout Service
 // ──────────────────────────────────────────────
-const BASE_URL =
-  import.meta.env.VITE_API_GATEWAY_URL ??
-  'https://patricia-api-gateway-prod.ambitiousocean-47ea546c.eastus.azurecontainerapps.io';
+const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL ?? '/svc/gateway';
 
 const hangoutApi = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
