@@ -8,6 +8,8 @@ import { monas, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { profileService } from '../services/profileService';
 import type { UserProfileData } from '../services/profileService';
+import { getGamificationStats } from '../services/gamification.service';
+import type { UserStatsResponse } from '../services/gamification.service';
 
 function MockQRCode({ seed, size = 180 }: { seed: string; size?: number }) {
   const N = 21;
@@ -61,6 +63,7 @@ export function ProfilePage() {
   const [showQRModal, setShowQRModal] = useState(false);
 
   const [apiUser, setApiUser] = useState<UserProfileData | null>(null);
+  const [gamStats, setGamStats] = useState<UserStatsResponse | null>(null);
 
   useEffect(() => {
     profileService.getMyProfile().then((data) => {
@@ -73,6 +76,7 @@ export function ProfilePage() {
         });
       }
     });
+    getGamificationStats().then(setGamStats).catch(() => {});
   }, []);
 
   if (!currentUser) return null;
@@ -85,8 +89,8 @@ export function ProfilePage() {
     avatar: activeAvatar,
     faculty: apiUser?.faculty || currentUser.faculty || 'Sistemas',
     semester: apiUser?.semester || currentUser.semester || 1,
-    level: currentUser.level || 1,
-    xp: apiUser?.xp !== undefined ? apiUser.xp : currentUser.xp,
+    level: gamStats?.nivel ?? currentUser.level ?? 1,
+    xp: gamStats?.totalXp ?? currentUser.xp,
     activeParches: apiUser?.activeParches !== undefined ? apiUser.activeParches : currentUser.activeParches,
     streak: apiUser?.streak !== undefined ? apiUser.streak : currentUser.streak,
     rankFaculty: apiUser?.rankFaculty || currentUser.rankFaculty || 1,

@@ -33,7 +33,6 @@ import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { getMonas, redeemEventCode } from '../services/gamification.service';
-import { ServiceUnavailableModal } from '../components/ui/ServiceUnavailableModal';
 
 const mapApiRarityToMock = (rarity: string): 'común' | 'poco común' | 'raro' | 'épico' | 'legendario' => {
   const map: Record<string, 'común' | 'poco común' | 'raro' | 'épico' | 'legendario'> = {
@@ -848,7 +847,6 @@ export function MonasAlbumPage() {
   const { isDark } = useApp();
   const [collection, setCollection] = useState<Mona[]>([]);
   const [loading, setLoading] = useState(true);
-  const [serviceError, setServiceError] = useState(false);
   const [activeCategory, setActiveCategory] = useState('todas');
   const [selectedMona, setSelectedMona] = useState<Mona | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -886,7 +884,6 @@ export function MonasAlbumPage() {
       })
       .catch((err) => {
         console.error('Error loading monas:', err);
-        setServiceError(true);
         setCollection([]);
       })
       .finally(() => {
@@ -1704,7 +1701,6 @@ export function MonasAlbumPage() {
           </>
         )}
       </AnimatePresence>
-      <ServiceUnavailableModal show={serviceError} onClose={() => setServiceError(false)} />
     </div>
   );
 }

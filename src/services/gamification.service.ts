@@ -11,16 +11,8 @@ const gamificationApi = axios.create({
 gamificationApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('patricia-token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
-
-  try {
-    const raw = localStorage.getItem('patricia-user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      const userId = user.studentId || user.id;
-      if (userId) config.headers['X-User-Id'] = userId;
-    }
-  } catch { /* ignore */ }
-
+  const userId = localStorage.getItem('patricia_user_id');
+  if (userId) config.headers['X-User-Id'] = userId;
   return config;
 });
 
@@ -95,10 +87,9 @@ export interface RankingOptInResponse {
   updatedAt: string;
 }
 
-function logFallback(endpoint: string, error: any) {
-  console.warn(
-    `[Gamification] La llamada a backend ${endpoint} falló (${error?.response?.status || 'Error de Red'}).`
-  );
+function logFallback(endpoint: string, error: unknown) {
+  const status = (error as { response?: { status?: number } })?.response?.status;
+  console.warn(`[Gamification] La llamada a backend ${endpoint} falló (${status || 'Error de Red'}).`);
 }
 
 export async function getMonas(): Promise<MonaResponse[]> {

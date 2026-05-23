@@ -77,7 +77,7 @@ export const useMatchingStore = create<MatchingState>((set) => ({
       if (tab === 'explore') {
         const [candidates, scores, catalog] = await Promise.all([
           profileService.getMatchingCandidates(currentUserId),
-          matchingService.getRecommendationsWithScores(currentUserId),
+          matchingService.getRecommendationsWithScores(currentUserId).catch(() => []),
           profileService.getTagsCatalog().catch(() => []),
         ]);
         const tagIdToName = new Map<string, string>();
@@ -180,8 +180,11 @@ export const useMatchingStore = create<MatchingState>((set) => ({
         };
       });
     } catch (err) {
-      set({ error: 'Error al aceptar solicitud. Intenta de nuevo.' });
-      console.error('[acceptRequest]', err);
+      const e = err as { response?: { status?: number; data?: { message?: string; error?: string } } };
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? `Error ${status ?? 'de red'} al aceptar solicitud`;
+      set({ error: msg });
+      console.error('[acceptRequest]', msg, err);
     }
   },
 
@@ -192,8 +195,11 @@ export const useMatchingStore = create<MatchingState>((set) => ({
         received: s.received.filter(u => u.matchId !== matchId),
       }));
     } catch (err) {
-      set({ error: 'Error al rechazar solicitud. Intenta de nuevo.' });
-      console.error('[rejectRequest]', err);
+      const e = err as { response?: { status?: number; data?: { message?: string; error?: string } } };
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? `Error ${status ?? 'de red'} al rechazar solicitud`;
+      set({ error: msg });
+      console.error('[rejectRequest]', msg, err);
     }
   },
 
@@ -205,8 +211,11 @@ export const useMatchingStore = create<MatchingState>((set) => ({
         sent: s.sent.filter(u => u.matchId !== matchId),
       }));
     } catch (err) {
-      set({ error: 'Error al eliminar conexión. Intenta de nuevo.' });
-      console.error('[removeMatch]', err);
+      const e = err as { response?: { status?: number; data?: { message?: string; error?: string } } };
+      const status = e?.response?.status;
+      const msg = e?.response?.data?.message ?? e?.response?.data?.error ?? `Error ${status ?? 'de red'} al eliminar conexión`;
+      set({ error: msg });
+      console.error('[removeMatch]', msg, err);
     }
   },
 }));

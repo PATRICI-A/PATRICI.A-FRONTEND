@@ -10,7 +10,6 @@ import { getStudentDashboard, getSocialIndicators, getInteractionAnalytics } fro
 import type { StudentDashboardResponse, SocialIndicatorsResponse, InteractionAnalyticsResponse } from '../services/analytics.service';
 import { getGamificationStats, getUnlockedBadges, getBadgeProgress } from '../services/gamification.service';
 import type { UserStatsResponse, EarnedBadgeResponse, BadgeProgressResponse } from '../services/gamification.service';
-import { ServiceUnavailableModal } from '../components/ui/ServiceUnavailableModal';
 
 const DATA_BY_PERIOD = {
   semana: {
@@ -117,7 +116,6 @@ export function StatsPage() {
   const [gamificationStats, setGamificationStats] = useState<UserStatsResponse | null>(null);
   const [unlockedBadges, setUnlockedBadges] = useState<EarnedBadgeResponse[]>([]);
   const [badgeProgress, setBadgeProgress] = useState<BadgeProgressResponse[]>([]);
-  const [serviceError, setServiceError] = useState(false);
 
   useEffect(() => {
     setHeader({ title: '🏆 Estadísticas', subtitle: 'Tu impacto en la comunidad', showBack: true });
@@ -125,15 +123,15 @@ export function StatsPage() {
   }, [setHeader]);
 
   useEffect(() => {
-    getStudentDashboard().then(setDashboard).catch(() => setServiceError(true));
-    getInteractionAnalytics().then(setInteractions).catch(() => setServiceError(true));
-    getGamificationStats().then(setGamificationStats).catch(() => setServiceError(true));
-    getUnlockedBadges().then(setUnlockedBadges).catch(() => setServiceError(true));
-    getBadgeProgress().then(setBadgeProgress).catch(() => setServiceError(true));
+    getStudentDashboard().then(setDashboard).catch(() => {});
+    getInteractionAnalytics().then(setInteractions).catch(() => {});
+    getGamificationStats().then(setGamificationStats).catch(() => {});
+    getUnlockedBadges().then(setUnlockedBadges).catch(() => {});
+    getBadgeProgress().then(setBadgeProgress).catch(() => {});
   }, []);
 
   useEffect(() => {
-    getSocialIndicators(WEEK_RANGE[period]).then(setSocial).catch(() => setServiceError(true));
+    getSocialIndicators(WEEK_RANGE[period]).then(setSocial).catch(() => {});
   }, [period]);
 
   if (!currentUser) return null;
@@ -432,7 +430,6 @@ export function StatsPage() {
           </motion.div>
 
       </div>
-      <ServiceUnavailableModal show={serviceError} onClose={() => setServiceError(false)} />
     </div>
   );
 }
