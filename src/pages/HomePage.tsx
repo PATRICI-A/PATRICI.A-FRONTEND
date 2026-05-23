@@ -957,7 +957,7 @@ export function HomePage() {
               key="futbol-mascot-card"
               whileHover={{ scale: 1.03, y: -3 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/create-parche')}
+              onClick={() => navigate('/parches/create')}
               className="flex-shrink-0 rounded-3xl overflow-hidden text-left flex flex-col relative"
               style={{
                 width: 210,

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Settings, ChevronRight, Edit2, Star, Zap, Users, Heart, TrendingUp, LogOut, Lock, ScanLine, QrCode, Share2, X, Trophy, Bell, ChevronLeft, CalendarDays } from 'lucide-react';
 import patyImg from '../assets/patyProfile.png';
 import { useApp } from '../store/AppContext';
-import { monas, rankingUsers, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
+import { monas, notifications, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, PINK, ORANGE, TEAL } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { profileService } from '../services/profileService';
 import type { UserProfileData } from '../services/profileService';
@@ -97,9 +97,6 @@ export function ProfilePage() {
   const xpForNextLevel = 5000;
   const xpPercent = (activeUser.xp / xpForNextLevel) * 100;
   const unreadNotifications = notifications.filter(n => !n.read).length;
-  const campusRank = rankingUsers.findIndex(u => u.isCurrentUser) + 1;
-  const topThree = rankingUsers.slice(0, 3);
-
   const handleLogout = () => { logout(); navigate('/'); };
   const handleShareQR = async () => {
     const url = `${window.location.origin}/profile?user=${activeUser.id}`;
@@ -197,22 +194,6 @@ export function ProfilePage() {
           </div>
 
           <div className="px-5 mb-4">
-            <motion.button whileHover={{ scale: 1.015 }} whileTap={{ scale: 0.985 }} onClick={() => navigate('/ranking')} className="w-full rounded-2xl p-4 text-left relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1A3A5C 40%, #0D2847 100%)', border: '1.5px solid rgba(245,158,11,0.3)', boxShadow: '0 4px 20px rgba(217,119,6,0.2)' }}>
-              <motion.div className="absolute inset-0 pointer-events-none" animate={{ x: ['-100%', '200%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear', repeatDelay: 2 }} style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.1), transparent)', width: '60%' }} />
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: GOLD_GRADIENT }}><Trophy size={18} className="text-white" /></div>
-                <div className="flex-1"><p className="font-black text-white text-sm">Ranking Campus</p><p className="text-[10px]" style={{ color: GOLD_LIGHT }}>ECI 2025 · Tu posición global</p></div>
-                <div className="text-right"><p className="font-black text-2xl" style={{ color: GOLD_LIGHT }}>#{campusRank}</p><p className="text-[10px] text-white/40">de {rankingUsers.length} estudiantes</p></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">{topThree.map((u) => <img key={u.id} src={u.avatar} alt={u.name} className="w-6 h-6 rounded-full object-cover border-2 border-[#0A192F]" /> )}</div>
-                <p className="text-[10px] text-white/50 flex-1">Top 3: {topThree.map(u => u.name.split(' ')[0]).join(', ')}</p>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: GOLD_LIGHT, background: 'rgba(245,158,11,0.15)' }}>Ver ranking →</span>
-              </div>
-            </motion.button>
-          </div>
-
-          <div className="px-5 mb-4">
             <div className="rounded-2xl p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all" style={{ background: 'linear-gradient(135deg, #F9A8D4 0%, #EC4899 60%, #BE185D 100%)' }} onClick={() => navigate('/wellness')}>
               <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0"><Heart size={20} color="#EC4899" strokeWidth={2.5} /></div>
               <div className="flex-1"><p className="text-white font-semibold text-sm">Soporte y Bienestar 24/7</p><p className="text-white/80 text-xs">Estamos aquí para escucharte siempre</p></div>
@@ -303,7 +284,7 @@ export function ProfilePage() {
                     <div className="p-4 rounded-2xl mb-4" style={{ background: 'white', boxShadow: `0 0 40px rgba(245,158,11,0.3)` }}><MockQRCode seed={activeUser.id} size={190} /></div>
                     <div className="text-center mb-5">
                       <p className="text-white font-black text-base">{activeUser.name}</p><p className="text-blue-400 text-xs">{activeUser.faculty} · Niv. {activeUser.level}</p>
-                      <div className="flex items-center justify-center gap-3 mt-2"><span className="text-[10px] text-white/50">{activeUser.xp.toLocaleString()} XP</span><span className="text-[10px] text-white/30">·</span><span className="text-[10px] text-white/50">{unlockedMonas.length} patricias</span><span className="text-[10px] text-white/30">·</span><span className="text-[10px] text-white/50">#{campusRank} campus</span></div>
+                      <div className="flex items-center justify-center gap-3 mt-2"><span className="text-[10px] text-white/50">{activeUser.xp.toLocaleString()} XP</span><span className="text-[10px] text-white/30">·</span><span className="text-[10px] text-white/50">{unlockedMonas.length} patricias</span></div>
                     </div>
                     <motion.button whileTap={{ scale: 0.96 }} onClick={handleShareQR} className="w-full py-4 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2" style={{ background: GOLD_GRADIENT, boxShadow: '0 8px 24px rgba(217,119,6,0.4)' }}><Share2 size={16} />Compartir mi perfil</motion.button>
                     <p className="text-white/30 text-xs mt-3 text-center">Otros estudiantes pueden escanear este código para conectar contigo</p>

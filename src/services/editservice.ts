@@ -77,11 +77,11 @@ export const editService = {
         const payload: Record<string, unknown> = {
             name: data.name,
             biography: data.bio,
-            career: mappedCareer,
-            semester: data.semester,
+            semester: Number(data.semester) || 1,
             gender: mappedGender,
             privacyLevel: mappedPrivacy,
         };
+        if (mappedCareer) payload.career = mappedCareer;
         if (data.secondCareer) payload.secondaryCareer = data.secondCareer;
 
         const result = await profileService.updateProfile(userId, payload);
