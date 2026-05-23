@@ -475,7 +475,7 @@ export function MatchesPage() {
               </div>
               <div className="flex gap-3 px-4 pb-3 overflow-x-auto scrollbar-hide">
                 {nearbySuggestions.map(user => (
-                  <motion.button key={user.id} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/user/${user.id}`)} className="flex-shrink-0 flex flex-col items-center gap-1.5" style={{ width: 68 }}>
+                  <motion.button key={user.id} whileTap={{ scale: 0.95 }} onClick={() => navigate(`/user/${user.id}`, { state: { matchUser: user } })} className="flex-shrink-0 flex flex-col items-center gap-1.5" style={{ width: 68 }}>
                     <div className="relative">
                       <div className="w-14 h-14 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,#10B981,#06B6D4)' }}>
                         {user.photoUrl
@@ -560,7 +560,7 @@ export function MatchesPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04, type: 'spring', damping: 18 }}
-                  onClick={() => navigate(`/user/${user.id}`)}
+                  onClick={() => navigate(`/user/${user.id}`, { state: { matchUser: user } })}
                   className="rounded-2xl overflow-hidden cursor-pointer group"
                   style={{
                     boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.35)' : '0 3px 12px rgba(10,25,47,0.10)',

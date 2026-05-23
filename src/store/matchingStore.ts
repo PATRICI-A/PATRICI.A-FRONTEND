@@ -169,8 +169,9 @@ export const useMatchingStore = create<MatchingState>((set) => ({
   },
 
   async acceptRequest(matchId) {
+    const currentUserId = localStorage.getItem('patricia_user_id') ?? undefined;
     try {
-      await matchingService.updateMatchStatus(matchId, 'ACCEPTED');
+      await matchingService.updateMatchStatus(matchId, 'ACCEPTED', currentUserId);
       set(s => {
         const user = s.received.find(u => u.matchId === matchId);
         if (!user) return s;
@@ -189,8 +190,9 @@ export const useMatchingStore = create<MatchingState>((set) => ({
   },
 
   async rejectRequest(matchId) {
+    const currentUserId = localStorage.getItem('patricia_user_id') ?? undefined;
     try {
-      await matchingService.updateMatchStatus(matchId, 'REJECTED');
+      await matchingService.updateMatchStatus(matchId, 'REJECTED', currentUserId);
       set(s => ({
         received: s.received.filter(u => u.matchId !== matchId),
       }));
@@ -204,8 +206,9 @@ export const useMatchingStore = create<MatchingState>((set) => ({
   },
 
   async removeMatch(matchId) {
+    const currentUserId = localStorage.getItem('patricia_user_id') ?? undefined;
     try {
-      await matchingService.deleteMatch(matchId);
+      await matchingService.deleteMatch(matchId, currentUserId);
       set(s => ({
         friends: s.friends.filter(u => u.matchId !== matchId),
         sent: s.sent.filter(u => u.matchId !== matchId),

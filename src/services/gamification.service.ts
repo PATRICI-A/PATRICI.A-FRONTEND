@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL ?? '/svc/gateway';
+const BASE_URL = '/svc/gateway';
 
 const gamificationApi = axios.create({
   baseURL: `${BASE_URL}/api/v1`,

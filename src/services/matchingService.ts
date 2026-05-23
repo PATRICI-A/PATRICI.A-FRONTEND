@@ -135,16 +135,17 @@ export const matchingService = {
     return data;
   },
 
-  async updateMatchStatus(matchId: string, status: MatchStatus): Promise<MatchResponse> {
+  async updateMatchStatus(matchId: string, status: MatchStatus, userId?: string): Promise<MatchResponse> {
     const { data } = await matchingApi.patch<MatchResponse>(
       `/api/v1/matches/${matchId}/status`,
-      { status } satisfies MatchUpdateRequest
+      { status } satisfies MatchUpdateRequest,
+      userId ? { params: { userId } } : {}
     );
     return data;
   },
 
-  async deleteMatch(matchId: string): Promise<void> {
-    await matchingApi.delete(`/api/v1/matches/${matchId}`);
+  async deleteMatch(matchId: string, userId?: string): Promise<void> {
+    await matchingApi.delete(`/api/v1/matches/${matchId}`, userId ? { params: { userId } } : {});
   },
 
   async getUserMatches(userId: string): Promise<MatchResponse[]> {

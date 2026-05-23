@@ -734,6 +734,23 @@ export const parches: Parche[] = [
 ];
 export const events: Event[] = [
   {
+    id: 'e0',
+    title: 'PRESENTACIÓN DOWS PATRICI.A',
+    description: 'Presentación oficial de PATRICI.A ante la comunidad universitaria. ¡No te lo pierdas!',
+    category: 'Tecnología',
+    emoji: '🚀',
+    date: '23 Mayo 2026',
+    time: '10:00 - 13:00',
+    location: 'Auditorio Principal',
+    organizer: 'Equipo PATRICI.A',
+    attendees: 0,
+    coverGradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+    official: true,
+    registered: false,
+    reminder: false,
+    tags: ['PATRICI.A', 'Presentación', 'Tecnología'],
+  },
+  {
     id: 'e1',
     title: 'Inter-U Music Fest 2024',
     description: 'La batalla de bandas más grande del año. Registro abierto hasta el viernes. Premios para las 3 mejores bandas universitarias.',

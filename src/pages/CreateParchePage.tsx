@@ -8,6 +8,20 @@ import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
 import { getAvailablePlaces } from '../services/parches.service';
 import type { PlaceResponse } from '../services/parches.service';
+
+const FALLBACK_PLACES: PlaceResponse[] = [
+  { code: 'EDIFICIO_A', displayName: 'Edificio A' },
+  { code: 'EDIFICIO_B', displayName: 'Edificio B' },
+  { code: 'EDIFICIO_C', displayName: 'Edificio C' },
+  { code: 'EDIFICIO_D', displayName: 'Edificio D' },
+  { code: 'EDIFICIO_E', displayName: 'Edificio E' },
+  { code: 'EDIFICIO_F', displayName: 'Edificio F' },
+  { code: 'EDIFICIO_G', displayName: 'Edificio G' },
+  { code: 'CANCHA_FUTBOL', displayName: 'Cancha de Fútbol' },
+  { code: 'COLISEO', displayName: 'Coliseo' },
+  { code: 'ENTRADA', displayName: 'Entrada' },
+  { code: 'LAGO', displayName: 'Lago' },
+];
 const categories = [
   { id: 'MUSIC', label: 'Música', emoji: '🎵', gradient: GRADIENT },
   { id: 'SPORT', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
@@ -45,7 +59,9 @@ export function CreateParchePage() {
   const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
-    getAvailablePlaces().then(setPlaces).catch(() => {});
+    getAvailablePlaces()
+      .then(data => setPlaces(data.length > 0 ? data : FALLBACK_PLACES))
+      .catch(() => setPlaces(FALLBACK_PLACES));
   }, []);
   const toggleFriend = (id: string) => {
     setInvitedFriends(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
