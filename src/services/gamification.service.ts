@@ -14,10 +14,20 @@ const gamificationApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach token automatically from localStorage
+// Attach token + user-id automatically from localStorage
 gamificationApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('patricia-token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  try {
+    const raw = localStorage.getItem('patricia-user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      const userId = user.studentId || user.id;
+      if (userId) config.headers['X-User-Id'] = userId;
+    }
+  } catch { /* ignore */ }
+
   return config;
 });
 

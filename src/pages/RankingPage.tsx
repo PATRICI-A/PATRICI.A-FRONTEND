@@ -1,40 +1,47 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Trophy, Crown, Zap, Users,
-  Flame, TrendingUp, Award, Sparkles,
+  TrendingUp, Award, Sparkles,
 } from 'lucide-react';
-import {
-  rankingUsers, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD, TEAL,
-  type RankingUser, matchUsers,
-} from '../types/mockData';
+import { GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { useApp } from '../store/AppContext';
 import { getRanking, getMyRankingPosition } from '../services/gamification.service';
 import { Loader2 } from 'lucide-react';
+
+interface RankEntry {
+  id: string;
+  name: string;
+  levelName: string;
+  totalMonas: number;
+  monasThisPeriod: number;
+  isCurrentUser: boolean;
+}
+
 const TIER = {
   1: { bg: GOLD_GRADIENT,                                    border: GOLD_LIGHT, label: 'ORO',   height: 130 },
   2: { bg: 'linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)', border: '#CBD5E1', label: 'PLATA', height: 100 },
   3: { bg: 'linear-gradient(135deg, #92400E 0%, #B45309 100%)', border: '#D97706', label: 'BRONCE', height: 80 },
 } as const;
-type RankTab = 'xp' | 'parches';
+type RankTab = 'monas' | 'parches';
 const TABS: { key: RankTab; label: string; Icon: typeof Zap; color: string }[] = [
-  { key: 'xp',      label: 'XP',     Icon: Zap,   color: GOLD_LIGHT },
+  { key: 'monas',   label: 'Monas',  Icon: Trophy, color: GOLD_LIGHT },
   { key: 'parches', label: 'Parches', Icon: Users, color: '#3B82F6'  },
 ];
-function getValue(user: RankingUser, tab: RankTab): string {
-  if (tab === 'xp') return `${user.xp.toLocaleString('es-CO')} XP`;
-  return `${user.parchesCount} parches`;
+function getValue(user: RankEntry, tab: RankTab): string {
+  if (tab === 'monas') return `${user.totalMonas} monas`;
+  return `${user.monasThisPeriod} parches`;
 }
-function getRaw(user: RankingUser, tab: RankTab): number {
-  if (tab === 'xp') return user.xp;
-  return user.parchesCount;
+function getRaw(user: RankEntry, tab: RankTab): number {
+  if (tab === 'monas') return user.totalMonas;
+  return user.monasThisPeriod;
 }
 function PodiumSlot({
   user, rank, tab, delay,
 }: {
-  user: RankingUser; rank: 1 | 2 | 3; tab: RankTab; delay: number;
+  user: RankEntry; rank: 1 | 2 | 3; tab: RankTab; delay: number;
 }) {
   const tier = TIER[rank];
   const isFirst = rank === 1;
@@ -58,15 +65,17 @@ function PodiumSlot({
       {}
       <div className="relative">
         <div
-          className="rounded-full overflow-hidden"
+          className="rounded-full overflow-hidden flex items-center justify-center font-black text-white"
           style={{
             width: isFirst ? 64 : 52,
             height: isFirst ? 64 : 52,
             border: `3px solid ${tier.border}`,
             boxShadow: isFirst ? `0 0 20px rgba(245,158,11,0.6)` : `0 0 8px rgba(0,0,0,0.5)`,
+            background: tier.bg,
+            fontSize: isFirst ? '20px' : '16px',
           }}
         >
-          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+          {user.name.charAt(0).toUpperCase()}
         </div>
         {}
         <div
@@ -121,7 +130,7 @@ function PodiumSlot({
 function RankRow({
   user, rank, tab, delay,
 }: {
-  user: RankingUser; rank: number; tab: RankTab; delay: number;
+  user: RankEntry; rank: number; tab: RankTab; delay: number;
 }) {
   const isMe = user.isCurrentUser;
   return (
@@ -150,12 +159,15 @@ function RankRow({
       </div>
       {}
       <div className="relative flex-shrink-0">
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="w-10 h-10 rounded-xl object-cover"
-          style={{ border: isMe ? `2px solid ${GOLD_LIGHT}` : '2px solid rgba(255,255,255,0.1)' }}
-        />
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-sm"
+          style={{
+            background: isMe ? GOLD_GRADIENT : 'rgba(255,255,255,0.12)',
+            border: isMe ? `2px solid ${GOLD_LIGHT}` : '2px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          {user.name.charAt(0).toUpperCase()}
+        </div>
         {isMe && (
           <div
             className="absolute -top-1 -right-1 px-1 rounded-full text-[7px] font-black text-white"
@@ -173,73 +185,43 @@ function RankRow({
         >
           {user.name}
         </p>
-        <p className="text-[10px] text-white/40 truncate">{user.faculty} · Niv. {user.level}</p>
+        <p className="text-[10px] text-white/40 truncate">{user.levelName}</p>
       </div>
       {}
       <div className="text-right flex-shrink-0">
         <p className="font-black text-sm" style={{ color: isMe ? GOLD_LIGHT : 'rgba(255,255,255,0.8)' }}>
           {getValue(user, tab)}
         </p>
-        <p className="text-[9px] flex items-center justify-end gap-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          <Flame size={9} style={{ color: '#F59E0B' }} /> {user.streak}d
-        </p>
       </div>
     </motion.div>
   );
 }
-const ALL_CAREERS = [
-  'Ingeniería Civil',
-  'Ingeniería Eléctrica',
-  'Ingeniería de Sistemas',
-  'Ingeniería Industrial',
-  'Ingeniería Electrónica',
-  'Economía',
-  'Administración de Empresas',
-  'Matemáticas',
-  'Ingeniería Mecánica',
-  'Ingeniería Biomédica',
-  'Ingeniería Ambiental',
-  'Ingeniería Estadística',
-  'Ingeniería de Inteligencia Artificial',
-  'Ingeniería de Ciberseguridad',
-  'Ingeniería en Biotecnología',
-];
-
-const getAvatarForUser = (name: string): string => {
-  const match = matchUsers.find(u => u.name.toLowerCase().includes(name.toLowerCase()));
-  return match?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=150';
-};
-
 export function RankingPage() {
   const navigate = useNavigate();
   const { isDark, currentUser } = useApp();
-  const [tab, setTab]                 = useState<RankTab>('xp');
-  const [facultyFilter, setFacultyFilter] = useState('');
+  const [tab, setTab] = useState<RankTab>('monas');
 
-  const [rankingList, setRankingList] = useState<RankingUser[]>([]);
+  const [rankingList, setRankingList] = useState<RankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [myPosition, setMyPosition] = useState<number | null>(null);
 
   const fetchRanking = () => {
     setLoading(true);
-    const apiPeriod = tab === 'xp' ? 'SEMESTER' : 'WEEKLY';
+    const apiPeriod = tab === 'monas' ? 'SEMESTER' : 'WEEKLY';
     Promise.all([
       getRanking(apiPeriod),
       getMyRankingPosition(apiPeriod)
     ]).then(([apiRank, apiPos]) => {
-      const mapped = apiRank.map((apiUser, idx) => {
+      const mapped: RankEntry[] = apiRank.map(apiUser => {
         const isMe = apiUser.studentId === currentUser?.id || apiUser.studentId === 'u1';
         return {
           id: apiUser.studentId,
           name: apiUser.displayName,
-          avatar: getAvatarForUser(apiUser.displayName),
-          faculty: apiUser.levelName || 'Ingeniería de Sistemas',
-          level: 2,
-          xp: apiUser.totalMonas * 100,
-          parchesCount: apiUser.monasThisPeriod,
-          streak: 3 + (idx % 4),
-          isCurrentUser: isMe
-        } as RankingUser;
+          levelName: apiUser.levelName || 'Universitario',
+          totalMonas: apiUser.totalMonas,
+          monasThisPeriod: apiUser.monasThisPeriod,
+          isCurrentUser: isMe,
+        };
       });
       setRankingList(mapped);
       setMyPosition(apiPos.position);
@@ -254,19 +236,16 @@ export function RankingPage() {
     fetchRanking();
   }, [tab]);
 
-  const sorted = useMemo(() => {
-    let list = [...rankingList];
-    if (facultyFilter) {
-      list = list.filter(u => u.faculty.toLowerCase().includes(facultyFilter.toLowerCase()));
-    }
-    return list.sort((a, b) => getRaw(b, tab) - getRaw(a, tab));
-  }, [rankingList, tab, facultyFilter]);
+  const sorted = useMemo(() =>
+    [...rankingList].sort((a, b) => getRaw(b, tab) - getRaw(a, tab)),
+    [rankingList, tab]
+  );
 
   const top3   = sorted.slice(0, 3);
   const rest   = sorted.slice(3);
   const meRank = myPosition || sorted.findIndex(u => u.isCurrentUser) + 1;
   const meData = sorted.find(u => u.isCurrentUser);
-  const podiumOrder: [RankingUser, 1 | 2 | 3][] = top3.length >= 3
+  const podiumOrder: [RankEntry, 1 | 2 | 3][] = top3.length >= 3
     ? [[top3[1], 2], [top3[0], 1], [top3[2], 3]]
     : top3.map((u, i) => [u, (i + 1) as 1 | 2 | 3]);
 
@@ -285,102 +264,80 @@ export function RankingPage() {
       style={{ background: isDark ? 'linear-gradient(180deg, #050D1A 0%, #071525 100%)' : 'transparent', isolation: 'isolate' }}
     >
       <DoodleBackground isDark opacity={0.65} />
-      {}
-      <div className="relative px-5 pt-12 pb-6">
-        {}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
-          >
-            <ArrowLeft size={18} className="text-white" />
-          </button>
-          <div className="text-center">
-            <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
-            <h2 className="text-white font-black text-lg leading-none flex items-center gap-2">
-              <Trophy size={18} style={{ color: GOLD_LIGHT }} />
-              Ranking Campus
-            </h2>
-          </div>
-          <div className="w-9" />
-        </div>
-        {}
-        <div className="flex gap-2 bg-white/5 rounded-2xl p-1 mb-3">
-          {TABS.map(({ key, label, Icon, color }) => (
+      <div className="w-full px-4 md:w-4/6 max-w-[1200px] mx-auto">
+        <div className="relative pt-12 pb-6">
+          <div className="flex items-center justify-between mb-6">
             <button
-              key={key}
-              onClick={() => setTab(key)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all"
-              style={{
-                background: tab === key ? 'rgba(255,255,255,0.12)' : 'transparent',
-                color: tab === key ? color : 'rgba(255,255,255,0.4)',
-                border: tab === key ? `1px solid ${color}44` : '1px solid transparent',
-              }}
+              onClick={() => navigate('/home')}
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.08)' }}
             >
-              <Icon size={13} style={tab === key ? { color } : {}} />
-              {label}
+              <ArrowLeft size={18} className="text-white" />
             </button>
-          ))}
-        </div>
-        {}
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Filtrar por carrera</p>
-          <div className="flex flex-wrap gap-2">
-            {['', ...ALL_CAREERS].map(f => (
+            <div className="text-center">
+              <p className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">patrici.a</p>
+              <h2 className="text-white font-black text-lg leading-none flex items-center gap-2">
+                <Trophy size={18} style={{ color: GOLD_LIGHT }} />
+                Ranking Campus
+              </h2>
+            </div>
+            <div className="w-9" />
+          </div>
+          <div className="flex gap-2 bg-white/5 rounded-2xl p-1 mb-3">
+            {TABS.map(({ key, label, Icon, color }) => (
               <button
-                key={f || 'all'}
-                onClick={() => setFacultyFilter(f)}
-                className="flex-shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
-                style={facultyFilter === f
-                  ? { background: GOLD_GRADIENT, color: 'white', boxShadow: '0 3px 10px rgba(217,119,6,0.35)' }
-                  : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+                key={key}
+                onClick={() => setTab(key)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all"
+                style={{
+                  background: tab === key ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: tab === key ? color : 'rgba(255,255,255,0.4)',
+                  border: tab === key ? `1px solid ${color}44` : '1px solid transparent',
+                }}
               >
-                {f || 'Todas'}
+                <Icon size={13} style={tab === key ? { color } : {}} />
+                {label}
               </button>
             ))}
           </div>
         </div>
-      </div>
-      {}
-      <AnimatePresence mode="wait">
-        <div
-          key={tab}
-          className="px-4 flex items-end justify-center gap-2 mb-6"
-          style={{ minHeight: 260 }}
-        >
-          {podiumOrder.map(([user, rank], i) => (
-            <PodiumSlot
-              key={user.id}
-              user={user}
-              rank={rank}
-              tab={tab}
-              delay={i * 0.08}
-            />
-          ))}
-        </div>
-      </AnimatePresence>
-      {}
-      <div className="px-4">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp size={13} style={{ color: GOLD_LIGHT }} />
-          <span className="text-white/50 text-xs font-bold uppercase tracking-wider">Posiciones</span>
-        </div>
         <AnimatePresence mode="wait">
-          <div key={tab}>
-            {rest.map((user, i) => (
-              <RankRow
+          <div
+            key={tab}
+            className="flex items-end justify-center gap-2 mb-6"
+            style={{ minHeight: 260 }}
+          >
+            {podiumOrder.map(([user, rank], i) => (
+              <PodiumSlot
                 key={user.id}
                 user={user}
-                rank={i + 4}
+                rank={rank}
                 tab={tab}
-                delay={i * 0.05}
+                delay={i * 0.08}
               />
             ))}
           </div>
         </AnimatePresence>
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp size={13} style={{ color: GOLD_LIGHT }} />
+            <span className="text-white/50 text-xs font-bold uppercase tracking-wider">Posiciones</span>
+          </div>
+          <AnimatePresence mode="wait">
+            <div key={tab}>
+              {rest.map((user, i) => (
+                <RankRow
+                  key={user.id}
+                  user={user}
+                  rank={i + 4}
+                  tab={tab}
+                  delay={i * 0.05}
+                />
+              ))}
+            </div>
+          </AnimatePresence>
+        </div>
       </div>
-      {}
       {meData && (
         <div
           className="fixed bottom-0 left-0 right-0 px-4 pb-safe z-30"
@@ -398,28 +355,22 @@ export function RankingPage() {
               backdropFilter: 'blur(20px)',
             }}
           >
-            {}
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-black text-white"
               style={{ background: GOLD_GRADIENT, boxShadow: '0 4px 12px rgba(217,119,6,0.5)' }}
             >
               #{meRank}
             </div>
-            <img
-              src={meData.avatar}
-              alt={meData.name}
-              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-              style={{ border: `2px solid ${GOLD_LIGHT}` }}
-            />
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-white text-sm"
+              style={{ background: GOLD_GRADIENT, border: `2px solid ${GOLD_LIGHT}` }}
+            >
+              {meData.name.charAt(0).toUpperCase()}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="font-black text-sm" style={{ color: GOLD_LIGHT }}>Tu posición</p>
-              <p className="text-[10px] text-white/50">{meData.faculty} · {getValue(meData, tab)}</p>
+              <p className="text-[10px] text-white/50">{meData.levelName} · {getValue(meData, tab)}</p>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Flame size={13} style={{ color: GOLD_LIGHT }} />
-              <span className="text-white/70 text-xs font-bold">{meData.streak}d racha</span>
-            </div>
-            {}
             <motion.div
               className="absolute inset-0 rounded-2xl pointer-events-none"
               animate={{ opacity: [0.3, 0.7, 0.3] }}
@@ -429,7 +380,6 @@ export function RankingPage() {
           </motion.div>
         </div>
       )}
-      {}
       <div className="fixed top-8 right-8 pointer-events-none z-0">
         <motion.div
           animate={{ rotate: 360 }}
