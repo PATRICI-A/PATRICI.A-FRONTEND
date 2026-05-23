@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import {
   monas as initialMonas, GRADIENT, GOLD_GRADIENT, GOLD_LIGHT, GOLD,
-  TEAL, EVENT_ENVELOPES, type Mona, type EventEnvelope, CAFETERIA_PRIZES
+  TEAL, EVENT_ENVELOPES, type Mona, type EventEnvelope
 } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
@@ -92,12 +92,7 @@ const R = {
     shimmer: 'rgba(252,211,77,0.5)', textColor: '#FDE68A', tagBg: 'rgba(245,158,11,0.3)',
   },
 } as const;
-const REWARDS = [
-  { id: 'r1', pct: 25, emoji: '📝', title: '+0.2 en un parcial', subtitle: 'Décimas extra', color: '#06B6D4', bg: 'rgba(6,182,212,0.15)', description: 'Agrega 0.2 décimas a la nota de un parcial de tu elección.' },
-  { id: 'r2', pct: 50, emoji: '📚', title: '+0.3 en un trabajo', subtitle: 'Décimas extra', color: '#3B82F6', bg: 'rgba(59,130,246,0.15)', description: 'Agrega 0.3 décimas a la nota de un trabajo de tu elección.' },
-  { id: 'r3', pct: 75, emoji: '⭐', title: '+0.5 en una materia', subtitle: 'Décimas extra', color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)', description: 'Agrega 0.5 décimas a la nota final de una materia de tu elección.' },
-  { id: 'r4', pct: 100, emoji: '👑', title: 'Punto libre', subtitle: 'Materia a tu elección', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', description: '¡El gran premio! Un punto completo en cualquier materia.' },
-];
+
 const CATEGORIES = [
   { id: 'todas', label: 'Todas', emoji: '✨', color: '#3B82F6' },
   { id: 'networking', label: 'Networking', emoji: '🤝', color: '#3B82F6' },
@@ -820,78 +815,6 @@ function EnvelopeModal({
     </>
   );
 }
-function RouletteModal({ onClose, prizes, onFinish }: { onClose: () => void, prizes: any[], onFinish: (prize: any) => void }) {
-  const [spinning, setSpinning] = useState(false);
-  const [rotation, setRotation] = useState(0);
-  
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !spinning) onClose(); };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose, spinning]);
-
-  const handleSpin = () => {
-    if (spinning) return;
-    setSpinning(true);
-    
-    const prizeIndex = Math.floor(Math.random() * prizes.length);
-    const segmentAngle = 360 / prizes.length;
-    const randomOffset = (Math.random() * 0.6 + 0.2) * segmentAngle;
-    const finalRotation = rotation + 360 * 6 + (360 - (prizeIndex * segmentAngle)) - randomOffset;
-    
-    setRotation(finalRotation);
-    
-    setTimeout(() => {
-      setSpinning(false);
-      onFinish(prizes[prizeIndex]);
-    }, 5500);
-  };
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-lg">
-       <button onClick={onClose} disabled={spinning} className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center disabled:opacity-50"><X size={24} className="text-white" /></button>
-       
-       <h2 className="text-3xl md:text-5xl font-black text-white mb-8">Ruleta de Premios</h2>
-       
-       <div className="relative w-[300px] h-[300px] md:w-[500px] md:h-[500px] mb-12">
-         {/* Indicator */}
-         <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[35px] border-t-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
-         
-         <motion.div 
-           className="w-full h-full rounded-full border-[10px] border-slate-800 overflow-hidden shadow-[0_0_80px_rgba(249,115,22,0.4)]"
-           animate={{ rotate: rotation }}
-           transition={{ duration: 5.5, ease: [0.15, 0.9, 0.1, 1] }}
-           style={{ transformOrigin: 'center' }}
-         >
-           <div className="w-full h-full rounded-full relative" style={{
-             background: `conic-gradient(${prizes.map((p, i) => `${i % 2 === 0 ? '#F97316' : '#EA580C'} ${i * (360/prizes.length)}deg ${(i+1) * (360/prizes.length)}deg`).join(', ')})`
-           }}>
-             {prizes.map((p, i) => (
-                <div key={i} className="absolute inset-0 flex justify-center" style={{ transform: `rotate(${i * (360/prizes.length) + (360/prizes.length)/2}deg)` }}>
-                   <div className="pt-8 text-white font-black text-xs md:text-xl drop-shadow-md" style={{ writingMode: 'vertical-rl' }}>{(p?.name || '').toUpperCase()}</div>
-                </div>
-             ))}
-           </div>
-         </motion.div>
-         {/* Center dot */}
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-slate-900 border-4 border-slate-700 rounded-full shadow-xl flex items-center justify-center">
-           <Star size={24} className="text-orange-500" />
-         </div>
-       </div>
-       
-       <motion.button 
-         onClick={handleSpin}
-         disabled={spinning}
-         whileHover={{ scale: 1.05 }}
-         whileTap={{ scale: 0.95 }}
-         className="px-12 py-5 rounded-full text-xl md:text-2xl font-black text-white disabled:opacity-50"
-         style={{ background: 'linear-gradient(135deg, #F59E0B, #EA580C)', boxShadow: '0 8px 30px rgba(245, 158, 11, 0.4)' }}
-       >
-         {spinning ? 'GIRANDO...' : '¡GIRAR AHORA!'}
-       </motion.button>
-    </motion.div>
-  );
-}
 
 export function MonasAlbumPage() {
   const navigate = useNavigate();
@@ -904,8 +827,6 @@ export function MonasAlbumPage() {
   const [showEventCodeModal, setShowEventCodeModal] = useState(false);
   const [pendingEnvelope, setPendingEnvelope] = useState<{ envelope: EventEnvelope; cards: Mona[] } | null>(null);
   const [usedEventCodes, setUsedEventCodes] = useState<string[]>([]);
-  const [showRewardModal, setShowRewardModal] = useState<typeof CAFETERIA_PRIZES[0] | null>(null);
-  const [claimedRewards, setClaimedRewards] = useState<(typeof CAFETERIA_PRIZES[0])[]>([]);
 
   const fetchMonas = () => {
     setLoading(true);
@@ -972,7 +893,6 @@ export function MonasAlbumPage() {
   
   // Nivel calculation (1 nivel por cada 500 XP)
   const currentLevel = Math.floor(totalXP / 500) + 1;
-  const availableSpins = currentLevel - 1 - claimedRewards.length;
   const swipeStartX = useRef(0);
   const swipeActive = useRef(false);
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -1203,64 +1123,73 @@ export function MonasAlbumPage() {
               </div>
             </div>
 
-            {/* ROW 2: Recompensas y Ruleta */}
-            <div className="w-full bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] dark:border dark:border-white/5 flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-1">
-                <h3 className="text-xl font-black flex items-center gap-2 text-slate-800 dark:text-white mb-2">
-                  <Trophy size={24} className="text-orange-500" /> Ruleta de Recompensas
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-                  Sube de nivel obteniendo monas y gana recompensas en las cafeterías. <strong>Nivel actual: {currentLevel}</strong>
-                </p>
+            {/* ROW 2: Progreso de Nivel Universitario y XP */}
+            <div className="w-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-200/50 dark:border-white/5 flex flex-col lg:flex-row gap-8 items-stretch">
+              
+              {/* Bloque 1: Nivel de Usuario */}
+              <div className="flex-1 flex flex-col md:flex-row items-center gap-6 p-6 rounded-[2rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5">
+                <div className="relative flex-shrink-0">
+                  <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-blue-600 to-cyan-500 flex flex-col items-center justify-center shadow-[0_8px_25px_rgba(59,130,246,0.3)] dark:shadow-[0_8px_25px_rgba(6,182,212,0.15)]">
+                    <span className="text-[10px] font-black text-cyan-200 tracking-wider uppercase mb-0.5">Nivel</span>
+                    <span className="text-4xl font-black text-white leading-none">{currentLevel}</span>
+                  </div>
+                  <motion.div 
+                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 flex items-center justify-center shadow-md"
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ repeat: Infinity, duration: 2.5 }}
+                  >
+                    <Award size={12} className="text-white" />
+                  </motion.div>
+                </div>
+                
+                <div className="text-center md:text-left">
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-tight flex items-center justify-center md:justify-start gap-2">
+                    Nivel Universitario
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 leading-relaxed max-w-[320px]">
+                    Tu estatus en PATRICI.A. Colecciona láminas y asiste a parches para subir tu rango académico.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bloque 2: Progreso de Nivel (Barra) */}
+              <div className="flex-[1.5] flex flex-col justify-between p-6 rounded-[2rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-white/5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">PROGRESO DEL NIVEL</span>
+                  <span className="text-xs font-bold text-blue-500 bg-blue-500/10 dark:bg-blue-500/20 px-3 py-1 rounded-full border border-blue-500/10">{totalXP % 500} / 500 XP</span>
+                </div>
+                
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+                  <span className="text-xs font-black text-slate-400 dark:text-slate-500">Lvl {currentLevel}</span>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 rounded-full h-4 overflow-hidden p-0.5 border border-slate-200/50 dark:border-white/5">
                     <motion.div 
-                      className="h-full bg-orange-500"
+                      className="h-full rounded-full bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                       initial={{ width: 0 }}
                       animate={{ width: `${((totalXP % 500) / 500) * 100}%` }}
+                      transition={{ type: 'spring', stiffness: 80, damping: 15 }}
                     />
                   </div>
-                  <span className="text-xs font-bold text-slate-500">{totalXP % 500} / 500 XP</span>
+                  <span className="text-xs font-black text-slate-400 dark:text-slate-500">Lvl {currentLevel + 1}</span>
                 </div>
-                {availableSpins > 0 ? (
-                  <motion.button
-                    onClick={handleSpinRoulette}
-                    disabled={isSpinning}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full md:w-auto px-8 py-4 bg-orange-500 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 disabled:opacity-50"
-                  >
-                    <PartyPopper size={24} />
-                    {`¡Girar Ruleta! (${availableSpins} disp.)`}
-                  </motion.button>
-                ) : (
-                  <div className="w-full md:w-auto inline-block px-6 py-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-500 font-bold text-sm">
-                    Consigue {500 - (totalXP % 500)} XP más para el próximo giro.
+
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  <div className="p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-white/5 flex items-center gap-2.5">
+                    <Rocket size={16} className="text-blue-500" />
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block leading-none">XP TOTAL</span>
+                      <span className="text-sm font-black text-slate-800 dark:text-white mt-0.5 block">{totalXP} XP</span>
+                    </div>
                   </div>
-                )}
+                  <div className="p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100/50 dark:border-white/5 flex items-center gap-2.5">
+                    <Library size={16} className="text-cyan-500" />
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block leading-none">COLECCIÓN</span>
+                      <span className="text-sm font-black text-slate-800 dark:text-white mt-0.5 block">{unlockedCount}/{totalMonas} ({completionPct}%)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="w-full md:w-1/3 flex flex-col gap-3">
-                <h4 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Tus premios</h4>
-                {claimedRewards.length === 0 ? (
-                  <div className="text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 dark:text-slate-600 text-sm font-medium">
-                    Aún no tienes premios.<br/>¡Sube al nivel 2 para tu primer giro!
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2">
-                    {claimedRewards.map((prize, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-white/5">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${prize.color}20` }}>
-                          <EmojiIcon emoji={prize.emoji} size={20} color={prize.color} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-slate-800 dark:text-white">{prize.name}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">Nivel {idx + 2}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
             </div>
 
       </div>
@@ -1667,93 +1596,6 @@ export function MonasAlbumPage() {
       </AnimatePresence>
       {}
       <AnimatePresence>
-        {showRouletteModal && (
-          <RouletteModal 
-            prizes={CAFETERIA_PRIZES} 
-            onClose={() => setShowRouletteModal(false)}
-            onFinish={(prize) => {
-              setShowRouletteModal(false);
-              claimReward(prize);
-            }}
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showRewardModal && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-md z-40"
-              onClick={() => setShowRewardModal(null)}
-            />
-            {/* Botón X fuera de la carta */}
-            <button
-              onClick={() => setShowRewardModal(null)}
-              className="fixed top-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md border border-white/20"
-            >
-              <X size={20} className="text-white" />
-            </button>
-            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0, y: 50 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.8, opacity: 0, y: 50 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-                className="relative w-[320px] sm:w-[360px] rounded-3xl overflow-hidden flex flex-col items-center justify-between py-8 px-6 pointer-events-auto"
-                style={{
-                  aspectRatio: '3/4',
-                  background: `linear-gradient(135deg, ${showRewardModal.color}40 0%, ${showRewardModal.color}10 100%)`,
-                  border: `2px solid ${showRewardModal.color}`,
-                  boxShadow: `0 12px 48px ${showRewardModal.color}60`,
-                }}
-              >
-                {showRewardModal.pct === 100 && (
-                  <motion.div
-                    className="absolute inset-0"
-                    animate={{ opacity: [0.3, 0.7, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    style={{ background: `linear-gradient(135deg, transparent, ${showRewardModal.color}40, transparent)` }}
-                  />
-                )}
-                
-                <div className="flex justify-between w-full z-10">
-                  <span className="text-[10px] font-black tracking-widest uppercase" style={{ color: showRewardModal.color }}>
-                    RECOMPENSA
-                  </span>
-                  <Trophy size={16} style={{ color: showRewardModal.color }} />
-                </div>
-                
-                <div className="flex-1 flex flex-col items-center justify-center z-10 w-full gap-6">
-                  <div className="w-32 h-32 flex items-center justify-center rounded-full relative" style={{ background: 'rgba(255,255,255,0.05)', boxShadow: `inset 0 0 40px ${showRewardModal.color}40` }}>
-                    <EmojiIcon emoji={showRewardModal.emoji} size={64} color={showRewardModal.color} strokeWidth={1.5} />
-                  </div>
-                  
-                  <div className="w-full text-center bg-black/40 backdrop-blur-sm rounded-2xl py-4 px-3 border border-white/10">
-                    <h3 className="text-xl font-black mb-1" style={{ color: showRewardModal.color }}>{showRewardModal.name}</h3>
-                    <p className="text-xs uppercase tracking-widest text-white/50">¡Premio de la Ruleta!</p>
-                    <p className="text-white/80 text-sm mt-3 leading-relaxed">"Muestra esta pantalla en la caja de cualquier cafetería del campus para reclamar tu premio."</p>
-                  </div>
-                </div>
-
-                <motion.button
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setShowRewardModal(null)}
-                  className="w-full mt-4 py-4 rounded-2xl text-white font-black text-sm uppercase tracking-widest z-10 flex items-center justify-center gap-2"
-                  style={{
-                    background: `linear-gradient(135deg, ${showRewardModal.color}, ${showRewardModal.color}CC)`,
-                    boxShadow: `0 8px 24px ${showRewardModal.color}40`
-                  }}
-                >
-                  <Gift size={18} />
-                  ¡Entendido!
-                </motion.button>
-              </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
-      {}
-      <AnimatePresence>
         {showWelcomeModal && (
           <>
             <motion.div
@@ -1781,9 +1623,9 @@ export function MonasAlbumPage() {
                 transition={{ type: 'spring', stiffness: 260, damping: 25 }}
                 className="relative w-full max-w-[420px] rounded-[32px] p-6 h-[62.5vh] max-h-[62.5vh] flex flex-col justify-between pointer-events-auto custom-scrollbar transition-all duration-300 overflow-y-auto"
                 style={{ 
-                  background: isDark ? 'linear-gradient(160deg, #0A1628, #112240)' : 'linear-gradient(160deg, #FDFCF8, #EDE9E0)', 
-                  border: isDark ? '2px solid rgba(59,130,246,0.4)' : '2px solid rgba(59,130,246,0.25)',
-                  boxShadow: isDark ? '0 12px 48px rgba(59,130,246,0.2)' : '0 12px 48px rgba(59,130,246,0.12)'
+                   background: isDark ? 'linear-gradient(160deg, #0A1628, #112240)' : 'linear-gradient(160deg, #FDFCF8, #EDE9E0)', 
+                   border: isDark ? '2px solid rgba(59,130,246,0.4)' : '2px solid rgba(59,130,246,0.25)',
+                   boxShadow: isDark ? '0 12px 48px rgba(59,130,246,0.2)' : '0 12px 48px rgba(59,130,246,0.12)'
                 }}
               >
                 <div>
@@ -1792,7 +1634,7 @@ export function MonasAlbumPage() {
                       <Library size={28} className="text-white" />
                     </div>
                     <h2 className={`font-black text-2xl tracking-tight transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>¡Bienvenido al Álbum!</h2>
-                    <p className={`text-sm mt-1 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Colecciona Patricias y gana recompensas</p>
+                    <p className={`text-sm mt-1 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Colecciona Patricias y sube tu nivel</p>
                   </div>
                   <div className="space-y-4 mb-6">
                     <div className="flex gap-3">
@@ -1814,7 +1656,7 @@ export function MonasAlbumPage() {
                       <div className="flex-1">
                         <h3 className={`font-bold text-sm transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>El Gran Objetivo</h3>
                         <p className={`text-xs mt-1 leading-relaxed transition-colors ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-                          Coleccionar patricias suma <strong className={isDark ? "text-white font-black" : "text-gray-900 font-black"}>XP</strong>. Por cada 500 XP, subirás de nivel y obtendrás giros en la ruleta para ganar premios reales en las cafeterías.
+                          Coleccionar patricias te otorga <strong className={isDark ? "text-white font-black" : "text-gray-900 font-black"}>XP</strong>. Por cada 500 XP acumulados, subirás de nivel para destacar en la comunidad universitaria de la ECI.
                         </p>
                       </div>
                     </div>
