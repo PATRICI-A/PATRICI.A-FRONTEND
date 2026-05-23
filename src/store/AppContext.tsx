@@ -81,6 +81,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(mockCurrentUser);
+  // Pre-seed localStorage so the hangout service interceptor can read the studentId
+  if (!localStorage.getItem('patricia-user')) {
+    localStorage.setItem('patricia-user', JSON.stringify(mockCurrentUser));
+  }
   const [notificationsList, setNotificationsList] = useState<Notification[]>(initialNotifications);
   const [geo, setGeoState] = useState<GeoState>(GEO_INITIAL);
   useEffect(() => {
@@ -116,11 +120,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(true);
     setCurrentUser(user);
     localStorage.setItem('patricia-logged-in', 'true');
+    localStorage.setItem('patricia-user', JSON.stringify(user));
   };
   const logout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     localStorage.removeItem('patricia-logged-in');
+    localStorage.removeItem('patricia-user');
   };
   const updateGeo = useCallback((patch: Partial<GeoState>) => {
     setGeoState(prev => ({ ...prev, ...patch }));
