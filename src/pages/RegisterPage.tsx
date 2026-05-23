@@ -440,7 +440,7 @@ export function RegisterPage() {
     if (resendCooldown > 0) return;
     setOtpTimeLeft(OTP_DURATION); setCode(['', '', '', '', '', '']);
     setOtpStatus('idle'); setOtpAttempts(0); setResendCooldown(RESEND_COOLDOWN); setErrors({});
-    authService.resendOtp(email).catch(() => {});
+    authService.resendOtp(email.trim().toLowerCase().replace(/['"]/g, '')).catch(() => {});
     setTimeout(() => codeRefs.current[0]?.focus(), 50);
   };
   const handleVerifyOtp = async () => {
@@ -456,7 +456,7 @@ export function RegisterPage() {
     }
     setIsLoading(true);
     try {
-      await authService.verifyOtp(email, full);
+      await authService.verifyOtp(email.trim().toLowerCase().replace(/['"]/g, ''), full);
       setOtpStatus('idle'); setErrors({});
       setStep(4);
     } catch (err: unknown) {

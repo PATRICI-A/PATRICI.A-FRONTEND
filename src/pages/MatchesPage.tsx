@@ -44,10 +44,17 @@ export function MatchesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showUnfriendModal, setShowUnfriendModal] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [connectingIds, setConnectingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     store.loadTab(activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!store.error) return;
+    const t = setTimeout(() => useMatchingStore.setState({ error: null }), 6000);
+    return () => clearTimeout(t);
+  }, [store.error]);
 
   const activeUsers = useMemo<EnrichedMatchUser[]>(() => {
     if (activeTab === 'explore') return store.explore;
@@ -91,10 +98,14 @@ export function MatchesPage() {
   }, [activeUsers, activeTab, filters, searchQuery, nearbyUserIds]);
 
   const handleConnect = (userId: string) => {
+    if (connectingIds.has(userId)) return;
     const user = [...store.explore, ...store.sent].find(u => u.id === userId);
     if (!user) return;
     if (user.connectionStatus === 'none') {
-      store.sendRequest(userId);
+      setConnectingIds(prev => new Set(prev).add(userId));
+      store.sendRequest(userId).finally(() => {
+        setConnectingIds(prev => { const s = new Set(prev); s.delete(userId); return s; });
+      });
     } else if (user.connectionStatus === 'pending' && user.matchId) {
       store.removeMatch(user.matchId);
     }
@@ -135,6 +146,21 @@ export function MatchesPage() {
   return (
     <div className="min-h-screen relative" style={{ background: 'transparent' }}>
       <DoodleBackground isDark={isDark} />
+      <AnimatePresence>
+        {store.error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl text-white text-xs font-semibold shadow-xl max-w-[280px] text-center"
+            style={{ background: 'linear-gradient(135deg,#EF4444,#DC2626)' }}
+          >
+            {store.error?.toLowerCase().includes('tag')
+              ? <>Necesitas agregar intereses a tu perfil antes de conectar. <button onClick={() => navigate('/edit-profile')} className="underline font-bold">Ir a Editar Perfil →</button></>
+              : store.error}
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div
         className="backdrop-blur-xl border-b"
         style={isDark
@@ -618,17 +644,21 @@ export function MatchesPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={e => { e.stopPropagation(); handleConnect(user.id); }}
                         key={`${user.id}-${status}`}
-                        className="w-full py-1.5 rounded-xl flex items-center justify-center gap-1 text-white text-[10px] font-bold transition-all"
+                        disabled={connectingIds.has(user.id)}
+                        className="w-full py-1.5 rounded-xl flex items-center justify-center gap-1 text-white text-[10px] font-bold transition-all disabled:opacity-70"
                         style={{
                           background: status === 'connected' ? 'linear-gradient(135deg,#10B981,#059669)' :
                                        status === 'pending' ? 'linear-gradient(135deg,#F59E0B,#D97706)' :
+                                       connectingIds.has(user.id) ? 'linear-gradient(135deg,#6B7280,#4B5563)' :
                                        GRADIENT,
-                          boxShadow: status === 'none' ? '0 3px 10px rgba(6,182,212,0.3)' : 'none',
+                          boxShadow: status === 'none' && !connectingIds.has(user.id) ? '0 3px 10px rgba(6,182,212,0.3)' : 'none',
                         }}
                       >
-                        {status === 'connected' ? <><Heart size={11} fill="white" /> Conectados</> :
-                         status === 'pending' ? <><Clock size={11} /> Pendiente</> :
-                                                <><Heart size={11} /> Conectar</>}
+                        {connectingIds.has(user.id) ? (
+                          <><div className="w-2.5 h-2.5 border border-white/40 border-t-white rounded-full animate-spin" /> Enviando...</>
+                        ) : status === 'connected' ? <><Heart size={11} fill="white" /> Conectados</> :
+                           status === 'pending' ? <><Clock size={11} /> Pendiente</> :
+                                                  <><Heart size={11} /> Conectar</>}
                       </motion.button>
                     )}
                   </div>
@@ -712,10 +742,13 @@ export function MatchesPage() {
                       onClick={() => handleConnect(selectedUser.id)}
                       whileTap={{ scale: 0.97 }}
                       key={`modal-${selectedUser.id}-${selectedUser.connectionStatus}`}
-                      className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg"
-                      style={{ background: selectedUser.connectionStatus === 'pending' ? '#F59E0B' : GRADIENT }}
+                      disabled={connectingIds.has(selectedUser.id)}
+                      className="w-full py-3.5 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                      style={{ background: selectedUser.connectionStatus === 'pending' ? '#F59E0B' : connectingIds.has(selectedUser.id) ? '#6B7280' : GRADIENT }}
                     >
-                      {selectedUser.connectionStatus === 'pending'
+                      {connectingIds.has(selectedUser.id) ? (
+                        <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Enviando...</>
+                      ) : selectedUser.connectionStatus === 'pending'
                         ? '⏱ Solicitud enviada (toca para cancelar)'
                         : 'Enviar solicitud de conexión'}
                     </motion.button>

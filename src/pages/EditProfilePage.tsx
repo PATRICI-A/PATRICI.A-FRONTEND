@@ -178,6 +178,7 @@ export function EditProfilePage() {
   const { currentUser, isDark } = useApp();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -214,7 +215,7 @@ export function EditProfilePage() {
   }, []);
 
   const totalSelected = selectedInterests.length;
-  const canSave = !isSaving && !saved && totalSelected >= 3 && totalSelected <= 10;
+  const canSave = !isSaving && !saved;
 
   const toggleInterest = (key: string) => {
     setSelectedInterests(prev => {
@@ -241,8 +242,14 @@ export function EditProfilePage() {
       });
       setSaved(true);
       setTimeout(() => navigate(-1), 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al guardar:", error);
+      const status = error?.response?.status;
+      const raw = error?.response?.data;
+      const msg = raw
+        ? (typeof raw === 'object' ? (raw.message ?? raw.error ?? JSON.stringify(raw)) : String(raw))
+        : `Error ${status ?? 'de red'} al guardar`;
+      setSaveError(msg);
       setIsSaving(false);
     }
   };
@@ -502,8 +509,13 @@ export function EditProfilePage() {
             )}
           </div>
 
+          {saveError && (
+            <div className="w-full px-4 py-2.5 rounded-xl text-sm text-white font-medium mb-2" style={{ background: '#EF4444' }}>
+              {saveError}
+            </div>
+          )}
           <button
-              onClick={handleSave}
+              onClick={() => { setSaveError(null); handleSave(); }}
               disabled={!canSave}
               className="w-full py-4 rounded-2xl text-white font-semibold text-base shadow-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
               style={{ background: saved ? '#10B981' : GRADIENT }}

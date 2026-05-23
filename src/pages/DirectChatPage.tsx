@@ -51,6 +51,7 @@ export function DirectChatPage() {
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -90,13 +91,21 @@ export function DirectChatPage() {
 
   const handleSend = async () => {
     if (!input.trim() || !friendId) return;
+    setSendError(null);
     try {
       const responseMsg = await chatService.sendFriendMessage(friendId, input.trim());
       setMessages(prev => [...prev, responseMsg]);
       setInput('');
       setShowEmojis(false);
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const raw = error?.response?.data;
+      const msg = raw
+        ? (typeof raw === 'object' ? (raw.message ?? raw.error) : String(raw))
+        : `Error ${status ?? 'de red'} al enviar mensaje`;
       console.error('Error al enviar mensaje privado:', error);
+      setSendError(msg);
+      setTimeout(() => setSendError(null), 5000);
     }
   };
   const handleContextAction = (action: string) => {
@@ -446,6 +455,9 @@ export function DirectChatPage() {
         className="px-4 py-3 border-t backdrop-blur-md"
         style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
       >
+        {sendError && (
+          <div className="text-xs text-red-500 font-medium mb-2 px-1">{sendError}</div>
+        )}
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setShowAttachments(v => !v); setShowEmojis(false); }}

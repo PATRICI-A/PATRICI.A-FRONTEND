@@ -3,10 +3,8 @@ import axios from 'axios';
 // ──────────────────────────────────────────────
 // Dedicated Axios instance for the Hangout Service
 // ──────────────────────────────────────────────
-const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL ?? '/svc/gateway';
-
 const hangoutApi = axios.create({
-  baseURL: `${BASE_URL}/api/v1`,
+  baseURL: '/api/v1',
   timeout: 12000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -15,17 +13,8 @@ const hangoutApi = axios.create({
 hangoutApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('patricia-token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
-
-  // The hangout service identifies users via X-User-Id (studentId)
-  try {
-    const raw = localStorage.getItem('patricia-user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      const userId = user.studentId || user.id;
-      if (userId) config.headers['X-User-Id'] = userId;
-    }
-  } catch { /* ignore */ }
-
+  const userId = localStorage.getItem('patricia_user_id');
+  if (userId) config.headers['X-User-Id'] = userId;
   return config;
 });
 
@@ -311,9 +300,7 @@ export async function createParche(
   userId: string,
 ): Promise<ParcheResponse> {
   try {
-    const res = await hangoutApi.post<ParcheResponse>('/parches', data, {
-      headers: { 'X-User-Id': userId },
-    });
+    const res = await hangoutApi.post<ParcheResponse>('/parches', data);
     const p = res.data;
     return {
       ...p,

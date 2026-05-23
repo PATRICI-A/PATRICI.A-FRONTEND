@@ -75,15 +75,23 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
 
     try {
       if (tab === 'explore') {
-        const [candidates, scores] = await Promise.all([
+        const [candidates, scores, catalog] = await Promise.all([
           profileService.getMatchingCandidates(currentUserId),
           matchingService.getRecommendationsWithScores(currentUserId),
+          profileService.getTagsCatalog().catch(() => []),
         ]);
+        const tagIdToName = new Map<string, string>();
+        for (const cat of catalog) {
+          for (const tag of cat.tags) tagIdToName.set(tag.id, tag.name);
+        }
         const scoreMap = new Map(scores.map(s => [s.targetUserId, s.totalScore]));
         const allIds = candidates.map(c => c.id);
         const profiles = await profileService.getBatchProfiles(allIds);
         const profileMap = new Map(profiles.map(p => [p.id, p]));
-        const candidateMap = new Map(candidates.map(c => [c.id, c]));
+        const candidateMap = new Map(candidates.map(c => [c.id, {
+          ...c,
+          tags: c.tags.map(t => tagIdToName.get(t) ?? t).filter(t => !t.match(/^[0-9a-f-]{36}$/i)),
+        }]));
 
         set({
           explore: candidates.map(c =>
@@ -139,42 +147,65 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
     const currentUserId = localStorage.getItem('patricia_user_id');
     if (!currentUserId) return;
 
-    const match = await matchingService.sendRequest(currentUserId, targetId);
-
-    set(s => {
-      const user = s.explore.find(u => u.id === targetId);
-      if (!user) return s;
-      return {
-        explore: s.explore.filter(u => u.id !== targetId),
-        sent: [...s.sent, { ...user, matchId: match.idMatch, connectionStatus: 'pending' as const }],
-      };
-    });
+    try {
+      const match = await matchingService.sendRequest(currentUserId, targetId);
+      set(s => {
+        const user = s.explore.find(u => u.id === targetId);
+        if (!user) return s;
+        return {
+          explore: s.explore.map(u =>
+            u.id === targetId ? { ...u, matchId: match.idMatch, connectionStatus: 'pending' as const } : u
+          ),
+          sent: [...s.sent, { ...user, matchId: match.idMatch, connectionStatus: 'pending' as const }],
+        };
+      });
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? `Error ${status ?? 'de red'} al enviar solicitud`;
+      set({ error: msg });
+      console.error('[sendRequest]', msg, err);
+    }
   },
 
   async acceptRequest(matchId) {
-    await matchingService.updateMatchStatus(matchId, 'ACCEPTED');
-    set(s => {
-      const user = s.received.find(u => u.matchId === matchId);
-      if (!user) return s;
-      return {
-        received: s.received.filter(u => u.matchId !== matchId),
-        friends: [...s.friends, { ...user, connectionStatus: 'connected' as const }],
-      };
-    });
+    try {
+      await matchingService.updateMatchStatus(matchId, 'ACCEPTED');
+      set(s => {
+        const user = s.received.find(u => u.matchId === matchId);
+        if (!user) return s;
+        return {
+          received: s.received.filter(u => u.matchId !== matchId),
+          friends: [...s.friends, { ...user, connectionStatus: 'connected' as const }],
+        };
+      });
+    } catch (err: any) {
+      set({ error: 'Error al aceptar solicitud. Intenta de nuevo.' });
+      console.error('[acceptRequest]', err);
+    }
   },
 
   async rejectRequest(matchId) {
-    await matchingService.updateMatchStatus(matchId, 'REJECTED');
-    set(s => ({
-      received: s.received.filter(u => u.matchId !== matchId),
-    }));
+    try {
+      await matchingService.updateMatchStatus(matchId, 'REJECTED');
+      set(s => ({
+        received: s.received.filter(u => u.matchId !== matchId),
+      }));
+    } catch (err: any) {
+      set({ error: 'Error al rechazar solicitud. Intenta de nuevo.' });
+      console.error('[rejectRequest]', err);
+    }
   },
 
   async removeMatch(matchId) {
-    await matchingService.deleteMatch(matchId);
-    set(s => ({
-      friends: s.friends.filter(u => u.matchId !== matchId),
-      sent: s.sent.filter(u => u.matchId !== matchId),
-    }));
+    try {
+      await matchingService.deleteMatch(matchId);
+      set(s => ({
+        friends: s.friends.filter(u => u.matchId !== matchId),
+        sent: s.sent.filter(u => u.matchId !== matchId),
+      }));
+    } catch (err: any) {
+      set({ error: 'Error al eliminar conexión. Intenta de nuevo.' });
+      console.error('[removeMatch]', err);
+    }
   },
 }));

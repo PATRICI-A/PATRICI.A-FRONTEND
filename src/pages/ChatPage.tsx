@@ -12,8 +12,24 @@ import { EmojiIcon } from '../components/ui/EmojiIcon';
 import { parches, directChats, matchUsers, GRADIENT, GOLD_LIGHT, PINK, ORANGE } from '../types/mockData';
 import { useApp } from '../store/AppContext';
 import { chatService, type MessageResponse } from '../services/chat.service';
+import { getParcheById } from '../services/parches.service';
 import { DoodleBackground } from '../components/ui/DoodleBackground';
 import { ChatSidebar } from '../components/chat/ChatSidebar';
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  MUSIC: '🎵', SPORT: '⚽', TECHNOLOGY: '💻', STUDY: '📚',
+  CULTURE: '🎨', SOCIAL: '🤝', FOOD: '🍕', WELLNESS: '🧘',
+};
+const CATEGORY_COLOR: Record<string, string> = {
+  MUSIC: 'linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)',
+  SPORT: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)',
+  TECHNOLOGY: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+  STUDY: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+  CULTURE: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
+  SOCIAL: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+  FOOD: 'linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)',
+  WELLNESS: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+};
 const EMOJIS = ['😊', '👍', '🔥', '❤️', '😂', '🙌', '✨', '💯'];
 function extractGradientColors(coverColor: string) {
   const hexes = coverColor.match(/#[0-9A-Fa-f]{6}/g);
@@ -38,7 +54,8 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { currentUser, isDark } = useApp();
-  const parche = parches.find(p => p.id === id) || parches[0];
+  const mockParche = parches.find(p => p.id === id) || parches[0];
+  const [apiParche, setApiParche] = useState<{ id: string; name: string; emoji: string; coverColor: string; membersCount: number } | null>(null);
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [input, setInput] = useState('');
   const [showEmojis, setShowEmojis] = useState(false);
@@ -51,10 +68,15 @@ export function ChatPage() {
   const [reportDescription, setReportDescription] = useState<string>('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuAnchor, setMenuAnchor] = useState({ top: 60, right: 16 });
+
+  const parche = apiParche
+    ? { id: apiParche.id, name: apiParche.name, emoji: apiParche.emoji, coverColor: apiParche.coverColor, members: apiParche.membersCount }
+    : mockParche;
   const { bubbleBg, accentColor } = extractGradientColors(parche.coverColor);
 
   // Helper to fetch matching user avatars
@@ -67,24 +89,30 @@ export function ChatPage() {
     return matched?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50';
   };
 
-  // reiniciar y cargar mensajes desde el backend de Azure al cambiar de parche
+  // Load real parche info and messages from the backend
   useEffect(() => {
-    const currentParche = parches.find(p => p.id === id) || parches[0];
-    const loadMessages = async () => {
-      try {
-        const response = await chatService.fetchParcheMessages(currentParche.id, 0, 100);
-        setMessages(response.content);
-      } catch (error) {
-        console.error('Error al cargar mensajes del parche:', error);
-      }
-    };
-
-    loadMessages();
+    if (!id) return;
+    setMessages([]);
     setInput('');
     setShowEmojis(false);
     setShowInfo(false);
     setShowAttachments(false);
     setShowContextMenu(false);
+
+    getParcheById(id).then(data => {
+      const cat = data.category?.toUpperCase() ?? 'SOCIAL';
+      setApiParche({
+        id: data.id,
+        name: data.name,
+        emoji: CATEGORY_EMOJI[cat] ?? '🤝',
+        coverColor: CATEGORY_COLOR[cat] ?? 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+        membersCount: data.actualMembers,
+      });
+    }).catch(() => {});
+
+    chatService.fetchParcheMessages(id, 0, 100)
+      .then(res => setMessages(res.content))
+      .catch(err => console.error('Error al cargar mensajes del parche:', err));
   }, [id]);
 
   useEffect(() => {
@@ -93,13 +121,21 @@ export function ChatPage() {
 
   const handleSend = async () => {
     if (!input.trim() || !id) return;
+    setSendError(null);
     try {
       const responseMsg = await chatService.sendParcheMessage(id, input.trim());
       setMessages(prev => [...prev, responseMsg]);
       setInput('');
       setShowEmojis(false);
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const raw = error?.response?.data;
+      const msg = raw
+        ? (typeof raw === 'object' ? (raw.message ?? raw.error) : String(raw))
+        : `Error ${status ?? 'de red'} al enviar mensaje`;
       console.error('Error al enviar mensaje al parche:', error);
+      setSendError(msg);
+      setTimeout(() => setSendError(null), 5000);
     }
   };
   const handleContextAction = (action: string) => {
@@ -266,11 +302,10 @@ export function ChatPage() {
             onClick={() => navigate('/profile')}
             className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-[#1E3A5F] shadow-sm active:scale-95 transition-transform ml-1"
           >
-            <img
-              src={currentUser?.avatar}
-              alt={currentUser?.name}
-              className="w-full h-full object-cover"
-            />
+            {currentUser?.avatar
+              ? <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold" style={{ background: GRADIENT }}>{(currentUser?.name || '?')[0].toUpperCase()}</div>
+            }
           </button>
         </div>
       </div>
@@ -464,6 +499,9 @@ export function ChatPage() {
         className="px-4 py-3 border-t backdrop-blur-md"
         style={{ background: isDark ? 'rgba(17, 34, 64, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: isDark ? '#233554' : '#F3F4F6' }}
       >
+        {sendError && (
+          <div className="text-xs text-red-500 font-medium mb-2 px-1">{sendError}</div>
+        )}
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setShowAttachments(v => !v); setShowEmojis(false); }}

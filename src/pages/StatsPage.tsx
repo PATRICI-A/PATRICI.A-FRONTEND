@@ -141,17 +141,17 @@ export function StatsPage() {
 
   const activityData = dashboard?.weeklyActivity
     ? Object.entries(dashboard.weeklyActivity).map(([day, value]) => ({ day: DAY_LABELS[day] ?? day, value: value ?? 0 }))
-    : d.activity;
+    : [];
 
   const categoryData = interactions?.interactionSummary
     ? Object.entries(interactions.interactionSummary).map(([name, count], i) => ({
         name, count, color: ['#3B82F6', PINK, '#10B981', ORANGE, '#8B5CF6'][i % 5],
       }))
-    : d.categories;
+    : [];
 
   const radarData = social?.socialAffinity
     ? Object.entries(social.socialAffinity).map(([subject, value]) => ({ subject, value: Math.round(value * 100) }))
-    : d.radar;
+    : [];
 
   const achievements = unlockedBadges.length > 0
     ? unlockedBadges.map(b => ({
@@ -165,17 +165,13 @@ export function StatsPage() {
     ? dashboard.recentAchievements.map(a => ({
         emoji: '🏆', title: a.name, desc: a.description, xp: a.xpReward, color: ORANGE,
       }))
-    : [
-        { emoji: '🏆', title: 'Primer Parche', desc: 'Creaste tu primer parche', xp: 50, color: ORANGE },
-        { emoji: '🤝', title: 'Networker', desc: 'Conectaste con 10 compañeros', xp: 75, color: PINK },
-        { emoji: '⭐', title: 'Explorador', desc: 'Visitaste 5 zonas del campus', xp: 60, color: TEAL },
-      ];
+    : [];
 
   const statsGrid = [
-    { icon: Users,         value: String(dashboard?.patchesAttended ?? d.stats[1].value), label: 'Parches asistidos', delta: '', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
-    { icon: Calendar,      value: String(dashboard?.achievementsEarned ?? d.stats[0].value), label: 'Logros obtenidos', delta: '', color: PINK, bg: 'rgba(236,72,153,0.12)' },
-    { icon: MessageCircle, value: String(interactions?.totalInteractions ?? d.stats[2].value), label: 'Interacciones', delta: '', color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
-    { icon: Star,          value: dashboard?.participationLevel ?? d.stats[3].value, label: 'Nivel de participación', delta: '', color: ORANGE, bg: 'rgba(251,146,60,0.12)' },
+    { icon: Users,         value: String(dashboard?.patchesAttended ?? '0'), label: 'Parches asistidos', delta: '', color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+    { icon: Calendar,      value: String(dashboard?.achievementsEarned ?? '0'), label: 'Logros obtenidos', delta: '', color: PINK, bg: 'rgba(236,72,153,0.12)' },
+    { icon: MessageCircle, value: String(interactions?.totalInteractions ?? '0'), label: 'Interacciones', delta: '', color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { icon: Star,          value: dashboard?.participationLevel ?? '—', label: 'Nivel de participación', delta: '', color: ORANGE, bg: 'rgba(251,146,60,0.12)' },
   ];
 
   const maxActivity = Math.max(...activityData.map(a => a.value), 1);

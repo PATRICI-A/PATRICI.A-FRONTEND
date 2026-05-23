@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Globe, Lock, MapPin, Clock, Calendar, Users, Plus, X, Check, Rocket, Sparkles, Image as ImageIcon, Ticket } from 'lucide-react';
-import { GRADIENT, PINK, ORANGE, events, ECI_LOCATIONS } from '../types/mockData';
+import { GRADIENT, PINK, ORANGE, events } from '../types/mockData';
 import { EmojiIcon } from '../components/ui/EmojiIcon';
 import patySelfieImg from '../assets/PATY SELFIE.png';
 import patyBalonesImg from '../assets/PATY BALONES.png';
+import { getAvailablePlaces } from '../services/parches.service';
+import type { PlaceResponse } from '../services/parches.service';
 const categories = [
   { id: 'MUSIC', label: 'Música', emoji: '🎵', gradient: GRADIENT },
   { id: 'SPORT', label: 'Deporte', emoji: '⚽', gradient: 'linear-gradient(135deg, #0369A1 0%, #0EA5E9 100%)' },
@@ -41,6 +43,12 @@ export function CreateParchePage() {
   const [eventId, setEventId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [created, setCreated] = useState(false);
+  const [places, setPlaces] = useState<PlaceResponse[]>([]);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAvailablePlaces().then(setPlaces).catch(() => {});
+  }, []);
   const toggleFriend = (id: string) => {
     setInvitedFriends(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
@@ -57,33 +65,39 @@ export function CreateParchePage() {
   const handleCreate = async () => {
     if (!name || !category) return;
     setIsLoading(true);
+    setCreateError(null);
     try {
-      const formattedTime = time ? `${time}:00` : "00:00:00";
+      const formattedTime = time ? `${time}:00` : '12:00:00';
       const formattedDate = date || new Date().toISOString().split('T')[0];
-      
+      const userId = localStorage.getItem('patricia_user_id') || currentUser?.id || '';
+
+      // Only send imageUrl if it's a real URL (not a base64 data URI)
+      const safeImageUrl = coverImage && !coverImage.startsWith('data:') ? coverImage : undefined;
+
       const newParche = await createParche({
         name,
         description,
-        lugar: location || 'Campus',
+        lugar: location,
         category,
         date: formattedDate,
         hour: formattedTime,
         maximumQuota: parseInt(maxMembers) || 10,
         type: isPublic ? 'PUBLIC' : 'PRIVATE',
         eventId: eventId || undefined,
-        imageUrl: coverImage || undefined,
-      }, currentUser?.id || 'u1');
+        imageUrl: safeImageUrl,
+      }, userId);
 
       if (invitedFriends.length > 0) {
         await Promise.allSettled(
           invitedFriends.map(friendId => sendInvitation(newParche.id, friendId))
         );
       }
-      
+
       setCreated(true);
       setTimeout(() => navigate('/parches'), 2000);
-    } catch (err: unknown) {
-      alert("Error al crear parche");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? 'Error al crear el parche. Intenta de nuevo.';
+      setCreateError(typeof msg === 'string' ? msg : JSON.stringify(msg));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -226,29 +240,59 @@ export function CreateParchePage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de parche</label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { value: true, icon: Globe, title: 'Público', desc: 'Cualquiera puede unirse' },
-                { value: false, icon: Lock, title: 'Privado', desc: 'Solo por invitación' },
-              ].map(opt => (
-                <button
-                  key={String(opt.value)}
-                  type="button"
-                  onClick={() => setIsPublic(opt.value)}
-                  className="flex flex-col gap-2 p-4 rounded-xl border-2 text-left transition-all"
-                  style={
-                    isPublic === opt.value
-                      ? { borderColor: PINK, background: 'rgba(29,78,216,0.05)' }
-                      : { borderColor: '#E5E7EB', background: 'white' }
-                  }
-                >
-                  <opt.icon size={20} style={{ color: isPublic === opt.value ? PINK : '#9CA3AF' }} />
-                  <div>
-                    <p className="font-semibold text-sm text-gray-800" style={isPublic === opt.value ? { color: PINK } : {}}>
-                      {opt.title}
-                    </p>
-                    <p className="text-xs text-gray-400">{opt.desc}</p>
-                  </div>
-                </button>
-              ))}
+                {
+                  value: true,
+                  icon: Globe,
+                  title: 'Público',
+                  desc: 'Cualquiera puede unirse',
+                  gradient: 'linear-gradient(135deg, #1D4ED8 0%, #06B6D4 100%)',
+                },
+                {
+                  value: false,
+                  icon: Lock,
+                  title: 'Privado',
+                  desc: 'Solo por invitación',
+                  gradient: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 100%)',
+                },
+              ].map(opt => {
+                const selected = isPublic === opt.value;
+                return (
+                  <button
+                    key={String(opt.value)}
+                    type="button"
+                    onClick={() => setIsPublic(opt.value)}
+                    className="relative flex flex-col gap-2 p-4 rounded-2xl border-2 text-left transition-all active:scale-95"
+                    style={
+                      selected
+                        ? { borderColor: 'transparent', background: opt.gradient, boxShadow: '0 6px 20px rgba(0,0,0,0.18)' }
+                        : { borderColor: '#E5E7EB', background: 'white' }
+                    }
+                  >
+                    {selected && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white/30 flex items-center justify-center">
+                        <Check size={11} color="white" strokeWidth={3} />
+                      </div>
+                    )}
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={selected
+                        ? { background: 'rgba(255,255,255,0.22)' }
+                        : { background: '#F3F4F6' }
+                      }
+                    >
+                      <opt.icon size={20} style={{ color: selected ? 'white' : '#9CA3AF' }} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm" style={{ color: selected ? 'white' : '#374151' }}>
+                        {opt.title}
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: selected ? 'rgba(255,255,255,0.75)' : '#9CA3AF' }}>
+                        {opt.desc}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
           {/* Evento */}
@@ -280,8 +324,8 @@ export function CreateParchePage() {
                   className="w-full pl-8 pr-10 py-3 rounded-xl bg-white dark:bg-[#112240] border border-gray-200 dark:border-[#233554] text-gray-800 dark:text-white focus:outline-none focus:border-[#1D4ED8] text-sm transition-all appearance-none"
                 >
                   <option value="" disabled>Selecciona el lugar...</option>
-                  {ECI_LOCATIONS.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
+                  {places.map(p => (
+                    <option key={p.code} value={p.code}>{p.displayName}</option>
                   ))}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -363,10 +407,14 @@ export function CreateParchePage() {
               })}
             </div>
           </div>
-          {}
+          {createError && (
+            <div className="w-full px-4 py-3 rounded-xl text-sm text-white font-medium" style={{ background: '#EF4444' }}>
+              {createError}
+            </div>
+          )}
           <button
             onClick={handleCreate}
-            disabled={!name || !category || isLoading}
+            disabled={!name || !category || !location || isLoading}
             className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-50 shadow-lg flex items-center justify-center gap-2"
             style={{ background: GRADIENT }}
           >

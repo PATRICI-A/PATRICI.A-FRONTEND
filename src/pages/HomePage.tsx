@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { Search, Plus, TrendingUp, MapPin, Clock, ChevronRight, ChevronLeft, Heart, Users, BookOpen, Sparkles, Lock, Flame, LocateFixed, Navigation } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { parches, matchUsers, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
+import { parches, vibraCategories, events, monas, GRADIENT, PINK, ORANGE, TEAL, TEAL_GRADIENT, GOLD_GRADIENT, GOLD_LIGHT } from '../types/mockData';
+import { useMatchingStore } from '../store/matchingStore';
 import type { Event, Mona } from '../types/mockData';
 import { eventsService } from '../services/events.service';
 import type { ApiEvent } from '../services/events.service';
@@ -46,8 +47,8 @@ import vibraPintura from '../assets/Pintura-removebg-preview.png';
 export function HomePage() {
   const navigate = useNavigate();
   const { currentUser, isDark, geo } = useApp();
+  const matchingStore = useMatchingStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [connectionStates, setConnectionStates] = useState<Record<string, 'none' | 'pending' | 'connected'>>({});
   const [homeEvents, setHomeEvents] = useState<Event[]>([]);
   const [homeMonas, setHomeMonas] = useState<Mona[]>(monas);
 
@@ -61,6 +62,7 @@ export function HomePage() {
         setHomeMonas(monas.map(m => ({ ...m, unlocked: unlockedSet.has(m.id) })));
       }
     });
+    if (matchingStore.explore.length === 0) matchingStore.loadTab('explore');
   }, []);
 
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -129,18 +131,14 @@ export function HomePage() {
     setVibraAtStart(scrollLeft <= 10);
     setVibraAtEnd(scrollLeft + clientWidth >= scrollWidth - 10);
   };
-  const handleQuickConnect = (userId: string, currentStatus?: 'none' | 'pending' | 'connected') => {
-    const status = connectionStates[userId] || currentStatus || 'none';
-    if (status === 'none') {
-      setConnectionStates(prev => ({ ...prev, [userId]: 'pending' }));
-    }
-  };
-  const getConnectionStatus = (userId: string, originalStatus?: 'none' | 'pending' | 'connected') => {
-    return connectionStates[userId] || originalStatus || 'none';
+  const handleQuickConnect = (userId: string) => {
+    const user = matchingStore.explore.find(u => u.id === userId);
+    if (!user || user.connectionStatus !== 'none') return;
+    matchingStore.sendRequest(userId);
   };
   const featuredEvent = homeEvents[currentEventIndex] ?? homeEvents[0];
   const topParches = parches.slice(0, 3);
-  const topMatches = matchUsers.slice(0, 4);
+  const topMatches = matchingStore.explore.slice(0, 4);
   const unlockedMonas = homeMonas.filter(m => m.unlocked);
   const totalMonas = homeMonas.length;
   const albumPercent = totalMonas > 0 ? Math.round((unlockedMonas.length / totalMonas) * 100) : 0;
@@ -601,7 +599,19 @@ export function HomePage() {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {topMatches.slice(0, 4).map((user, i) => (
+          {matchingStore.loading.explore && topMatches.length === 0 ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl overflow-hidden flex flex-row animate-pulse" style={{ height: '160px', background: isDark ? '#112240' : '#F3F4F6' }}>
+                <div className="flex-shrink-0" style={{ width: '50%', background: isDark ? '#1E3A5F' : '#E5E7EB' }} />
+                <div className="flex flex-col gap-2 p-4" style={{ width: '50%' }}>
+                  <div className="h-4 rounded-full" style={{ background: isDark ? '#1E3A5F' : '#E5E7EB', width: '70%' }} />
+                  <div className="h-3 rounded-full" style={{ background: isDark ? '#1E3A5F' : '#E5E7EB', width: '50%' }} />
+                </div>
+              </div>
+            ))
+          ) : topMatches.length === 0 ? (
+            <p className="col-span-2 text-center text-gray-400 py-6 text-sm">No hay matches disponibles aún</p>
+          ) : topMatches.map((user, i) => (
             <motion.div
               key={user.id}
               initial={{ opacity: 0, y: 10 }}
@@ -616,25 +626,23 @@ export function HomePage() {
                 height: '160px',
               }}
             >
-              
               <div className="relative flex-shrink-0" style={{ width: '50%' }}>
                 <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A192F 0%, #1E3A5F 100%)' }}>
                   <span className="text-white font-bold text-4xl select-none">{user.name.charAt(0)}</span>
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                    onError={e => { e.currentTarget.style.display = 'none'; }}
-                  />
+                  {user.photoUrl && (
+                    <img
+                      src={user.photoUrl}
+                      alt={user.name}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      onError={e => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
                 </div>
-                
                 <div className="absolute inset-y-0 right-0 w-8 pointer-events-none" style={{ background: isDark ? 'linear-gradient(to right, transparent, #112240)' : 'linear-gradient(to right, transparent, rgba(253,252,248,0.95))' }} />
                 <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold text-white shadow" style={{ background: TEAL_GRADIENT }}>
                   {user.matchPercent}%
                 </div>
-
               </div>
-              
               <div className="flex flex-col justify-between p-4" style={{ width: '50%' }}>
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
@@ -642,33 +650,37 @@ export function HomePage() {
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: TEAL }} />
                   </div>
                   <div className="flex gap-1.5 flex-wrap mb-2">
-                    {user.interests.slice(0, 2).map(interest => (
-                      <span key={interest} className="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style={{ background: isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.1)', color: TEAL }}>
-                        {interest}
+                    {user.tags.slice(0, 2).map(tag => (
+                      <span key={tag} className="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style={{ background: isDark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.1)', color: TEAL }}>
+                        {tag}
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mt-1"><MapPin size={11} /> {user.commonPlace}</p>
+                  {user.career && (
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                      <MapPin size={11} /> {user.career.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                    </p>
+                  )}
                 </div>
                 <div className="mt-2">
-                <button
-                  className="w-full py-2 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95 text-white text-xs font-bold shadow-md"
-                  style={{
-                    background: getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? '#10B981' :
-                                getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? '#F59E0B' :
-                                GRADIENT,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  }}
-                  onClick={e => { e.stopPropagation(); handleQuickConnect(user.id, user.connectionStatus); }}
-                >
-                  {getConnectionStatus(user.id, user.connectionStatus) === 'connected' ? (
-                    <><Heart size={13} fill="white" /><span>Conectado</span></>
-                  ) : getConnectionStatus(user.id, user.connectionStatus) === 'pending' ? (
-                    <><Clock size={13} /><span>Pendiente</span></>
-                  ) : (
-                    <><Heart size={13} /><span>Conectar</span></>
-                  )}
-                </button>
+                  <button
+                    className="w-full py-2 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95 text-white text-xs font-bold shadow-md"
+                    style={{
+                      background: user.connectionStatus === 'connected' ? '#10B981' :
+                                  user.connectionStatus === 'pending' ? '#F59E0B' :
+                                  GRADIENT,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
+                    onClick={e => { e.stopPropagation(); handleQuickConnect(user.id); }}
+                  >
+                    {user.connectionStatus === 'connected' ? (
+                      <><Heart size={13} fill="white" /><span>Conectado</span></>
+                    ) : user.connectionStatus === 'pending' ? (
+                      <><Clock size={13} /><span>Pendiente</span></>
+                    ) : (
+                      <><Heart size={13} /><span>Conectar</span></>
+                    )}
+                  </button>
                 </div>
               </div>
             </motion.div>

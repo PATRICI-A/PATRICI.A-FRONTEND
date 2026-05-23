@@ -43,10 +43,8 @@ import enfermeriaImg from '../assets/Enfermeria-removebg-preview.png';
 import nutricionImg from '../assets/Nutricion-removebg-preview.png';
 import futbolImg from '../assets/Futbol-removebg-preview.png';
 import yogaImg from '../assets/Yoga-removebg-preview.png';
-import natacionImg from '../assets/Natacion-removebg-preview.png';
 import teatroImg from '../assets/Teatro-removebg-preview.png';
-import fotografiaImg from '../assets/Fotografia-removebg-preview.png';
-import cineImg from '../assets/Cine-removebg-preview.png';
+import baileImg from '../assets/Teatro-removebg-preview.png';
 import psicologiaImg from '../assets/Psicologia-removebg-preview.png';
 import apoyoImg from '../assets/Apoyo-removebg-preview.png';
 import proyectoVidaImg from '../assets/ProyectoVida-removebg-preview.png';
@@ -58,13 +56,11 @@ const RESOURCE_IMAGES: Record<string, string> = {
   w3: nutricionImg,
   w4: futbolImg,
   w5: yogaImg,
-  w6: natacionImg,
   w7: teatroImg,
-  w8: fotografiaImg,
-  w9: cineImg,
   w10: psicologiaImg,
   w11: apoyoImg,
   w12: proyectoVidaImg,
+  w13: baileImg,
 };
 
 type CategoryKey = 'ALL' | 'RECOMMENDATIONS' | 'SALUD' | 'DEPORTE' | 'CULTURA' | 'MENTAL_HEALTH';
@@ -221,12 +217,6 @@ function ResourceCard({ resource, isDark, image }: { resource: WellnessResource;
             <MapPin size={12} className="flex-shrink-0" /> {resource.location}
           </div>
         )}
-        <div className="flex items-center gap-1.5 text-xs">
-          <Mail size={12} className="flex-shrink-0 text-gray-400" />
-          <a href={`mailto:${resource.contact}`} className="underline decoration-dotted underline-offset-2 truncate" style={{ color: meta.color }}>
-            {resource.contact}
-          </a>
-        </div>
       </div>
     </motion.div>
   );

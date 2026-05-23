@@ -9,9 +9,9 @@ const chatApi = axios.create({
 
 chatApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('patricia-token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const userId = localStorage.getItem('patricia_user_id');
+  if (userId) config.headers['X-User-Id'] = userId;
   return config;
 });
 
